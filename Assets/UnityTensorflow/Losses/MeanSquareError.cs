@@ -15,7 +15,8 @@
             if (sample_weight != null || mask != null)
                 throw new NotImplementedException();
 
-            using (K.NameScope("mean_square_error"))
-                return K.Mean(K.Square(y_pred - y_true), axis: -1);
+        using (K.NameScope("mean_square_error"))
+            
+            return K.Mean(K.Square(y_pred - y_true), axis: -1);
         }
     }

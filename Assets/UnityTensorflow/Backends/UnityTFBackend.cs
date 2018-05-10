@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TensorFlow;
 using UnityEngine;
 using Accord.Math;
+using System.IO;
 
 public class UnityTFBackend : IDisposable
 {
@@ -42,6 +43,22 @@ public class UnityTFBackend : IDisposable
     }
 
 
+    public void ExportGraphDef(string filePath)
+    {
+        using (var buffer = new TFBuffer())
+        {
+            Graph.ToGraphDef(buffer);
+            var bytes = buffer.ToArray();
+            var fileInfo = new FileInfo(filePath);
+            if (!Directory.Exists(fileInfo.Directory.FullName))
+            {
+                Directory.CreateDirectory(fileInfo.Directory.FullName);
+            }
+            
+            File.WriteAllBytes(filePath, bytes);
+        }
+    }
+
     /// <summary>
     ///   Reshapes a tensor to the specified shape.
     /// </summary>
@@ -51,7 +68,7 @@ public class UnityTFBackend : IDisposable
     /// 
     /// <returns>Tensor.</returns>
     /// 
-    public UnityTFTensor reshape(UnityTFTensor x, int[] shape)
+    public UnityTFTensor Reshape(UnityTFTensor x, int[] shape)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L1724
         return Out(Graph.Reshape(tensor: In(x), shape: _constant(shape)));
@@ -325,7 +342,6 @@ public class UnityTFBackend : IDisposable
         var x = param.Select(t => In(t).Output).ToList().ToArray();
 
         TFOutput[] grads = Graph.AddGradients(y, x);
-
         List<UnityTFTensor> r = new List<UnityTFTensor>();
         for (int i = 0; i < grads.Length; i++)
             r.Add(Out(grads[i], name: "grad/" + x[i].Operation.Name));
@@ -766,7 +782,6 @@ public class UnityTFBackend : IDisposable
         }
 
         var tfshape = this.In(shape);
-
         UnityTFTensor x = Out(Graph.Placeholder(In(dtype.Value), tfshape, operName: name));
         //x.sha = shape;
         return x;
@@ -889,9 +904,10 @@ public class UnityTFBackend : IDisposable
     public UnityTFTensor Update(UnityTFTensor x, UnityTFTensor new_x, string name = null)
     {
         UnityTFTensor _x = In(x);
-        var result = new UnityTFTensor(this);
-        result.Operation = Graph.AssignVariableOp(_x.Output, In(new_x), operName: name);
-        return result;
+        //var result = new UnityTFTensor(this);
+        //result.Operation = Graph.AssignVariableOp(_x.Output, In(new_x), operName: name);
+        //return result;
+        return Out(Graph.Assign(_x.Output, In(new_x), operName: name));
     }
     /// <summary>
     /// Temperaly output TFOperation right now
@@ -900,9 +916,10 @@ public class UnityTFBackend : IDisposable
         where T : struct
     {
         UnityTFTensor _x = In(x);
-        var result = new UnityTFTensor(this);
-        result.Operation = Graph.AssignAddVariableOp(_x, _constant(increment), operName: name);
-        return result;
+        //var result = new UnityTFTensor(this);
+        //result.Operation = Graph.AssignAddVariableOp(_x, _constant(increment), operName: name);
+        //return result;
+        return Out(Graph.AssignAdd(_x, _constant(increment), operName: name));
     }
 
     public UnityTFTensor PrintTensor(UnityTFTensor x, string message)

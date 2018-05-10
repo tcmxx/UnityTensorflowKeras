@@ -6,7 +6,7 @@ using System.Linq;
 using Accord.Math;
 using Accord;
 using System.IO;
-
+using UnityEngine;
 
 public class UnityTFFunction
 {
@@ -103,7 +103,19 @@ public class UnityTFFunction
         foreach (KeyValuePair<UnityTFTensor, Array> pair in feed_dict)
         {
             UnityTFTensor t = backend.In(pair.Key);
-            runner.AddInput(t.Output, pair.Value);
+
+            //get the shape based on the tensor and input data length
+            long[] actualShape = t.TF_Shape.Copy();
+            int totalLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n*s));
+
+            int indexOfBatch = actualShape.IndexOf(-1);
+            if (indexOfBatch >= 0)
+                actualShape[indexOfBatch] = pair.Value.Length / totalLength;
+            Debug.Assert(totalLength <= pair.Value.Length, "Feed array does not have enough data");
+
+            //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
+            TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
+            runner.AddInput(t.Output, data);
         }
 
 
