@@ -34,6 +34,7 @@ public class UnityTFTensor {
             return Output.OutputType;
         }
     }
+    public bool UsesLearningPhase { get; set; }
 
     public long[] TF_Shape
     {
@@ -53,6 +54,25 @@ public class UnityTFTensor {
     {
         get { return Backend.IntShape(this); }
     }
+
+
+    public int?[] KerasShape
+    {
+        get; set;
+    } = null;
+    public int?[] IntShape
+    {
+        get;set;
+    } = null;
+
+    public ValueTuple<Layer, int , int >? KerasHistory    //layer node_index, tensor_index
+    {
+        get;
+        set;
+    }
+
+
+
 
     public UnityTFTensor(UnityTFBackend backend)
     {

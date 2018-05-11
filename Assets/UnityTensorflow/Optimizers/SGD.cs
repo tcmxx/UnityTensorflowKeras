@@ -71,7 +71,7 @@ public class SGD : OptimizerBase, IOptimizer
 
             using (K.NameScope("moments"))
             {
-                List<int?[]> shapes = param.Select(p => K.get_variable_shape(p)).ToList();
+                List<int?[]> shapes = param.Select(p => K.GetVariableShape(p)).ToList();
                 moments = shapes.Select(s => K.Zeros(s)).ToList();
             }
 

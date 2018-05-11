@@ -6,7 +6,6 @@ Created on Thu May 10 17:53:08 2018
 """
 
 import tensorflow as tf
-from tensorflow.python.platform import gfile
 import os
 
 
@@ -14,7 +13,7 @@ tf.reset_default_graph() #Clear the Tensorflow graph.x
 
 with tf.Session() as sess:
 
-    with gfile.FastGFile("test.pb",'rb') as f:
+    with tf.gfile.FastGFile("test.pb",'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
         sess.graph.as_default()

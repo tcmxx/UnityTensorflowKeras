@@ -27,7 +27,7 @@ public class TensorflowTest : MonoBehaviour {
         var weights = new List<UnityTFTensor>();
         weights.Add(weight);
         var optimizer = new SGD();
-        //var updates = optimizer.get_updates(weights, new Dictionary<UnityTFTensor, IWeightConstraint>(),loss);
+        var updates = optimizer.get_updates(weights, new Dictionary<UnityTFTensor, IWeightConstraint>(),loss);
 
         var inputs = new List<UnityTFTensor>();
         inputs.Add(input);
@@ -36,20 +36,19 @@ public class TensorflowTest : MonoBehaviour {
         outputs.Add(loss);
 
         
-        var function = K.Function(inputs, outputs, null, "Train");
+        var function = K.Function(inputs, outputs, updates, "Train");
 
         var inputData = new List<Array>();
         inputData.Add(new float[] { 1.2f, 3.3f, 4.3f,5,5,5 });
         inputData.Add(new float[] { 2,10 });
-        var functionResult = function.Call(inputData);
-        
-        var test = K.Placeholder(new int?[] { -1 });
-        test = K.Constant(1.0f) * test;
 
+        for (int i = 0; i < 20; ++i)
+        {
+            var functionResult = function.Call(inputData);
+            float resultLoss = (float)functionResult[0].Eval();
+            print(resultLoss);
+        }
         K.ExportGraphDef("SavedGraph/test.pb");
-
-        float resultLoss = (float)functionResult[0].Eval();
-        print(resultLoss);
     }
 	
 	// Update is called once per frame

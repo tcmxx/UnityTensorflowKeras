@@ -49,7 +49,7 @@ public class RMSProp : OptimizerBase, IOptimizer
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/optimizers.py#L221
 
             List<UnityTFTensor> grads = this.get_gradients(loss, param);
-            List<int?[]> shapes = param.Select(p => K.get_variable_shape(p)).ToList();
+            List<int?[]> shapes = param.Select(p => K.GetVariableShape(p)).ToList();
             List<UnityTFTensor> accumulators = shapes.Select(shape => K.Zeros(shape)).ToList();
             this.weights = accumulators;
             this.updates = new List<List<UnityTFTensor>>();

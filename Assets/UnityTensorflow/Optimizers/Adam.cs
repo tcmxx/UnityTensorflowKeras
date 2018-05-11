@@ -43,7 +43,7 @@ public class Adam : OptimizerBase, IOptimizer
             UnityTFTensor lr_t = K.Mul(lr, (K.Sqrt(1 - K.Pow(this.beta_2, t)) /
                              (1 - K.Pow(this.beta_1, t))), name: "lr_t");
 
-            var shapes = param.Select(p => K.get_variable_shape(p));
+            var shapes = param.Select(p => K.GetVariableShape(p));
             var ms = shapes.Select(shape => K.Zeros(shape)).ToArray();
             var vs = shapes.Select(shape => K.Zeros(shape)).ToArray();
             this.weights = new[] { this.iterations }.Concat(ms).Concat(vs).ToList();

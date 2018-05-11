@@ -18,6 +18,18 @@ public class UnityTFBackend : IDisposable
     public readonly float EPS = 10e-8f;
     public readonly DataFormatType format = DataFormatType.ChannelsLast;
 
+    // This dictionary holds a mapping {graph: learning_phase}.
+    // A learning phase is a bool tensor used to run Keras models in
+    // either train mode (learning_phase == 1) or test mode (learning_phase == 0).
+    private Dictionary<TFGraph, object> _GRAPH_LEARNING_PHASES = new Dictionary<TFGraph, object>();
+
+    // This dictionary holds a mapping {graph: UID_DICT}.
+    // each UID_DICT is a dictionary mapping name prefixes to a current index,
+    // used for generatic graph-specific string UIDs
+    // for various names (e.g. layer names).
+    private Dictionary<TFGraph, Dictionary<string, int>> _GRAPH_UID_DICTS = new Dictionary<TFGraph, Dictionary<string, int>>();
+
+
     public DataFormatType image_data_format()
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/common.py#L111
@@ -30,6 +42,36 @@ public class UnityTFBackend : IDisposable
         Session = new TFSession(Graph);
     }
 
+    /// <summary>
+    ///   Get the uid for the default graph.
+    /// </summary>
+    /// 
+    /// <param name="prefix">An optional prefix of the graph.</param>
+    /// 
+    /// <returns>A unique identifier for the graph.</returns>
+    /// 
+    public int GetUid(string prefix)
+    {
+        // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L58
+        var graph = Graph;
+        if (!_GRAPH_UID_DICTS.ContainsKey(graph))
+            _GRAPH_UID_DICTS[graph] = new Dictionary<string, int>();
+        if (!_GRAPH_UID_DICTS[graph].ContainsKey(prefix))
+            _GRAPH_UID_DICTS[graph][prefix] = 0;
+        _GRAPH_UID_DICTS[graph][prefix] += 1;
+        return _GRAPH_UID_DICTS[graph][prefix];
+    }
+
+    /// <summary>
+    ///   Reset graph identifiers.
+    /// </summary>
+    /// 
+    public void ResetUids()
+    {
+        _GRAPH_UID_DICTS = new Dictionary<TFGraph, Dictionary<string, int>>();
+    }
+
+
 
     /// <summary>
     ///   Destroys the current TF graph and creates a new one.
@@ -40,6 +82,10 @@ public class UnityTFBackend : IDisposable
     {
         Graph = new TFGraph();
         Session = new TFSession(Graph);
+
+        TFOutput phase = Graph.Placeholder(dtype: TFDataType.Bool, operName: "keras_learning_phase");
+        _GRAPH_LEARNING_PHASES = new Dictionary<TFGraph, object>();
+        _GRAPH_LEARNING_PHASES[Graph] = phase;
     }
 
 
@@ -294,9 +340,10 @@ public class UnityTFBackend : IDisposable
     }
 
 
-    public UnityTFTensor Dropout(object p, double retain_prob, object noise_shape, object seed)
+    public UnityTFTensor Dropout(UnityTFTensor x, double keep_prob, int[] noise_shape, int? seed)
     {
-        throw new NotImplementedException();
+        return Out(Graph.Dropout(In(x), _constant(keep_prob), new TFShape(noise_shape.Apply(p=>(long)p)),seed));
+        //throw new NotImplementedException();
     }
 
     public DataType? DType(UnityTFTensor tensor)
@@ -309,12 +356,12 @@ public class UnityTFBackend : IDisposable
         return Out(Graph.Elu(In(x)));
     }
 
-    public UnityTFTensor elu(UnityTFTensor x, double alpha)
+    public UnityTFTensor Elu(UnityTFTensor x, double alpha)
     {
         throw new NotImplementedException();
     }
 
-    public UnityTFTensor exp(UnityTFTensor x)
+    public UnityTFTensor Exp(UnityTFTensor x)
     {
         return Out(Graph.Exp(In(x)));
     }
@@ -330,7 +377,7 @@ public class UnityTFBackend : IDisposable
     ///   Returns the shape of a variable.
     /// </summary>
     /// 
-    public int?[] get_variable_shape(UnityTFTensor x)
+    public int?[] GetVariableShape(UnityTFTensor x)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L2192
         return IntShape(x);
@@ -391,8 +438,8 @@ public class UnityTFBackend : IDisposable
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L468
 
-        //if (x._keras_shape != null)
-       //     return x._keras_shape;
+        if (x.KerasShape != null)
+            return x.KerasShape;
 
         return _int_shape(In(x).Output);
     }
@@ -417,7 +464,7 @@ public class UnityTFBackend : IDisposable
         throw new NotImplementedException();
     }
 
-    /*/// <summary>
+    /// <summary>
     ///   Selects `x` in train phase, and `alt` otherwise.
     /// </summary>
     /// 
@@ -427,7 +474,7 @@ public class UnityTFBackend : IDisposable
     /// 
     /// <returns>Either 'x' or 'alt' based on the 'training' flag. The 'training' flag defaults to 'K.learning_phase()'.</returns>
     /// 
-    public Tensor in_train_phase(Func<Tensor> x, Func<Tensor> alt, bool? training)
+    public UnityTFTensor InTrainPhase(Func<UnityTFTensor> x, Func<UnityTFTensor> alt, bool? training)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/tensorflow_backend.py#L2583
 
@@ -435,7 +482,7 @@ public class UnityTFBackend : IDisposable
 
         if (training == null)
         {
-            var t = learning_phase();
+            var t = LearningPhase();
             if (t is bool)
                 training = (bool)t;
             uses_learning_phase = true;
@@ -457,24 +504,24 @@ public class UnityTFBackend : IDisposable
         {
             //else: assume learning phase is a placeholder tensor.
 
-            Tensor xx = @switch((Tensor)learning_phase(), x, alt);
+            UnityTFTensor xx = Switch((UnityTFTensor)LearningPhase(), x, alt);
 
             if (uses_learning_phase)
-                xx._uses_learning_phase = true;
+                xx.UsesLearningPhase = true;
             return xx;
         }
-    }*/
+    }
 
-    /*/// <summary>
+    /// <summary>
     ///   Selects `x` in test phase, and `alt` otherwise. Note that `alt` should have the* same shape* as `x`.
     /// </summary>
-    public Tensor in_test_phase(Func<Tensor> x, Func<Tensor> alt, bool? training = null)
+    public UnityTFTensor InTestPhase(Func<UnityTFTensor> x, Func<UnityTFTensor> alt, bool? training = null)
     {
-        return in_train_phase(alt, x, training: training);
+        return InTrainPhase(alt, x, training: training);
     }
-    */
+    
 
-    /*/// <summary>
+    /// <summary>
     ///   Switches between two operations depending on a scalar value. Note that both `then_expression` and `else_expression`
     ///   should be symbolic tensors of the *same shape
     /// </summary>
@@ -485,7 +532,7 @@ public class UnityTFBackend : IDisposable
     /// 
     /// <returns>The selected tensor.</returns>
     /// 
-    public UnityTFTensor @switch(UnityTFTensor condition, Func<UnityTFTensor> then_expression, Func<UnityTFTensor> else_expression)
+    public UnityTFTensor Switch(UnityTFTensor condition, Func<UnityTFTensor> then_expression, Func<UnityTFTensor> else_expression)
     {
         var _condition = In(condition);
 
@@ -495,7 +542,7 @@ public class UnityTFBackend : IDisposable
                     () => In(then_expression()),
                     () => In(else_expression()));
         return Out(x);
-    }*/
+    }
 
     public bool IsSparse(UnityTFTensor tensor)
     {
@@ -507,7 +554,7 @@ public class UnityTFBackend : IDisposable
         throw new NotImplementedException();
     }
 
-    /*/// <summary>
+    /// <summary>
     ///   Returns the learning phase flag.
     /// </summary>
     /// 
@@ -519,25 +566,25 @@ public class UnityTFBackend : IDisposable
     /// 
     /// <returns> Learning phase (scalar integer tensor or Python integer).</returns>
     /// 
-    public object learning_phase()
+    public object LearningPhase()
     {
-        TFGraph graph = tf;
+        TFGraph graph = Graph;
         if (!_GRAPH_LEARNING_PHASES.ContainsKey(graph))
         {
-            TFOutput phase = tf.Placeholder(dtype: TFDataType.Bool, operName: "keras_learning_phase");
+            TFOutput phase = Graph.Placeholder(dtype: TFDataType.Bool, operName: "keras_learning_phase");
             _GRAPH_LEARNING_PHASES[graph] = phase;
         }
 
         return _GRAPH_LEARNING_PHASES[graph];
-    }*/
+    }
 
-    /*/// <summary>
+    /// <summary>
     ///   Sets the learning phase to a fixed value.
     /// </summary>
-    public void set_learning_phase(bool value)
+    public void SetLearningPhase(bool value)
     {
-        _GRAPH_LEARNING_PHASES[tf] = value;
-    }*/
+        _GRAPH_LEARNING_PHASES[Graph] = value;
+    }
 
     public UnityTFTensor Max(UnityTFTensor x, int v, object p)
     {
@@ -565,11 +612,11 @@ public class UnityTFBackend : IDisposable
     /// 
     public UnityTFTensor BatchFlatten(UnityTFTensor x)
     {
-        throw new NotImplementedException();
-        /*var _x = In(x);
+        //throw new NotImplementedException();
+        var _x = In(x);
         TFOutput shape = Graph.Shape(_x);
         TFOutput dim = Graph.Prod(Graph.Slice(shape, Graph.Const(1), Graph.Rank(shape)), reduction_indices: Graph.ReduceDims(shape, null));
-        return Out(Graph.Reshape(In(x), Graph.Stack(new TFOutput[] { Graph.Const(-1), dim })));*/
+        return Out(Graph.Reshape(In(x), Graph.Stack(new TFOutput[] { Graph.Const(-1), dim })));
     }
 
 
@@ -783,7 +830,8 @@ public class UnityTFBackend : IDisposable
 
         var tfshape = this.In(shape);
         UnityTFTensor x = Out(Graph.Placeholder(In(dtype.Value), tfshape, operName: name));
-        //x.sha = shape;
+        x.KerasShape = shape;
+        x.UsesLearningPhase = false;
         return x;
     }
 
@@ -958,6 +1006,9 @@ public class UnityTFBackend : IDisposable
             init = Graph.Print(init, new[] { init }, $"initializing {scope.Name}");
             
             Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: "assign").Operation);
+
+            t.KerasShape = new int?[] { };
+            t.UsesLearningPhase = false;
             return t;
         }
     }
@@ -990,6 +1041,9 @@ public class UnityTFBackend : IDisposable
         init = Graph.Print(init, new[] { init }, $"initializing {varName}");
         //Graph.AddInitVariable(Graph.AssignVariableOp(t.Output, init, operName: $"{varName}/assign"));
         Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
+
+        t.KerasShape = array.GetLength().Apply(x => (int?)x);
+        t.UsesLearningPhase = false;
         return t;
     }
 
@@ -1035,8 +1089,8 @@ public class UnityTFBackend : IDisposable
         init = Graph.Print(init, new[] { init }, $"initializing {varName}");
         //Graph.AddInitVariable(Graph.AssignVariableOp(t.Output, init, operName: $"{varName}/assign"));
         Graph.AddInitVariable(Graph.Assign(t.Output, init, operName: $"{varName}/assign").Operation);
-        //t._keras_shape = tensor.shape;
-        //t._uses_learning_phase = false;
+        t.KerasShape = tensor.Shape;
+        t.UsesLearningPhase = false;
         return t;
     }
 
