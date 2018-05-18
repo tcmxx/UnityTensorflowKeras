@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PaddingType
+public enum PoolMode
 {
-    Valid,
-    Same,
-    Causal,
-    Full
+    Max,
+    Average
 }

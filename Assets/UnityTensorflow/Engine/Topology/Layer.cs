@@ -1118,7 +1118,7 @@ public abstract class Layer
         if (this.weights.Count == 0)
             return;
 
-        var weight_value_tuples = new List<Tuple<UnityTFTensor, Array>>();
+        var weight_value_tuples = new List<ValueTuple<UnityTFTensor, Array>>();
 
         List<Array> param_values = K.BatchGetValue(this.weights);
 
@@ -1129,7 +1129,7 @@ public abstract class Layer
             Array w = value[i];
             if (pv.GetLength().IsEqual(w.GetLength()))
                 throw new Exception($"Layer weight shape {pv.GetLength()} not compatible with provided weight shape {w.GetLength()}");
-            weight_value_tuples.Add(Tuple.Create(p, w));
+            weight_value_tuples.Add(ValueTuple.Create(p, w));
         }
 
         K.BatchSetValue(weight_value_tuples);

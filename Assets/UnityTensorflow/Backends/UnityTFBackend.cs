@@ -136,8 +136,11 @@ public class UnityTFBackend : IDisposable
     {
         throw new NotImplementedException();
     }
-
-    public void BatchSetValue(List<Tuple<UnityTFTensor, Array>> weight_value_tuples)
+    public List<Array> BatchGetValue(List<List<UnityTFTensor>> weights)
+    {
+        throw new NotImplementedException();
+    }
+    public void BatchSetValue(List<ValueTuple<UnityTFTensor, Array>> weight_value_tuples)
     {
         throw new NotImplementedException();
     }
@@ -266,7 +269,8 @@ public class UnityTFBackend : IDisposable
             var tempValue = Vector.Create((int)length, value);
             //o = _constant(Matrix.Create(value.GetType(), _shape, value), In(dtype.Value), name);
             //o = _constant(Matrix.Create(value.GetType(), _shape), In(dtype.Value), name);
-            o = _constant(tempValue, Array.ConvertAll(shape, item => (long)item), In(dtype.Value),name);
+            //o = _constant(tempValue, Array.ConvertAll(shape, item => (long)item), In(dtype.Value),name);
+            o = _constant(tempValue,  In(dtype.Value), name, Array.ConvertAll(shape, item => (long)item));
             //Debug.LogError("Currently the value neeed to be an array or shape length is not zero or no shape");
         }
         else
@@ -296,13 +300,26 @@ public class UnityTFBackend : IDisposable
         //var temp = value as Array;
         //Debug.Log(value);
         //Debug.Log(temp.Length);
-        TFTensor t;
-        if(shape == null)
-            t = new TFTensor((dynamic)value);
+        TFTensor t = null;
+        if (shape == null)
+        {
+            if(value is Array)
+            {
+                var dataArray = value as Array;
+                t = new TFTensor(dataArray);
+            }
+            else
+            {
+                t = UnityTFUtils.TFTensorFromT(value);
+            }
+        }
         else
         {
             long length = shape.Aggregate((a, b) => (a * b));
-            t = TFTensor.FromBuffer(new TFShape(shape), (dynamic)value, 0, (int)length);
+            var dataArray = value as Array;
+            Debug.Assert(dataArray != null, "Only support array input when shape is specified");
+            t = UnityTFUtils.TFTensorFromArray(dataArray, new TFShape(shape), 0, (int)length);
+            
         }
        // Debug.Log(string.Join(",",t.Shape));
         //var tensor = (float[])t.GetValue();
@@ -319,11 +336,26 @@ public class UnityTFBackend : IDisposable
         return Graph.Cast(o, dtype.Value);
     }
 
-    private TFOutput _constant<T>(T[] value, long[] shape, TFDataType? dtype = null, string operName = null)
+    
+    /*private TFOutput _constant<T>(T[] value, long[] shape, TFDataType? dtype = null, string operName = null)
     {
         long length = shape.Aggregate((a, b) => (a * b));
         Debug.Assert(length == value.Length, "Array size does not match shape");
-        TFTensor t = TFTensor.FromBuffer(new TFShape(shape), (dynamic)value,0, (int)length);
+
+
+        //TFTensor t = TFTensor.FromBuffer(new TFShape(shape), (dynamic)value,0, (int)length);
+        TFTensor t = null;
+        if(typeof(T) == typeof(float))
+        {
+            t = TFTensor.FromBuffer(new TFShape(shape), (float[]) Convert.ChangeType(value, typeof(float[])), 0, (int)length);
+        }else if(typeof(T) == typeof(double))
+        {
+            t = TFTensor.FromBuffer(new TFShape(shape), (double[])Convert.ChangeType(value, typeof(float[])), 0, (int)length);
+        }
+        else
+        {
+            Debug.LogError("Does not Support Constant of type" + typeof(T).Name);
+        }
         // Debug.Log(string.Join(",",t.Shape));
         //var tensor = (float[])t.GetValue();
         //Debug.Log(string.Join(",", tensor));
@@ -337,7 +369,7 @@ public class UnityTFBackend : IDisposable
             return o;
 
         return Graph.Cast(o, dtype.Value);
-    }
+    }*/
 
 
     public UnityTFTensor Dropout(UnityTFTensor x, double keep_prob, int[] noise_shape, int? seed)
@@ -406,7 +438,7 @@ public class UnityTFBackend : IDisposable
         return Out(Graph.NotEqual(In(x), In(y)));
     }
 
-    public UnityTFTensor NotEqual<T>(UnityTFTensor x, T y) where T : struct
+    /*public UnityTFTensor NotEqual<T>(UnityTFTensor x, T y) where T : struct
     {
         using (this.NameScope("not_equal"))
         {
@@ -414,7 +446,7 @@ public class UnityTFBackend : IDisposable
             var _y = Graph.Cast(Graph.Const((dynamic)y), _x.DType);
             return Out(Graph.NotEqual(_x, _y));
         }
-    }
+    }*/
 
     public UnityTFTensor HardSigmoid(UnityTFTensor x)
     {
@@ -742,9 +774,9 @@ public class UnityTFBackend : IDisposable
         switch (data_format.Value)
         {
             case DataFormatType.ChannelsFirst:
-                return "channels_first";
+                return "NHWC";
             case DataFormatType.ChannelsLast:
-                return "channels_last";
+                return "NHWC";
             default:
                 throw new Exception();
         }
@@ -1156,6 +1188,8 @@ public class UnityTFBackend : IDisposable
         TFOutput x = In(inputs).Output;
         TFOutput _kernel = In(kernel).Output;
 
+        var _strides = new List<int>(strides); _strides.Insert(0, 1); _strides.Add(1);
+
         // With 4d inputs, tf.nn.convolution only supports
         // data_format NHWC, so we transpose the inputs
         // in case we are in data_format channels_first.
@@ -1165,16 +1199,43 @@ public class UnityTFBackend : IDisposable
             input: x,
             filter: _kernel,
             //dilation_rate: dilation_rate,
-            strides: strides.Select(i => (long)i).ToList().ToArray(),
+            strides: _strides.ToArray().Select(i => (long)i).ToList().ToArray(),
             padding: _padding,
             data_format: "NHWC");
         return Out(_postprocess_conv2d_output(x, data_format.Value));
     }
 
+    public UnityTFTensor Pool2D(UnityTFTensor x, int[] poolSize, int[] strides,
+           PaddingType padding, DataFormatType? dataFormat = null,
+           PoolMode poolMode= PoolMode.Max)
+    {
+        if (dataFormat == null)
+            dataFormat = image_data_format();
+        string _padding = _preprocess_padding(padding);
+        var _strides = new List<int>(strides); _strides.Insert(0, 1); _strides.Add(1);
+        var _poolSize = new List<int>(poolSize); _poolSize.Insert(0, 1); _poolSize.Add(1);
+
+        var o = _preprocess_conv2d_input(x, dataFormat.Value);
+
+        if (poolMode == PoolMode.Max)
+        {
+            o = Graph.MaxPool(x, Array.ConvertAll(_poolSize.ToArray(), item => (long)item), Array.ConvertAll(_strides.ToArray(), item => (long)item), _padding);
+        }
+        else if (poolMode == PoolMode.Average)
+        {
+            o = Graph.AvgPool(x, Array.ConvertAll(_poolSize.ToArray(), item => (long)item), Array.ConvertAll(_strides.ToArray(), item => (long)item), _padding);
+        }
+        else
+            Debug.LogError("Invalid pooling mode");
+
+        return Out(_postprocess_conv2d_output(o, dataFormat.Value));
+     }
+
+
     /// <summary>
     ///   Transpose and cast the output from conv2d if needed.
     /// </summary>
-    private TFOutput _postprocess_conv2d_output(TFOutput x, DataFormatType data_format)
+private TFOutput _postprocess_conv2d_output(TFOutput x, DataFormatType data_format)
     {
         if (data_format == DataFormatType.ChannelsFirst)
             x = Graph.Transpose(x, _constant(new[] { 0, 3, 1, 2 }));
@@ -1307,7 +1368,12 @@ public class UnityTFBackend : IDisposable
 
     public string MakeName(string operName, string userName)
     {
-        Debug.Assert(userName != null, "user name can not be null");
+        if (userName == null)
+        {
+            var k = Graph.CurrentNameScope == "" ? operName : Graph.CurrentNameScope + "/" + operName;
+            return $"{k}_{UnityTFUtils.ToString(GetUid(k))}";
+        }
+
         if (Graph.CurrentNameScope == "")
             return userName;
         return Graph.CurrentNameScope + "/" + userName;

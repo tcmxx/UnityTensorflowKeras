@@ -114,7 +114,11 @@ public class UnityTFFunction
             Debug.Assert(totalLength <= pair.Value.Length, "Feed array does not have enough data");
 
             //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
-            TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
+
+            //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
+            TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape), 0, totalLength * (pair.Value.Length / totalLength)); 
+
+
             runner.AddInput(t.Output, data);
         }
 

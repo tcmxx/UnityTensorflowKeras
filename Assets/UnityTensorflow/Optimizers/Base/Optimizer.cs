@@ -71,7 +71,7 @@ public abstract class OptimizerBase
     public void set_weights(List<Array> weights)
     {
         var param = this.weights;
-        var weight_value_tuples = new List<Tuple<UnityTFTensor, Array>>();
+        var weight_value_tuples = new List<ValueTuple<UnityTFTensor, Array>>();
         var param_values = K.BatchGetValue(param);
 
         for (int i = 0; i < param_values.Count; i++)
@@ -83,7 +83,7 @@ public abstract class OptimizerBase
             if (pv.GetLength().IsEqual(w.GetLength()))
                 throw new Exception($"Optimizer weight shape {pv.GetLength()} not compatible with provided weight shape {w.GetLength()}.");
 
-            weight_value_tuples.Add(Tuple.Create(p, w));
+            weight_value_tuples.Add(ValueTuple.Create(p, w));
         }
 
         K.BatchSetValue(weight_value_tuples);
