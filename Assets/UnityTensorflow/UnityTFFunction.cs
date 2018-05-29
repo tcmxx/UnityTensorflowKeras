@@ -8,7 +8,7 @@ using Accord;
 using System.IO;
 using UnityEngine;
 
-public class UnityTFFunction
+public class UnityTFFunction: Function
 {
     private UnityTFBackend backend;
     private TFGraph graph;
@@ -55,7 +55,7 @@ public class UnityTFFunction
         //this.session_kwargs = session_kwargs;
     }
 
-    public List<UnityTFTensor> Call(List<Array> inputs)
+    public override List<UnityTFTensor> Call(List<Array> inputs)
     {
         var feed_dict = new Dictionary<UnityTFTensor, Array>();
         foreach (var tuple in Enumerable.Zip(this.inputs, inputs, (a, b) => Tuple.Create(a, b)))

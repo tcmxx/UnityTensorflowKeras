@@ -34,6 +34,12 @@ public class UnityTFTensor {
             return Output.OutputType;
         }
     }
+
+    public DataType? dtype
+    {
+        get { return Backend.DType(this); }
+    }
+
     public bool UsesLearningPhase { get; set; }
 
     public long[] TF_Shape

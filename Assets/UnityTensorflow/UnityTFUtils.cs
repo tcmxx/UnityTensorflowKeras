@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using TensorFlow;
 using UnityEngine;
+using System.Linq;
 
 using static Current;
 
@@ -12,6 +13,16 @@ public static class UnityTFUtils
 {
     // Mappings from Python calls to .NET
     static ObjectIDGenerator generator = new ObjectIDGenerator();
+
+    public static int[] Range(int a, int b)
+    {
+        return Accord.Math.Vector.Range(a, b);
+    }
+
+    public static int[] Range(int? a, int? b)
+    {
+        return Range(a.Value, b.Value);
+    }
 
     public static long GetId(object x)
     {
@@ -48,7 +59,12 @@ public static class UnityTFUtils
         return obj.ToString();
     }
 
-
+    public static HashSet<T> ToSet<T>(IEnumerable<T> x)
+    {
+        if (x == null)
+            return null;
+        return new HashSet<T>(x);
+    }
 
     /// <summary>
     ///   Input() is used to instantiate a Keras tensor.
@@ -140,6 +156,133 @@ public static class UnityTFUtils
             return null;
         }
     }
+
+    public static TValue TryGetOr<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue def)
+    {
+        TValue r;
+        if (dict.TryGetValue(key, out r))
+            return r;
+        return def;
+    }
+
+    // Methods to condense single elements and lists into dictionary
+    // so they can be passed more easily along methods that follow
+    // the Python interfaces. We include some markings to be able
+    // to detect what those values originally were before being
+    // transformed to dictionaries.
+
+    public static Dictionary<string, T> dict_from_single<T>(this T value)
+    {
+        return new Dictionary<string, T>() { { "__K__single__", value } };
+    }
+
+    public static Dictionary<string, T> dict_from_list<T>(this List<T> list)
+    {
+        var dict = new Dictionary<string, T>();
+        for (int i = 0; i < list.Count; i++)
+            dict["__K__list__" + i] = list[i];
+        return dict;
+    }
+
+    public static bool is_dict<T>(this Dictionary<string, T> dict)
+    {
+        if (dict == null)
+            return false;
+        return !dict.Keys.Any(x => x.StartsWith("__K__"));
+    }
+
+    public static bool is_list<T>(this Dictionary<string, T> dict)
+    {
+        if (dict == null)
+            return false;
+        return dict.Keys.All(x => x.StartsWith("__K__list__"));
+    }
+
+    public static bool is_single<T>(this Dictionary<string, T> dict)
+    {
+        if (dict == null)
+            return true;
+        return dict.Keys.Count == 1 && dict.ContainsKey("__K__single__");
+    }
+
+    public static List<T> to_list<T>(this Dictionary<string, T> dict)
+    {
+        List<T> list = new List<T>();
+        for (int i = 0; i < dict.Keys.Count; i++)
+            list.Add(dict["__K__list__" + i]);
+        return list;
+    }
+
+    public static T to_single<T>(this Dictionary<string, T> dict)
+    {
+        if (dict == null)
+            return default(T);
+        return dict["__K__single__"];
+    }
+
+
+
+    public static List<T> Get<T>(IList<string> name)
+    {
+        if (name == null)
+            return null;
+        return name.Select(s => Get<T>(s)).ToList();
+    }
+
+    public static T Get<T>(string name)
+    {
+        Type baseType = typeof(T);
+        Type foundType = get(name, baseType);
+
+        if (foundType == null)
+            foundType = get(name.Replace("_", ""), baseType); // try again after normalizing the name
+
+        if (foundType == null)
+            throw new ArgumentOutOfRangeException("name", $"Could not find {baseType.Name} '{name}'.");
+
+        return (T)Activator.CreateInstance(foundType);
+    }
+
+    private static Type get(string name, Type type)
+    {
+        return AppDomain.CurrentDomain.GetAssemblies()
+                                    .SelectMany(s => s.GetTypes())
+                                    .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
+                                    .Where(p => p.Name.ToUpperInvariant() == name.ToUpperInvariant())
+                                    .FirstOrDefault();
+    }
+
+    public static List<T> Get<T>(IEnumerable<object> name)
+        where T : class
+    {
+        return name.Select(s => Get<T>(s)).ToList();
+    }
+
+    public static T Get<T>(object obj)
+        where T : class
+    {
+        if (obj is T)
+            return (T)obj;
+
+        if (obj is String)
+            return Get<T>(obj as string);
+
+        if (typeof(T) == typeof(IMetric))
+        {
+            var f2 = obj as Func<UnityTFTensor, UnityTFTensor, UnityTFTensor>;
+            if (f2 != null)
+                return new CustomMetric(f2) as T;
+
+            var f3 = obj as Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor>;
+            if (f3 != null)
+                return new CustomMetric(f3) as T;
+        }
+
+        throw new NotImplementedException();
+    }
+
+
+
 }
 
 
