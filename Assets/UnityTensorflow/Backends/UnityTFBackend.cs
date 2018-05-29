@@ -129,20 +129,85 @@ public class UnityTFBackend : IDisposable
 
 
 
-
+    public Array GetValue(UnityTFTensor x)
+    {
+        return x.Eval() as Array;
+    }
 
 
     public List<Array> BatchGetValue(List<UnityTFTensor> weights)
     {
-        throw new NotImplementedException();
+        List<Array> result = new List<Array>();
+        foreach(var w in weights)
+        {
+            result.Add(w.Eval() as Array);
+        }
+        //throw new NotImplementedException();
+        return result;
     }
     public List<Array> BatchGetValue(List<List<UnityTFTensor>> weights)
     {
         throw new NotImplementedException();
     }
+
+    public void SetValue(UnityTFTensor x, Array value) {
+        //value = np.asarray(value, dtype = dtype(x))
+        //var tf_dtype = tf.as_dtype(x.dtype.name.split('_')[0])
+        var shape = new TFShape(x.TF_Shape);
+        var valueTensor = UnityTFUtils.TFTensorFromArray(value, shape, 0,value.Length);
+
+        TFOutput assignPlaceholder;
+        TFOperation assignOperation;
+        if (x.AssignPlaceHolder.HasValue) {
+            assignPlaceholder = x.AssignPlaceHolder.Value;
+            assignOperation = x.AssignOperation;
+        }
+        else {
+            assignPlaceholder = Graph.Placeholder(valueTensor.TensorType, shape);
+            assignOperation = Graph.Assign(x.Output, assignPlaceholder).Operation;//  x.assign(assign_placeholder)
+            x.AssignPlaceHolder = assignPlaceholder;
+            x.AssignOperation = assignOperation;
+        }
+
+        Session.Run(new TFOutput[] { x.AssignPlaceHolder.Value }, new TFTensor[] { valueTensor }, new TFOutput[] { }, new TFOperation[] { x.AssignOperation } );
+     }
+
     public void BatchSetValue(List<ValueTuple<UnityTFTensor, Array>> weight_value_tuples)
     {
-        throw new NotImplementedException();
+
+        if (weight_value_tuples == null)
+            return;
+
+        var assignOps = new List<TFOperation>();
+        var valueTensors = new List<TFTensor>();
+        var assignPlaceholders = new List<TFOutput>();
+
+        foreach (var p in weight_value_tuples)
+        {
+            var shape = new TFShape(p.Item1.TF_Shape);
+            var valueTensor = UnityTFUtils.TFTensorFromArray(p.Item2, shape, 0, p.Item2.Length); //np.asarray(value, dtype = dtype(x))
+            TFOutput assignPlaceholder;
+            TFOperation assignOperation;
+
+            if (p.Item1.AssignPlaceHolder.HasValue)
+            {
+                assignPlaceholder = p.Item1.AssignPlaceHolder.Value;
+                assignOperation = p.Item1.AssignOperation;
+            }
+            else
+            {
+                assignPlaceholder = Graph.Placeholder(valueTensor.TensorType, shape);
+                assignOperation = Graph.Assign(p.Item1.Output, assignPlaceholder).Operation;//  x.assign(assign_placeholder)
+                p.Item1.AssignPlaceHolder = assignPlaceholder;
+                p.Item1.AssignOperation = assignOperation;
+            }
+            assignOps.Add(assignOperation);
+            valueTensors.Add(valueTensor);
+            assignPlaceholders.Add(assignPlaceholder);
+        }
+
+        Session.Run(assignPlaceholders.ToArray(), valueTensors.ToArray(), new TFOutput[] { }, assignOps.ToArray());
+        
     }
     
 

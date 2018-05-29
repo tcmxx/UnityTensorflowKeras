@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
+
 using static Current;
 
 public class TensorflowTest : MonoBehaviour {
@@ -13,7 +15,9 @@ public class TensorflowTest : MonoBehaviour {
         //TestBasicBackendAndOptimizerAndExportGraph();
         //TestLayer();
 
-        TestConv2D();
+        //TestConv2D();
+
+        TestSetAndGetValue();
     }
 	
 
@@ -108,5 +112,45 @@ public class TensorflowTest : MonoBehaviour {
 
 
         K.ExportGraphDef("SavedGraph/convLayer.pb");
+    }
+
+    public void TestSetAndGetValue()
+    {
+        var weight1 = K.Variable((new Constant(1)).Call(new int[] { 3 }, DataType.Float));
+        var weight2 = K.Variable((new Constant(1)).Call(new int[] { 5 }, DataType.Float));
+        //call eval once for intiaization
+        K.BatchGetValue(new List<UnityTFTensor>() { weight1, weight2 });
+
+        print("Test SetValue() and GetValue()");
+        var inputValue1 = new float[] { 8.8f, 9.9f, 1.1f };
+        K.SetValue(weight1, inputValue1);
+
+        var result1 = (float[])K.GetValue(weight1);
+
+        print("---Input value:" + string.Join(", ", inputValue1));
+        print("---Output value:" + string.Join(", ", result1));
+
+        print("Test "+ (result1.SequenceEqual(inputValue1)?"Passed":"Failed"));
+
+
+
+        print("Test BatchSetValue() and BatchGetValue()");
+        inputValue1 = new float[] { 2.2f, 3.9f, 4.1f };
+        var inputValue2 = new float[] { 4.2f, 3.2f, 14.5f, 44.5f, 74.3f };
+        K.BatchSetValue(new List<ValueTuple<UnityTFTensor, Array>>() {
+            ValueTuple.Create(weight1,inputValue1),ValueTuple.Create(weight2,inputValue2),
+        });
+
+        var resultBatch = K.BatchGetValue(new List<UnityTFTensor>() { weight1 , weight2 });
+
+        
+        print("---Input value1:" + string.Join(", ", inputValue1));
+        print("---Output value1:" + string.Join(", ", (float[])resultBatch[0]));
+        print("---Input value2:" + string.Join(", ", inputValue2));
+        print("---Output value2:" + string.Join(", ", (float[])resultBatch[1]));
+
+        print("Test " + ((inputValue1.SequenceEqual((float[])resultBatch[0])
+             && inputValue2.SequenceEqual((float[])resultBatch[1])) ? "Passed" : "Failed"));
+
     }
 }

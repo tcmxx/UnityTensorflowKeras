@@ -71,6 +71,9 @@ public class UnityTFTensor {
         set;
     }
 
+    public TFOutput? AssignPlaceHolder { get; set; } = null;
+    public TFOperation AssignOperation { get; set; } = null;
+
 
 
 
