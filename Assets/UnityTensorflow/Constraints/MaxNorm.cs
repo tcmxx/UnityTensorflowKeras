@@ -42,10 +42,10 @@ public class MaxNorm : IWeightConstraint
     /// 
     /// <returns>The output tensor with the constraint applied.</returns>
     /// 
-    public UnityTFTensor Call(UnityTFTensor w)
+    public Tensor Call(Tensor w)
     {
-        UnityTFTensor norms = K.Sqrt(K.Sum(K.Square(w), axis: this.axis, keepdims: true));
-        UnityTFTensor desired = K.Clip(norms, 0, this.max_value);
+        Tensor norms = K.Sqrt(K.Sum(K.Square(w), axis: this.axis, keepdims: true));
+        Tensor desired = K.Clip(norms, 0, this.max_value);
         w = K.Mul(w, K.Div(desired, K.Add(K.EPS, norms)));
         return w;
     }

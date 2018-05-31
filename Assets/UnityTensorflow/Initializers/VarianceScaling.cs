@@ -81,7 +81,7 @@ public class VarianceScaling : IWeightInitializer
     /// and element data type <paramref name="dtype" /> that has been initialized using this
     /// strategy.</returns>
     /// 
-    public UnityTFTensor Call(int[] shape, DataType? dtype = null)
+    public Tensor Call(int[] shape, DataType? dtype = null)
     {
         using (K.NameScope("variance_scaling"))
         {

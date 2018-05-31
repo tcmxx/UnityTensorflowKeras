@@ -49,14 +49,14 @@ public class Node
     public List<Layer> inbound_layers;
     public List<int?> node_indices;
     public List<int?> tensor_indices;
-    public List<UnityTFTensor> input_tensors;
-    public List<UnityTFTensor> output_tensors;
-    public List<UnityTFTensor> input_masks;
-    public List<UnityTFTensor> output_masks;
+    public List<Tensor> input_tensors;
+    public List<Tensor> output_tensors;
+    public List<Tensor> input_masks;
+    public List<Tensor> output_masks;
     public List<int?[]> input_shapes;
     public List<int?[]> output_shapes;
-    public List<UnityTFTensor> input_mask;
-    public List<UnityTFTensor> output_mask;
+    public List<Tensor> input_mask;
+    public List<Tensor> output_mask;
     private object arguments;
 
     /// <summary>
@@ -79,8 +79,8 @@ public class Node
     /// <param name="output_shapes">The list of output shapes.</param>
     public Node(Layer outbound_layer,
                 List<Layer> inbound_layers, List<int?> node_indices, List<int?> tensor_indices,
-                 List<UnityTFTensor> input_tensors, List<UnityTFTensor> output_tensors,
-                 List<UnityTFTensor> input_masks, List<UnityTFTensor> output_masks,
+                 List<Tensor> input_tensors, List<Tensor> output_tensors,
+                 List<Tensor> input_masks, List<Tensor> output_masks,
                  List<int?[]> input_shapes, List<int?[]> output_shapes,
                  object arguments = null)
     {

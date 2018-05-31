@@ -20,10 +20,10 @@ using static Current;
 [DataContract]
 public class SGD : OptimizerBase, IOptimizer
 {
-    private UnityTFTensor iterations;
-    private UnityTFTensor lr;
-    private UnityTFTensor momentum;
-    private UnityTFTensor decay;
+    private Tensor iterations;
+    private Tensor lr;
+    private Tensor momentum;
+    private Tensor decay;
     private double initial_decay;
     private bool nesterov;
 
@@ -54,20 +54,20 @@ public class SGD : OptimizerBase, IOptimizer
         this.nesterov = nesterov;
     }
 
-    public List<List<UnityTFTensor>> get_updates(List<UnityTFTensor> param, Dictionary<UnityTFTensor, IWeightConstraint> constraints, UnityTFTensor loss)
+    public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
     {
         using (K.NameScope($"SGD"))
         {
             var grads = this.get_gradients(loss, param);
-            this.updates = new List<List<UnityTFTensor>>();
+            this.updates = new List<List<Tensor>>();
 
             if (this.initial_decay > 0)
                 this.lr *= (1 / (1 + this.decay * this.iterations));
 
-            this.updates.Add(new List<UnityTFTensor> { K.UpdateAdd(this.iterations, 1f, name: "iterations/update") });
+            this.updates.Add(new List<Tensor> { K.UpdateAdd(this.iterations, 1f, name: "iterations/update") });
 
             // momentum
-            List<UnityTFTensor> moments;
+            List<Tensor> moments;
 
             using (K.NameScope("moments"))
             {
@@ -81,15 +81,15 @@ public class SGD : OptimizerBase, IOptimizer
             {
                 using (K.NameScope($"{param[i].Name}"))
                 {
-                    UnityTFTensor p = param[i];
-                    UnityTFTensor g = grads[i];
-                    UnityTFTensor m = moments[i];
+                    Tensor p = param[i];
+                    Tensor g = grads[i];
+                    Tensor m = moments[i];
 
-                    UnityTFTensor v = this.momentum * m - lr * g;  // velocity
+                    Tensor v = this.momentum * m - lr * g;  // velocity
 
-                    this.updates.Add(new List<UnityTFTensor> { K.Update(m, v, "momentum/update") });
+                    this.updates.Add(new List<Tensor> { K.Update(m, v, "momentum/update") });
 
-                    UnityTFTensor new_p;
+                    Tensor new_p;
                     if (this.nesterov)
                         new_p = p + this.momentum * v - lr * g;
                     else
@@ -99,7 +99,7 @@ public class SGD : OptimizerBase, IOptimizer
                     if (constraints.ContainsKey(p))
                         new_p = constraints[p].Call(new_p);
 
-                    updates.Add(new List<UnityTFTensor> { K.Update(p, new_p, "parameter/update") });
+                    updates.Add(new List<Tensor> { K.Update(p, new_p, "parameter/update") });
                 }
             }
 

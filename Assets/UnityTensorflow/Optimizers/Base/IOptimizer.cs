@@ -3,5 +3,5 @@
 
     public interface IOptimizer
     {
-        List<List<UnityTFTensor>> get_updates(List<UnityTFTensor> collected_trainable_weights, Dictionary<UnityTFTensor, IWeightConstraint> constraints, UnityTFTensor total_loss);
+        List<List<Tensor>> get_updates(List<Tensor> collected_trainable_weights, Dictionary<Tensor, IWeightConstraint> constraints, Tensor total_loss);
     }

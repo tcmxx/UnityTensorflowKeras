@@ -63,8 +63,8 @@ public class Sequential : Model, IEnumerable<Layer>
 
         this.layers = new List<Layer>(); // Stack of layers.
         this.model = null; // Internal Model instance.
-        this.inputs = new List<UnityTFTensor>(); // List of input tensors
-        this.outputs = new List<UnityTFTensor>(); // List of length 1: the output tensor (unique).
+        this.inputs = new List<Tensor>(); // List of input tensors
+        this.outputs = new List<Tensor>(); // List of length 1: the output tensor (unique).
         this._trainable = true;
         this._initial_weights = null;
 
@@ -135,7 +135,7 @@ public class Sequential : Model, IEnumerable<Layer>
                 throw new Exception("All layers in a Sequential model should have a single output tensor. For multi-output layers, use the functional API.");
             }
 
-            this.outputs = new List<UnityTFTensor> { layer.inbound_nodes[0].output_tensors[0] };
+            this.outputs = new List<Tensor> { layer.inbound_nodes[0].output_tensors[0] };
             this.inputs = base.get_source_inputs(this.outputs[0]);
 
             // We create an input node, which we will keep updated
@@ -147,15 +147,15 @@ public class Sequential : Model, IEnumerable<Layer>
                                 input_tensors: this.inputs,
                                 output_tensors: this.outputs,
                                 // no model-level masking for now
-                                input_masks: this.inputs.Select(x => (UnityTFTensor)null).ToList(),
-                                output_masks: new List<UnityTFTensor>() { null },
+                                input_masks: this.inputs.Select(x => (Tensor)null).ToList(),
+                                output_masks: new List<Tensor>() { null },
                                 input_shapes: this.inputs.Select(x => x.KerasShape).ToList(),
                                 output_shapes: this.outputs.Select(x => x.KerasShape).ToList()
             );
         }
         else
         {
-            List<UnityTFTensor> output_tensor = layer.Call(this.outputs);
+            List<Tensor> output_tensor = layer.Call(this.outputs);
             if (output_tensor.Count > 1)
             {
                 throw new Exception("All layers in a Sequential model should have a single output tensor. For multi-output layers, use the functional API.");
@@ -185,14 +185,14 @@ public class Sequential : Model, IEnumerable<Layer>
 
         if (this.layers.Count == 0)
         {
-            this.outputs = new List<UnityTFTensor>();
+            this.outputs = new List<Tensor>();
             this.inbound_nodes = new List<Node>();
             this.outbound_nodes = new List<Node>();
         }
         else
         {
             this.layers[-1].outbound_nodes = new List<Node>();
-            this.outputs = new List<UnityTFTensor>() { this.layers.ToArray().Get(-1).output[0] };
+            this.outputs = new List<Tensor>() { this.layers.ToArray().Get(-1).output[0] };
             // update this.inbound_nodes
         }
 
@@ -220,7 +220,7 @@ public class Sequential : Model, IEnumerable<Layer>
     }
 
 
-    protected override List<UnityTFTensor> InnerCall(List<UnityTFTensor> inputs, List<UnityTFTensor> mask = null, bool? training = null)
+    protected override List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
     {
         if (this.model == null)
             this.build();
@@ -367,7 +367,7 @@ public class Sequential : Model, IEnumerable<Layer>
 
 
 
-    public override List<UnityTFTensor> trainable_weights
+    public override List<Tensor> trainable_weights
     {
         get
         {
@@ -378,12 +378,12 @@ public class Sequential : Model, IEnumerable<Layer>
         }
     }
 
-    public override List<UnityTFTensor> non_trainable_weights
+    public override List<Tensor> non_trainable_weights
     {
         get
         {
             // Support for legacy behavior
-            List<UnityTFTensor> weights = base.non_trainable_weights;
+            List<Tensor> weights = base.non_trainable_weights;
             if (!this.trainable)
             {
                 trainable_weights = base.trainable_weights;
@@ -395,7 +395,7 @@ public class Sequential : Model, IEnumerable<Layer>
     }
 
 
-    public override List<List<UnityTFTensor>> updates
+    public override List<List<Tensor>> updates
     {
         get
         {
@@ -405,21 +405,21 @@ public class Sequential : Model, IEnumerable<Layer>
         }
     }
 
-    public override List<List<UnityTFTensor>> state_updates()
+    public override List<List<Tensor>> state_updates()
     {
         if (this.model == null)
             this.build();
         return this.model.state_updates();
     }
 
-    public override List<List<UnityTFTensor>> get_updates_for(List<UnityTFTensor> inputs)
+    public override List<List<Tensor>> get_updates_for(List<Tensor> inputs)
     {
         if (this.model == null)
             this.build();
         return this.model.get_updates_for(inputs);
     }
 
-    public override List<UnityTFTensor> losses
+    public override List<Tensor> losses
     {
         get
         {
@@ -429,14 +429,14 @@ public class Sequential : Model, IEnumerable<Layer>
         }
     }
 
-    public override List<UnityTFTensor> get_losses_for(List<UnityTFTensor> inputs)
+    public override List<Tensor> get_losses_for(List<Tensor> inputs)
     {
         if (this.model == null)
             this.build();
         return this.model.get_losses_for(inputs);
     }
 
-    public override Dictionary<UnityTFTensor, IWeightRegularizer> regularizers
+    public override Dictionary<Tensor, IWeightRegularizer> regularizers
     {
         get
         {
@@ -446,7 +446,7 @@ public class Sequential : Model, IEnumerable<Layer>
         }
     }
 
-    public override Dictionary<UnityTFTensor, IWeightConstraint> constraints
+    public override Dictionary<Tensor, IWeightConstraint> constraints
     {
         get
         {
@@ -466,7 +466,7 @@ public class Sequential : Model, IEnumerable<Layer>
         }
     }
 
-    public override List<UnityTFTensor> weights
+    public override List<Tensor> weights
     {
         get
         {
@@ -704,7 +704,7 @@ public class Sequential : Model, IEnumerable<Layer>
         return this.model.predict(x, batch_size: batch_size, verbose: verbose);
     }
 
-    public override List<UnityTFTensor> predict_on_batch(Dictionary<string, Array> x)
+    public override List<Tensor> predict_on_batch(Dictionary<string, Array> x)
     {
         //"""Returns predictions for a single batch of samples.
         //# Arguments
@@ -718,7 +718,7 @@ public class Sequential : Model, IEnumerable<Layer>
         return this.model.predict_on_batch(x);
     }
 
-    public override List<UnityTFTensor> train_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null, Dictionary<string, Dictionary<string, double>> class_weight = null)
+    public override List<Tensor> train_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null, Dictionary<string, Dictionary<string, double>> class_weight = null)
     {
         //"""Single gradient update over one batch of samples.
         //# Arguments
@@ -744,7 +744,7 @@ public class Sequential : Model, IEnumerable<Layer>
                                          class_weight: class_weight);
     }
 
-    public override List<UnityTFTensor> test_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null)
+    public override List<Tensor> test_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null)
     {
         //"""Evaluates the model over a single batch of samples.
         //# Arguments
@@ -810,7 +810,7 @@ public class Sequential : Model, IEnumerable<Layer>
     public History fit_generator(IEnumerator<List<Dictionary<string, Array>>> generator, int steps_per_epoch,
                       int epochs = 1, int verbose = 1, CallbackList callbacks = null,
                       List<Dictionary<string, Array>> validation_data = null, int? validation_steps = null,
-                      Dictionary<int, UnityTFTensor> class_weight = null,
+                      Dictionary<int, Tensor> class_weight = null,
                       int max_q_size = 10, int workers = 1, int initial_epoch = 0)
     {
         //        """Fits the model on data generated batch-by-batch by a Python generator.
@@ -893,7 +893,7 @@ public class Sequential : Model, IEnumerable<Layer>
                                         initial_epoch: initial_epoch);
     }
 
-    public List<UnityTFTensor> evaluate_generator(IEnumerator<List<List<UnityTFTensor>>> generator, int steps,
+    public List<Tensor> evaluate_generator(IEnumerator<List<List<Tensor>>> generator, int steps,
                            int max_q_size = 10, int workers = 1,
                            bool pickle_safe = false)
     {
@@ -931,7 +931,7 @@ public class Sequential : Model, IEnumerable<Layer>
                                          );
     }
 
-    public List<List<UnityTFTensor>> predict_generator(IEnumerator<List<Dictionary<string, Array>>> generator,
+    public List<List<Tensor>> predict_generator(IEnumerator<List<Dictionary<string, Array>>> generator,
         int steps, int max_q_size = 10, int workers = 1, int verbose = 0)
     {
         //"""Generates predictions for the input samples from a data generator.

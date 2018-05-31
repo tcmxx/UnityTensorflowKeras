@@ -14,5 +14,5 @@ public interface ILoss
     /// 
     /// <returns>A scalar value representing how far the model's predictions were from the ground-truth.</returns>
     /// 
-    UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor sample_weight = null, UnityTFTensor mask = null);
+    Tensor Call(Tensor expected, Tensor actual, Tensor sample_weight = null, Tensor mask = null);
 }

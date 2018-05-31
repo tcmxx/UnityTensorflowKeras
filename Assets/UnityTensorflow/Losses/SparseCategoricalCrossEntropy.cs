@@ -34,7 +34,7 @@ public class SparseCategoricalCrossEntropy : ILoss
     {
     }
 
-    public UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor sample_weight = null, UnityTFTensor mask = null)
+    public Tensor Call(Tensor expected, Tensor actual, Tensor sample_weight = null, Tensor mask = null)
     {
         throw new System.NotImplementedException();
     }

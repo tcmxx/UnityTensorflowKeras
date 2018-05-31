@@ -16,5 +16,5 @@
         ///   and element data type <paramref name="dtype"/> that has been initialized using this
         ///   strategy.</returns>
         /// 
-        UnityTFTensor Call(int[] shape, DataType? dtype = null);
+        Tensor Call(int[] shape, DataType? dtype = null);
     }

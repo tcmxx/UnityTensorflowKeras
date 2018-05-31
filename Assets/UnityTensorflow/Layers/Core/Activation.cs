@@ -78,7 +78,7 @@ public class Activation : Layer
         return activationFunction;
     }
 
-    protected override List<UnityTFTensor> InnerCall(List<UnityTFTensor> inputs, List<UnityTFTensor> mask = null, bool? training = null)
+    protected override List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
     {
         return activation.Call(inputs, mask);
     }

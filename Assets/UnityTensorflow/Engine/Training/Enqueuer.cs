@@ -34,7 +34,7 @@ internal class Enqueuer
         throw new NotImplementedException();
     }
 
-    internal IEnumerator<List<List<UnityTFTensor>>> GetEnumerator()
+    internal IEnumerator<List<List<Tensor>>> GetEnumerator()
     {
         throw new NotImplementedException();
     }
@@ -44,7 +44,7 @@ internal class Enqueuer
         throw new NotImplementedException();
     }
 
-    internal void start(int workers, int max_queue_size, IEnumerator<List<List<UnityTFTensor>>> output_generator)
+    internal void start(int workers, int max_queue_size, IEnumerator<List<List<Tensor>>> output_generator)
     {
         throw new NotImplementedException();
     }

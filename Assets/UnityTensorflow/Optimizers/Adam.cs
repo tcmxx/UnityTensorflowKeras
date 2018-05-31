@@ -9,11 +9,11 @@ using static Current;
 [DataContract]
 public class Adam : OptimizerBase, IOptimizer
 {
-    private UnityTFTensor iterations;
-    private UnityTFTensor lr;
-    private UnityTFTensor beta_1;
-    private UnityTFTensor beta_2;
-    private UnityTFTensor decay;
+    private Tensor iterations;
+    private Tensor lr;
+    private Tensor beta_1;
+    private Tensor beta_2;
+    private Tensor decay;
     private double initial_decay;
     private double epsilon;
 
@@ -28,19 +28,19 @@ public class Adam : OptimizerBase, IOptimizer
         this.initial_decay = decay;
     }
 
-    public List<List<UnityTFTensor>> get_updates(List<UnityTFTensor> param, Dictionary<UnityTFTensor, IWeightConstraint> constraints, UnityTFTensor loss)
+    public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
     {
         using (K.NameScope($"adam"))
         {
             var grads = this.get_gradients(loss, param);
-            this.updates = new List<List<UnityTFTensor>> { new List<UnityTFTensor> { K.UpdateAdd(this.iterations, 1f, "iterations/update") } };
+            this.updates = new List<List<Tensor>> { new List<Tensor> { K.UpdateAdd(this.iterations, 1f, "iterations/update") } };
 
-            UnityTFTensor lr = this.lr;
+            Tensor lr = this.lr;
             if (this.initial_decay > 0)
                 lr *= (1 / (1 + this.decay * this.iterations));
 
-            UnityTFTensor t = this.iterations + 1;
-            UnityTFTensor lr_t = K.Mul(lr, (K.Sqrt(1 - K.Pow(this.beta_2, t)) /
+            Tensor t = this.iterations + 1;
+            Tensor lr_t = K.Mul(lr, (K.Sqrt(1 - K.Pow(this.beta_2, t)) /
                              (1 - K.Pow(this.beta_1, t))), name: "lr_t");
 
             var shapes = param.Select(p => K.GetVariableShape(p));
@@ -60,8 +60,8 @@ public class Adam : OptimizerBase, IOptimizer
                     var v_t = (this.beta_2 * v) + (1 - this.beta_2) * K.Square(g);
                     var p_t = K.Subtract(p, lr_t * m_t / (K.Sqrt(v_t) + this.epsilon), name: "p_t");
 
-                    this.updates.Add(new List<UnityTFTensor> { K.Update(m, m_t, "m_t/update") });
-                    this.updates.Add(new List<UnityTFTensor> { K.Update(v, v_t, "v_t/update") });
+                    this.updates.Add(new List<Tensor> { K.Update(m, m_t, "m_t/update") });
+                    this.updates.Add(new List<Tensor> { K.Update(v, v_t, "v_t/update") });
 
                     var new_p = p_t;
                     // apply constraints
@@ -71,7 +71,7 @@ public class Adam : OptimizerBase, IOptimizer
                         new_p = c.Call(new_p);
                     }
 
-                    this.updates.Add(new List<UnityTFTensor> { K.Update(p, new_p, "parameter/update") });
+                    this.updates.Add(new List<Tensor> { K.Update(p, new_p, "parameter/update") });
                 }
             }
 

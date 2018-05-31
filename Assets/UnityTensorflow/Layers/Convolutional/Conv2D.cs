@@ -58,8 +58,8 @@ public class _Conv : Layer
     private IWeightRegularizer bias_regularizer;
     private IWeightConstraint kernel_constraint;
     private IWeightConstraint bias_constraint;
-    private UnityTFTensor kernel;
-    private UnityTFTensor bias;
+    private Tensor kernel;
+    private Tensor bias;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="_Conv" /> class.
@@ -191,7 +191,7 @@ public class _Conv : Layer
         this.built = true;
     }
 
-    protected override UnityTFTensor InnerCall(UnityTFTensor inputs, UnityTFTensor mask = null, bool? training = null)
+    protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/layers/convolutional.py#L149
 
@@ -201,7 +201,7 @@ public class _Conv : Layer
         if (training != null)
             throw new Exception();
 
-        UnityTFTensor outputs = null;
+        Tensor outputs = null;
 
         if (this.rank == 1)
         {

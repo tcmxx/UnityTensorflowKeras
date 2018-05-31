@@ -6,14 +6,14 @@ using System.Runtime.Serialization;
 public class CustomLoss : ILoss
 {
     // TODO: Use a delegate instead...
-    Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor> loss;
+    Func<Tensor, Tensor, Tensor, Tensor, Tensor> loss;
 
-    public CustomLoss(Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor> loss)
+    public CustomLoss(Func<Tensor, Tensor, Tensor, Tensor, Tensor> loss)
     {
         this.loss = loss;
     }
 
-    public UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor sample_weight = null, UnityTFTensor mask = null)
+    public Tensor Call(Tensor expected, Tensor actual, Tensor sample_weight = null, Tensor mask = null)
     {
         return loss(expected, actual, sample_weight, mask);
     }

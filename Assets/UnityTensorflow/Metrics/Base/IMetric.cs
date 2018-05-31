@@ -42,5 +42,5 @@ public interface IMetric
     /// 
     /// <returns>A scalar value representing how close the model's predictions were from the ground-truth.</returns>
     /// 
-    UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor mask = null);
+    Tensor Call(Tensor expected, Tensor actual, Tensor mask = null);
 }

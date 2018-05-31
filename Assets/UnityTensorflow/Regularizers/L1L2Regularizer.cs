@@ -62,9 +62,9 @@ public class L1L2Regularizer : WeightRegularizerBase, IWeightRegularizer
     /// 
     /// <returns>The output tensor with the regularization applied.</returns>
     /// 
-    public override UnityTFTensor Call(UnityTFTensor input)
+    public override Tensor Call(Tensor input)
     {
-        UnityTFTensor regularization = K.Constant(0);
+        Tensor regularization = K.Constant(0);
         if (l1 > 0)
             regularization = K.Add(regularization, K.Mul(l1, K.Abs(input)));
         if (l2 > 2)

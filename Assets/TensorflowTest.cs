@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using Accord;
 
 using static Current;
 
@@ -17,7 +18,9 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestConv2D();
 
-        TestSetAndGetValue();
+        //TestSetAndGetValue();
+
+        TestModelCompileAndFit();
     }
 	
 
@@ -44,15 +47,15 @@ public class TensorflowTest : MonoBehaviour {
         loss = K.Constant(1.0f) * loss;
 
         //training related
-        var weights = new List<UnityTFTensor>();
+        var weights = new List<Tensor>();
         weights.Add(weight);
         var optimizer = new SGD();
-        var updates = optimizer.get_updates(weights, new Dictionary<UnityTFTensor, IWeightConstraint>(), loss);
+        var updates = optimizer.get_updates(weights, new Dictionary<Tensor, IWeightConstraint>(), loss);
 
-        var inputs = new List<UnityTFTensor>();
+        var inputs = new List<Tensor>();
         inputs.Add(input);
         inputs.Add(target);
-        var outputs = new List<UnityTFTensor>();
+        var outputs = new List<Tensor>();
         outputs.Add(loss);
 
 
@@ -119,7 +122,7 @@ public class TensorflowTest : MonoBehaviour {
         var weight1 = K.Variable((new Constant(1)).Call(new int[] { 3 }, DataType.Float));
         var weight2 = K.Variable((new Constant(1)).Call(new int[] { 5 }, DataType.Float));
         //call eval once for intiaization
-        K.BatchGetValue(new List<UnityTFTensor>() { weight1, weight2 });
+        K.BatchGetValue(new List<Tensor>() { weight1, weight2 });
 
         print("Test SetValue() and GetValue()");
         var inputValue1 = new float[] { 8.8f, 9.9f, 1.1f };
@@ -137,11 +140,11 @@ public class TensorflowTest : MonoBehaviour {
         print("Test BatchSetValue() and BatchGetValue()");
         inputValue1 = new float[] { 2.2f, 3.9f, 4.1f };
         var inputValue2 = new float[] { 4.2f, 3.2f, 14.5f, 44.5f, 74.3f };
-        K.BatchSetValue(new List<ValueTuple<UnityTFTensor, Array>>() {
+        K.BatchSetValue(new List<ValueTuple<Tensor, Array>>() {
             ValueTuple.Create(weight1,inputValue1),ValueTuple.Create(weight2,inputValue2),
         });
 
-        var resultBatch = K.BatchGetValue(new List<UnityTFTensor>() { weight1 , weight2 });
+        var resultBatch = K.BatchGetValue(new List<Tensor>() { weight1 , weight2 });
 
         
         print("---Input value1:" + string.Join(", ", inputValue1));
@@ -152,5 +155,39 @@ public class TensorflowTest : MonoBehaviour {
         print("Test " + ((inputValue1.SequenceEqual((float[])resultBatch[0])
              && inputValue2.SequenceEqual((float[])resultBatch[1])) ? "Passed" : "Failed"));
 
+    }
+
+
+    public void TestModelCompileAndFit()
+    {
+
+        print("Test base Squential Model");
+
+        float[,] x = { { 2, 3, 4, 5 },{ 4,3,2,1}, { 8, 44, 22, 11 }, { 1, 3, 3, 1 } };
+        float[] y = { 0.2f, 0.4f,0.8f,0.1f };
+        var model = new Sequential();
+        model.Add(new Dense(12, input_dim: 4, activation: new ReLU()));
+        model.Add(new Dense(8, activation: new ReLU()));
+        model.Add(new Dense(1,  activation: new Sigmoid()));
+
+        // Compile the model (for the moment, only the mean square 
+        // error loss is supported, but this should be solved soon)
+        model.Compile(loss: new MeanSquareError(),
+            optimizer: new Adam(0.001));
+
+        print("fit 1");
+        model.fit(x, y, batch_size: 4,epochs:30, verbose:1);
+
+        print("fit 2");
+        model.fit(x, y, batch_size: 4, epochs: 30, verbose: 1);
+        // Use the model to make predictions
+        var test = model.predict(x)[0];
+        float[,] pred = model.predict(x)[0].To<float[,]>();
+
+
+        K.ExportGraphDef("SavedGraph/sequentialtest.pb");
+        // Evaluate the model
+        double[] scores = model.evaluate(x, y);
+        //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
     }
 }

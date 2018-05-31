@@ -47,22 +47,22 @@ using Accord.Math;
 /// 
 public class Container : Layer
 {
-    protected List<UnityTFTensor> inputs;
-    protected List<UnityTFTensor> masks;
-    protected List<UnityTFTensor> outputs;
+    protected List<Tensor> inputs;
+    protected List<Tensor> masks;
+    protected List<Tensor> outputs;
     public List<Layer> input_layers;
     public List<int> input_layers_node_indices;
     public List<int> input_layers_tensor_indices;
     public List<Layer> output_layers;
     public List<int> output_layers_node_indices;
     public List<int> output_layers_tensor_indices;
-    protected internal Dictionary<string, List<UnityTFTensor>> _output_tensor_cache;
+    protected internal Dictionary<string, List<Tensor>> _output_tensor_cache;
     protected internal Dictionary<string, List<int?[]>> _output_shape_cache;
-    protected internal Dictionary<string, List<UnityTFTensor>> _output_mask_cache;
+    protected internal Dictionary<string, List<Tensor>> _output_mask_cache;
     public List<string> input_names;
     public List<string> output_names;
     protected internal List<string> _feed_input_names;
-    protected internal List<UnityTFTensor> _feed_inputs;
+    protected internal List<Tensor> _feed_inputs;
     protected internal List<int?[]> _feed_input_shapes;
     protected int?[][] internal_input_shapes;
     protected int?[][] internal_output_shapes;
@@ -77,7 +77,7 @@ public class Container : Layer
 
     }
 
-    public Container(List<UnityTFTensor> inputs, List<UnityTFTensor> outputs, string name = null)
+    public Container(List<Tensor> inputs, List<Tensor> outputs, string name = null)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L1478
 
@@ -123,12 +123,12 @@ public class Container : Layer
         // every time the Container is called on a set on input tensors, we compute the output tensors,
         // output masks and output shapes in one pass, then cache them here. When of of these output is 
         // queried later, we retrieve it from there instead of recomputing it.
-        this._output_mask_cache = new Dictionary<string, List<UnityTFTensor>>();
-        this._output_tensor_cache = new Dictionary<string, List<UnityTFTensor>>();
+        this._output_mask_cache = new Dictionary<string, List<Tensor>>();
+        this._output_tensor_cache = new Dictionary<string, List<Tensor>>();
         this._output_shape_cache = new Dictionary<string, List<int?[]>>();
 
         // User-provided arguments validation.
-        foreach (UnityTFTensor x in this.inputs)
+        foreach (Tensor x in this.inputs)
         {
             // Check that x is an input tensor.
             //var (layer, node_index, tensor_index) = x._keras_history.Value;
@@ -143,7 +143,7 @@ public class Container : Layer
             }
         }
 
-        foreach (UnityTFTensor x in this.outputs)
+        foreach (Tensor x in this.outputs)
         {
             //var (layer, node_index, tensor_index) = x._keras_history.Value;
             var history = x.KerasHistory.Value;
@@ -155,30 +155,30 @@ public class Container : Layer
         }
 
         // Fill in the output mask cache.
-        var masks = new List<UnityTFTensor>();
-        foreach (UnityTFTensor x in this.inputs)
+        var masks = new List<Tensor>();
+        foreach (Tensor x in this.inputs)
         {
             //var (layer, node_index, tensor_index) = x._keras_history.Value;
             var history = x.KerasHistory.Value;
             var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
 
             Node node = layer.inbound_nodes[node_index];
-            UnityTFTensor mask = node.output_masks[tensor_index];
+            Tensor mask = node.output_masks[tensor_index];
             masks.Add(mask);
         }
 
         string mask_cache_key = String.Join(",", this.inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
         mask_cache_key += "_" + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
 
-        masks = new List<UnityTFTensor>();
-        foreach (UnityTFTensor x in this.outputs)
+        masks = new List<Tensor>();
+        foreach (Tensor x in this.outputs)
         {
             //var (layer, node_index, tensor_index) = x._keras_history.Value;
             var history = x.KerasHistory.Value;
             var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
 
             Node node = layer.inbound_nodes[node_index];
-            UnityTFTensor mask = node.output_masks[tensor_index];
+            Tensor mask = node.output_masks[tensor_index];
             masks.Add(mask);
         }
 
@@ -186,7 +186,7 @@ public class Container : Layer
         this._output_mask_cache[mask_cache_key] = masks;
 
         // Build this.input_layers:
-        foreach (UnityTFTensor x in this.inputs)
+        foreach (Tensor x in this.inputs)
         {
             //var (layer, node_index, tensor_index) = x._keras_history.Value;
             var history = x.KerasHistory.Value;
@@ -205,7 +205,7 @@ public class Container : Layer
         this.input_names = new List<string>();
         this.output_names = new List<string>();
         this._feed_input_names = new List<string>();
-        this._feed_inputs = new List<UnityTFTensor>();
+        this._feed_inputs = new List<Tensor>();
         this._feed_input_shapes = new List<int?[]>();
 
         for (int i = 0; i < this.input_layers.Count; i++)
@@ -304,7 +304,7 @@ public class Container : Layer
             var finished_nodes = new HashSet<Node>();
             var nodes_in_progress = new HashSet<Node>();
             foreach (var x in this.outputs)
-                build_map_of_graph(x, layer_indices, nodes_in_decreasing_depth, finished_nodes, nodes_in_progress);
+                build_map_of_graph(container_nodes, x, layer_indices, nodes_in_decreasing_depth, finished_nodes, nodes_in_progress);
 
             int depth = 0;
             foreach (Node node in Enumerable.Reverse(nodes_in_decreasing_depth))
@@ -387,7 +387,7 @@ public class Container : Layer
             // Check that all tensors required are computable.
             // computable_tensors: all tensors in the graph
             // that can be computed from the inputs provided.
-            var computable_tensors = new List<UnityTFTensor>();
+            var computable_tensors = new List<Tensor>();
             foreach (var x in this.inputs)
                 computable_tensors.Add(x);
 
@@ -401,7 +401,7 @@ public class Container : Layer
 
                     if (layer != null)
                     {
-                        foreach (UnityTFTensor x in node.input_tensors)
+                        foreach (Tensor x in node.input_tensors)
                         {
                             if (!computable_tensors.Contains(x))
                                 throw new Exception($"Graph disconnected: cannot obtain value for tensor {x} at layer {layer.name}. The following previous layers were accessed without issue: {layers_with_complete_input}");
@@ -443,8 +443,8 @@ public class Container : Layer
                      input_tensors: this.inputs,
                      output_tensors: this.outputs,
                      // No container-level masking for now.
-                     input_masks: this.inputs.Select(x => (UnityTFTensor)null).ToList(),
-                     output_masks: this.outputs.Select(x => (UnityTFTensor)null).ToList(),
+                     input_masks: this.inputs.Select(x => (Tensor)null).ToList(),
+                     output_masks: this.outputs.Select(x => (Tensor)null).ToList(),
                      input_shapes: this.inputs.Select(x => x.KerasShape).ToList(),
                      output_shapes: this.outputs.Select(x => x.KerasShape).ToList());
 
@@ -466,7 +466,7 @@ public class Container : Layer
     /// <param name="node_index">Node index from which `tensor` comes from.</param>
     /// <param name="tensor_index">Tensor_index from which `tensor` comes from.</param>
     ///			
-    void build_map_of_graph(UnityTFTensor tensor, Dictionary<Layer, int> layer_indices, List<Node> nodes_in_decreasing_depth,HashSet<Node> finished_nodes = null, HashSet<Node> nodes_in_progress = null,
+    void build_map_of_graph(HashSet<string> result_container_nodes, Tensor tensor, Dictionary<Layer, int> layer_indices, List<Node> nodes_in_decreasing_depth,HashSet<Node> finished_nodes = null, HashSet<Node> nodes_in_progress = null,
                                Layer layer = null, int? node_index = null, int? tensor_index = null)
     {
         if (layer == null || node_index == null || tensor_index == null)
@@ -488,7 +488,7 @@ public class Container : Layer
         string node_key = layer.name + "_ib-" + node_index;
 
         // Update container_nodes.
-        container_nodes.Add(node_key);
+        result_container_nodes.Add(node_key);
 
         // Store the traversal order for layer sorting.
         if (!layer_indices.ContainsKey(layer))
@@ -499,11 +499,11 @@ public class Container : Layer
         // Propagate to all previous tensors connected to this node.
         for (int i = 0; i < node.inbound_layers.Count; i++)
         {
-            UnityTFTensor x = node.input_tensors[i];
+            Tensor x = node.input_tensors[i];
             layer = node.inbound_layers[i];
             node_index = node.node_indices[i];
             tensor_index = node.tensor_indices[i];
-            build_map_of_graph(x, layer_indices, nodes_in_decreasing_depth, finished_nodes, nodes_in_progress, layer, node_index, tensor_index);
+            build_map_of_graph(result_container_nodes, x, layer_indices, nodes_in_decreasing_depth, finished_nodes, nodes_in_progress, layer, node_index, tensor_index);
         }
 
         finished_nodes.Add(node);
@@ -567,12 +567,12 @@ public class Container : Layer
     /// <remarks>Will only include updates that are either inconditional, or conditional on inputs to this model
     /// (e.g.will not include updates that depend on tensors that aren't inputs to this model).</remarks>
     /// 
-    public override List<List<UnityTFTensor>> updates
+    public override List<List<Tensor>> updates
     {
         get
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L1874
-            var updates = new List<List<UnityTFTensor>>();
+            var updates = new List<List<Tensor>>();
             foreach (Layer layer in this.layers)
             {
                 if (layer.updates != null)
@@ -612,11 +612,11 @@ public class Container : Layer
     /// 
     /// <returns>A list of loss tensors.</returns>
     ///
-    public override List<UnityTFTensor> losses
+    public override List<Tensor> losses
     {
         get
         {
-            var losses = new List<UnityTFTensor>();
+            var losses = new List<Tensor>();
             // Retrieve losses for all internal layers.
             foreach (var layer in this.layers)
             {
@@ -688,9 +688,9 @@ public class Container : Layer
     /// 
     /// <returns>A list of update ops.</returns>
     /// 
-    public virtual List<List<UnityTFTensor>> state_updates()
+    public virtual List<List<Tensor>> state_updates()
     {
-        var state_updates = new List<List<UnityTFTensor>>();
+        var state_updates = new List<List<Tensor>>();
         foreach (Layer layer in this.layers)
         {
             if (layer.stateful == false)
@@ -701,19 +701,19 @@ public class Container : Layer
     }
 
 
-    public virtual Dictionary<UnityTFTensor, IWeightRegularizer> regularizers
+    public virtual Dictionary<Tensor, IWeightRegularizer> regularizers
     {
         get; set;
     }
 
-    public override Dictionary<UnityTFTensor, IWeightConstraint> constraints
+    public override Dictionary<Tensor, IWeightConstraint> constraints
     {
         get
         {
-            var cons = new Dictionary<UnityTFTensor, IWeightConstraint>();
+            var cons = new Dictionary<Tensor, IWeightConstraint>();
             foreach (Layer layer in this.layers)
             {
-                foreach (UnityTFTensor key in layer.constraints.Keys)
+                foreach (Tensor key in layer.constraints.Keys)
                 {
                     var value = layer.constraints[key];
                     if (cons.ContainsKey(key) && cons[key] != value)
@@ -726,11 +726,11 @@ public class Container : Layer
     }
 
 
-    public override List<UnityTFTensor> trainable_weights
+    public override List<Tensor> trainable_weights
     {
         get
         {
-            var weights = new List<UnityTFTensor>();
+            var weights = new List<Tensor>();
             if (!this.trainable)
                 return weights;
 
@@ -740,17 +740,17 @@ public class Container : Layer
         }
     }
 
-    public override List<UnityTFTensor> non_trainable_weights
+    public override List<Tensor> non_trainable_weights
     {
         get
         {
-            var weights = new List<UnityTFTensor>();
+            var weights = new List<Tensor>();
             foreach (Layer layer in this.layers)
                 weights.AddRange(layer.non_trainable_weights);
 
             if (!this.trainable)
             {
-                var trainable_weights = new List<UnityTFTensor>();
+                var trainable_weights = new List<Tensor>();
                 foreach (Layer layer in this.layers)
                     trainable_weights.AddRange(layer.trainable_weights);
 
@@ -772,7 +772,7 @@ public class Container : Layer
     /// 
     public List<Array> get_weights()
     {
-        var weights = new List<List<UnityTFTensor>>();
+        var weights = new List<List<Tensor>>();
         foreach (var layer in this.layers)
             weights.Add(layer.weights);
         return K.BatchGetValue(weights);
@@ -786,7 +786,7 @@ public class Container : Layer
     /// 
     public override void set_weights(List<Array> weights)
     {
-        var tuples = new List<ValueTuple<UnityTFTensor, Array>>();
+        var tuples = new List<ValueTuple<Tensor, Array>>();
         foreach (var layer in this.layers)
         {
             int num_param = layer.weights.Count;
@@ -845,10 +845,10 @@ public class Container : Layer
     /// 
     /// <returns>A tensor if there is a single output, or a list of tensors if there are more than one outputs.</returns>
     /// 
-    public List<UnityTFTensor> call(List<UnityTFTensor> inputs, List<UnityTFTensor> mask = null)
+    public List<Tensor> call(List<Tensor> inputs, List<Tensor> mask = null)
     {
         if (mask == null)
-            masks = inputs.Select(x => (UnityTFTensor)x).ToList();
+            masks = inputs.Select(x => (Tensor)x).ToList();
 
         string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
         cache_key += '_' + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
@@ -861,10 +861,10 @@ public class Container : Layer
         return result.Item1;
     }
 
-    public override List<UnityTFTensor> compute_mask(List<UnityTFTensor> inputs, List<UnityTFTensor> mask)
+    public override List<Tensor> compute_mask(List<Tensor> inputs, List<Tensor> mask)
     {
         if (mask == null)
-            masks = inputs.Select(x => (UnityTFTensor)null).ToList();
+            masks = inputs.Select(x => (Tensor)null).ToList();
 
         string cache_key = String.Join(",", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
         cache_key += '_' + String.Join(",", masks.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
@@ -986,23 +986,23 @@ public class Container : Layer
     ///
     /// <returns>Three lists: output_tensors, output_masks, output_shapes</returns>
     ///
-    public ValueTuple<List<UnityTFTensor>, List<UnityTFTensor>, List<int?[]>> run_internal_graph(List<UnityTFTensor> inputs, List<UnityTFTensor> masks = null)
+    public ValueTuple<List<Tensor>, List<Tensor>, List<int?[]>> run_internal_graph(List<Tensor> inputs, List<Tensor> masks = null)
     {
         if (masks == null)
-            masks = inputs.Select(x => (UnityTFTensor)null).ToList();
+            masks = inputs.Select(x => (Tensor)null).ToList();
 
         // Dictionary mapping reference tensors to tuples
         // (computed tensor, compute mask)
         // we assume a 1:1 mapping from tensor to mask
         // TODO: raise exception when a '.compute_mask()' call
         // does not return a list the same size as 'call'
-        var tensor_map = new Dictionary<long, ValueTuple<UnityTFTensor, UnityTFTensor>>();
+        var tensor_map = new Dictionary<long, ValueTuple<Tensor, Tensor>>();
 
         for (int i = 0; i < this.inputs.Count; i++)
         {
-            UnityTFTensor x = this.inputs[i];
-            UnityTFTensor y = inputs[i];
-            UnityTFTensor mask = masks[i];
+            Tensor x = this.inputs[i];
+            Tensor y = inputs[i];
+            Tensor mask = masks[i];
 
             tensor_map[UnityTFUtils.GetId(x)] = ValueTuple.Create(y, mask);
 
@@ -1022,8 +1022,8 @@ public class Container : Layer
 
                     // If all previous input tensors are available in tensor_map,
                     // then call node.inbound_layer on them.
-                    var computed_data = new List<ValueTuple<UnityTFTensor, UnityTFTensor>>();  // List of tuples (input, mask).
-                    foreach (UnityTFTensor t in reference_input_tensors)
+                    var computed_data = new List<ValueTuple<Tensor, Tensor>>();  // List of tuples (input, mask).
+                    foreach (Tensor t in reference_input_tensors)
                     {
                         if (tensor_map.ContainsKey(UnityTFUtils.GetId(t)))
                             computed_data.Add(tensor_map[UnityTFUtils.GetId(t)]);
@@ -1034,11 +1034,11 @@ public class Container : Layer
                         // call layer
                         using (K.NameScope(layer.name))
                         {
-                            List<UnityTFTensor> innerMask = null;
-                            List<UnityTFTensor> computed_tensors = null;
-                            List<UnityTFTensor> computed_masks;
-                            List<UnityTFTensor> output_tensors;
-                            List<UnityTFTensor> output_masks;
+                            List<Tensor> innerMask = null;
+                            List<Tensor> computed_tensors = null;
+                            List<Tensor> computed_masks;
+                            List<Tensor> output_tensors;
+                            List<Tensor> output_masks;
                             if (computed_data.Count == 1)
                             {
                                 //var (computed_tensor, computed_mask) = computed_data[0];
@@ -1047,8 +1047,8 @@ public class Container : Layer
 
                                 output_tensors = layer.Call(computed_tensor);
                                 output_masks = layer.compute_mask(computed_tensor, computed_mask);
-                                computed_tensors = new List<UnityTFTensor>() { computed_tensor };
-                                computed_masks = new List<UnityTFTensor> { computed_mask };
+                                computed_tensors = new List<Tensor>() { computed_tensor };
+                                computed_masks = new List<Tensor> { computed_mask };
                             }
                             else
                             {
@@ -1113,11 +1113,11 @@ public class Container : Layer
         }
 
         {
-            List<UnityTFTensor> output_tensors = new List<UnityTFTensor>();
-            List<UnityTFTensor> output_masks = new List<UnityTFTensor>();
+            List<Tensor> output_tensors = new List<Tensor>();
+            List<Tensor> output_masks = new List<Tensor>();
             List<int?[]> output_shapes = new List<int?[]>();
 
-            foreach (UnityTFTensor x in this.outputs)
+            foreach (Tensor x in this.outputs)
             {
                 Trace.Assert(tensor_map.ContainsKey(UnityTFUtils.GetId(x)), $"Could not compute output {x}");
                 //var (tensor, mask) = tensor_map[UnityTFUtils.GetId(x)];
@@ -1171,7 +1171,7 @@ public class Container : Layer
     ///
     /// <returns>List of input tensors.</returns>
     ///
-    public List<UnityTFTensor> get_source_inputs(UnityTFTensor tensor, Layer layer = null, int? node_index = null)
+    public List<Tensor> get_source_inputs(Tensor tensor, Layer layer = null, int? node_index = null)
     {
         //		tensor: The tensor to start from.
         //		layer: Origin layer of the tensor.Will be
@@ -1186,7 +1186,7 @@ public class Container : Layer
             //(layer, node_index, _) = tensor._keras_history.Value;
         }
         if (layer.inbound_nodes.Count == 0)
-            return new List<UnityTFTensor>() { tensor };
+            return new List<Tensor>() { tensor };
 
 
         var node = layer.inbound_nodes[node_index.Value];
@@ -1197,17 +1197,17 @@ public class Container : Layer
             return node.input_tensors;
         }
 
-        var source_tensors = new List<UnityTFTensor>();
+        var source_tensors = new List<Tensor>();
 
         for (int i = 0; i < node.inbound_layers.Count; i++)
         {
             var x = node.input_tensors[i];
             layer = node.inbound_layers[i];
             node_index = node.node_indices[i];
-            List<UnityTFTensor> previous_sources = get_source_inputs(x, layer, node_index);
+            List<Tensor> previous_sources = get_source_inputs(x, layer, node_index);
 
             // Avoid input redundancy.
-            foreach (UnityTFTensor t in previous_sources)
+            foreach (Tensor t in previous_sources)
             {
                 if (!source_tensors.Contains(t))
                     source_tensors.Add(t);
@@ -1221,7 +1221,7 @@ public class Container : Layer
 
 
 
-    public static string _object_list_uid(List<UnityTFTensor> object_list)
+    public static string _object_list_uid(List<Tensor> object_list)
     {
         return string.Join(", ", object_list.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
     }
@@ -1237,11 +1237,11 @@ public class Container : Layer
     ///
     /// <returns>A mask tensor or list of mask tensors.</returns>
     ///
-    public static List<UnityTFTensor> _collect_previous_mask(List<UnityTFTensor> input_tensors)
+    public static List<Tensor> _collect_previous_mask(List<Tensor> input_tensors)
     {
-        var masks = new List<UnityTFTensor>();
+        var masks = new List<Tensor>();
 
-        foreach (UnityTFTensor x in input_tensors)
+        foreach (Tensor x in input_tensors)
         {
             if (x.KerasHistory.HasValue)
             {
@@ -1267,11 +1267,11 @@ public class Container : Layer
     /// 
     /// <returns>List of shape tuples(or single tuple), one tuple per input.</returns>
     /// 
-    public static List<int?[]> _collect_input_shape(List<UnityTFTensor> input_tensors)
+    public static List<int?[]> _collect_input_shape(List<Tensor> input_tensors)
     {
         var shapes = new List<int?[]>();
 
-        foreach (UnityTFTensor x in input_tensors)
+        foreach (Tensor x in input_tensors)
         {
             try
             {

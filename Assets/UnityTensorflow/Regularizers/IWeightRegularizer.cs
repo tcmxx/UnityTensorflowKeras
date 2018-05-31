@@ -43,7 +43,7 @@ public interface IWeightRegularizer
     /// 
     /// <returns>The output tensor with the regularization applied.</returns>
     /// 
-    UnityTFTensor Call(UnityTFTensor input);
+    Tensor Call(Tensor input);
 
     /// <summary>
     /// Wires the regularizer to the graph.
@@ -53,16 +53,16 @@ public interface IWeightRegularizer
     /// 
     /// <returns>The output tensor with the regularization applied.</returns>
     /// 
-    List<UnityTFTensor> Call(List<UnityTFTensor> input);
+    List<Tensor> Call(List<Tensor> input);
 }
 
 public abstract class WeightRegularizerBase
 {
-    public List<UnityTFTensor> Call(List<UnityTFTensor> input)
+    public List<Tensor> Call(List<Tensor> input)
     {
         return input.Select(x => Call(x)).ToList();
     }
 
-    public abstract UnityTFTensor Call(UnityTFTensor input);
+    public abstract Tensor Call(Tensor input);
 
 }

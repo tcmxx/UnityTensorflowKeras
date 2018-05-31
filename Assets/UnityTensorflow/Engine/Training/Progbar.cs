@@ -28,7 +28,7 @@ using Accord;
 using Accord.Math;
 using System;
 using System.Collections.Generic;
-
+using UnityEngine;
 
 internal class Progbar
 {
@@ -143,6 +143,7 @@ internal class Progbar
 
         Console.Write(info);
         Console.Out.Flush();
+        Debug.Log(info);
 
         if (current >= this.target)
             Console.Write("\n");
@@ -157,6 +158,7 @@ internal class Progbar
                     info += $" - {k}s:";
                     double avg = this.sum_values[k][0] / (double)Math.Max(1, this.sum_values[k][1]);
                     Console.Write(info + "\n");
+                    Debug.Log(info);
                 }
             }
         }

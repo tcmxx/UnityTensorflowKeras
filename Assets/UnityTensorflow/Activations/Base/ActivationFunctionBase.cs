@@ -39,16 +39,16 @@ public abstract class ActivationFunctionBase
     /// </summary>
     /// <param name="x">The input tensor.</param>
     /// <returns>The output tensor with the activation function applied.</returns>
-    public abstract UnityTFTensor Call(UnityTFTensor inputs, UnityTFTensor mask);
+    public abstract Tensor Call(Tensor inputs, Tensor mask);
 
     /// <summary>
     /// Wires the activation function to the graph.
     /// </summary>
     /// <param name="x">The input tensor.</param>
     /// <returns>The output tensor with the activation function applied.</returns>
-    public List<UnityTFTensor> Call(List<UnityTFTensor> inputs, List<UnityTFTensor> mask)
+    public List<Tensor> Call(List<Tensor> inputs, List<Tensor> mask)
     {
-        List<UnityTFTensor> output = new List<UnityTFTensor>();
+        List<Tensor> output = new List<Tensor>();
         for (int i = 0; i < inputs.Count; i++)
             output.Add(Call(inputs[i], mask != null ? mask[i] : null));
         return output;

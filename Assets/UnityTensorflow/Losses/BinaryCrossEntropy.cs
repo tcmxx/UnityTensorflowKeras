@@ -23,7 +23,7 @@ public class BinaryCrossEntropy : ILoss
     /// 
     /// <returns>A scalar value representing how far the model's predictions were from the ground-truth.</returns>
     /// 
-    public UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor sample_weight = null, UnityTFTensor mask = null)
+    public Tensor Call(Tensor expected, Tensor actual, Tensor sample_weight = null, Tensor mask = null)
     {
         if (sample_weight != null || mask != null)
             throw new NotImplementedException();

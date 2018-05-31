@@ -45,7 +45,7 @@ public class ReLU : ActivationFunctionBase, IActivationFunction
     /// </summary>
     /// <param name="x">The input tensor.</param>
     /// <returns>The output tensor with the activation function applied.</returns>
-    public override UnityTFTensor Call(UnityTFTensor x, UnityTFTensor mask = null)
+    public override Tensor Call(Tensor x, Tensor mask = null)
     {
         if (mask != null)
             throw new NotSupportedException();

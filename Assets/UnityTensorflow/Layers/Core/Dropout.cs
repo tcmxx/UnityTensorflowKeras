@@ -66,12 +66,12 @@ public class Dropout : Layer
         this.supports_masking = true;
     }
 
-    private int[] _get_noise_shape(UnityTFTensor x)
+    private int[] _get_noise_shape(Tensor x)
     {
         return this.noise_shape;
     }
 
-    protected override UnityTFTensor InnerCall(UnityTFTensor inputs, UnityTFTensor mask, bool? training = null)
+    protected override Tensor InnerCall(Tensor inputs, Tensor mask, bool? training = null)
     {
         if (0.0 < this.rate && this.rate < 1.0)
         {

@@ -13,5 +13,5 @@ public interface IWeightConstraint
     /// 
     /// <returns>The output tensor with the constraint applied.</returns>
     /// 
-    UnityTFTensor Call(UnityTFTensor w);
+    Tensor Call(Tensor w);
 }

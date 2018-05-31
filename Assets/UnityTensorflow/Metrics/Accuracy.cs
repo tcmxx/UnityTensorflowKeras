@@ -28,7 +28,7 @@
 
 public class Accuracy : IMetric
 {
-    public UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor mask = null)
+    public Tensor Call(Tensor expected, Tensor actual, Tensor mask = null)
     {
         throw new System.NotImplementedException();
     }

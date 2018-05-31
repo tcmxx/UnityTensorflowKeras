@@ -38,15 +38,15 @@ using static Current;
 public abstract class Layer
 {
     public virtual List<InputSpec> input_spec { get; set; }
-    public List<UnityTFTensor> _trainable_weights;
-    public List<UnityTFTensor> _non_trainable_weights;
+    public List<Tensor> _trainable_weights;
+    public List<Tensor> _non_trainable_weights;
     public bool _trainable;
     public List<Array> _initial_weights;
-    public Dictionary<UnityTFTensor, IWeightConstraint> _constraints;
-    public List<UnityTFTensor> _losses;
-    public List<List<UnityTFTensor>> _updates;
-    public Dictionary<string, List<UnityTFTensor>> _per_input_losses;
-    public Dictionary<string, List<List<UnityTFTensor>>> _per_input_updates;
+    public Dictionary<Tensor, IWeightConstraint> _constraints;
+    public List<Tensor> _losses;
+    public List<List<Tensor>> _updates;
+    public Dictionary<string, List<Tensor>> _per_input_losses;
+    public Dictionary<string, List<List<Tensor>>> _per_input_updates;
     public bool _built;
 
     public bool supports_masking;
@@ -108,10 +108,10 @@ public abstract class Layer
     /// 
     public Layer(string name = null, List<InputSpec> input_spec = null, bool trainable = true,
         bool uses_learning_phase = true, int?[] input_shape = null, int[] output_shape = null,
-        List<Node> inbound_nodes = null, List<Node> outbound_nodes = null, UnityTFTensor input = null,
-        UnityTFTensor output = null, UnityTFTensor input_mask = null, UnityTFTensor output_mask = null, List<UnityTFTensor> trainable_weights = null,
-        List<Array> non_trainable_weights = null, UnityTFTensor weights = null, DataType? dtype = null,
-        Dictionary<UnityTFTensor, IWeightConstraint> constraints = null, int?[] batch_input_shape = null,
+        List<Node> inbound_nodes = null, List<Node> outbound_nodes = null, Tensor input = null,
+        Tensor output = null, Tensor input_mask = null, Tensor output_mask = null, List<Tensor> trainable_weights = null,
+        List<Array> non_trainable_weights = null, Tensor weights = null, DataType? dtype = null,
+        Dictionary<Tensor, IWeightConstraint> constraints = null, int?[] batch_input_shape = null,
         int? batch_size = null, int? input_dim = null)
     {
         if (input_shape == null && input_dim != null)
@@ -123,13 +123,13 @@ public abstract class Layer
         this.supports_masking = false;
 
         // These properties will be set upon call of this.build()
-        this._trainable_weights = new List<UnityTFTensor>();
-        this._non_trainable_weights = new List<UnityTFTensor>();
-        this._constraints = new Dictionary<UnityTFTensor, IWeightConstraint>();  // dict {tensor: constraint instance}
-        this._losses = new List<UnityTFTensor>();
-        this._updates = new List<List<UnityTFTensor>>();
-        this._per_input_losses = new Dictionary<string, List<UnityTFTensor>>();
-        this._per_input_updates = new Dictionary<string, List<List<UnityTFTensor>>>();
+        this._trainable_weights = new List<Tensor>();
+        this._non_trainable_weights = new List<Tensor>();
+        this._constraints = new Dictionary<Tensor, IWeightConstraint>();  // dict {tensor: constraint instance}
+        this._losses = new List<Tensor>();
+        this._updates = new List<List<Tensor>>();
+        this._per_input_losses = new Dictionary<string, List<Tensor>>();
+        this._per_input_updates = new Dictionary<string, List<List<Tensor>>>();
         this._built = false;
 
         // These lists will be filled via successive calls
@@ -203,12 +203,12 @@ public abstract class Layer
         }
     }
 
-    public virtual List<UnityTFTensor> losses
+    public virtual List<Tensor> losses
     {
         get { return this._losses; }
     }
 
-    public virtual List<List<UnityTFTensor>> updates
+    public virtual List<List<Tensor>> updates
     {
         get { return this._updates; }
     }
@@ -219,19 +219,19 @@ public abstract class Layer
         set { this._built = value; }
     }
 
-    public virtual Dictionary<UnityTFTensor, IWeightConstraint> constraints
+    public virtual Dictionary<Tensor, IWeightConstraint> constraints
     {
         get { return this._constraints; }
         set { this._constraints = value; }
     }
 
-    public virtual List<UnityTFTensor> trainable_weights
+    public virtual List<Tensor> trainable_weights
     {
         get
         {
             if (trainable)
                 return this._trainable_weights;
-            return new List<UnityTFTensor> { };
+            return new List<Tensor> { };
         }
         set
         {
@@ -239,7 +239,7 @@ public abstract class Layer
         }
     }
 
-    public virtual List<UnityTFTensor> non_trainable_weights
+    public virtual List<Tensor> non_trainable_weights
     {
         get
         {
@@ -267,14 +267,14 @@ public abstract class Layer
     /// 
     /// <return>The created weight variable.</return>
     /// 
-    public UnityTFTensor add_weight(string name, int[] shape, DataType? dtype = null,
+    public Tensor add_weight(string name, int[] shape, DataType? dtype = null,
         IWeightInitializer initializer = null, IWeightRegularizer regularizer = null,
                bool trainable = true, IWeightConstraint constraint = null)
     {
-        UnityTFTensor weight = K.Variable(tensor: initializer.Call(shape), dtype: dtype, name: name);
+        Tensor weight = K.Variable(tensor: initializer.Call(shape), dtype: dtype, name: name);
 
         if (regularizer != null)
-            this.add_loss(new List<UnityTFTensor>() { regularizer.Call(weight) });
+            this.add_loss(new List<Tensor>() { regularizer.Call(weight) });
 
         if (constraint != null)
             this.constraints[weight] = constraint;
@@ -298,7 +298,7 @@ public abstract class Layer
     /// 
     /// <param name="inputs">The input tensor or list of input tensors.</param>
     /// 
-    public void assert_input_compatibility(List<UnityTFTensor> inputs)
+    public void assert_input_compatibility(List<Tensor> inputs)
     {
         // https://github.com/fchollet/keras/blob/2382f788b4f14646fa8b6b2d8d65f1fc138b35c4/keras/engine/topology.py#L393
 
@@ -310,7 +310,7 @@ public abstract class Layer
 
         for (int input_index = 0; input_index < inputs.Count; input_index++)
         {
-            UnityTFTensor x = inputs[input_index];
+            Tensor x = inputs[input_index];
             InputSpec spec = input_spec[input_index];
 
             if (spec == null)
@@ -390,7 +390,7 @@ public abstract class Layer
         }
     }
 
-    public List<UnityTFTensor> this[params UnityTFTensor[] x]
+    public List<Tensor> this[params Tensor[] x]
     {
         get { return this.Call(x.ToList()); }
     }
@@ -411,11 +411,11 @@ public abstract class Layer
     ///  
     ///  <returns>Output of the layer"s `call` method.</returns>.
     ///  
-    public List<UnityTFTensor> Call(UnityTFTensor input, UnityTFTensor mask = null, bool? training = null)
+    public List<Tensor> Call(Tensor input, Tensor mask = null, bool? training = null)
     {
         if (mask == null)
-            return Call(new List<UnityTFTensor> { input }, null, training);
-        return Call(new List<UnityTFTensor> { input }, new List<UnityTFTensor> { mask }, training);
+            return Call(new List<Tensor> { input }, null, training);
+        return Call(new List<Tensor> { input }, new List<Tensor> { mask }, training);
     }
 
     ///  <summary>
@@ -434,7 +434,7 @@ public abstract class Layer
     ///  
     ///  <returns>Output of the layer"s `call` method.</returns>.
     ///  
-    public List<UnityTFTensor> Call(List<UnityTFTensor> inputs, List<UnityTFTensor> mask = null, bool? training = null)
+    public List<Tensor> Call(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
     {
         using (K.NameScope(this.name))
         {
@@ -448,7 +448,7 @@ public abstract class Layer
 
             // Collect input shapes to build layer.
             var input_shapes = new List<int?[]>();
-            foreach (UnityTFTensor x_elem in inputs)
+            foreach (Tensor x_elem in inputs)
             {
                 if (x_elem.KerasShape != null)
                     input_shapes.Add(x_elem.KerasShape);
@@ -470,11 +470,11 @@ public abstract class Layer
             this.assert_input_compatibility(inputs);
 
             // Handle mask propagation.
-            List<UnityTFTensor> previous_mask = _collect_previous_mask(inputs);
+            List<Tensor> previous_mask = _collect_previous_mask(inputs);
             //var user_kwargs = copy.copy(kwargs);
 
-            List<UnityTFTensor> nextMask = null;
-            if (previous_mask.Any((UnityTFTensor x) => x != null))
+            List<Tensor> nextMask = null;
+            if (previous_mask.Any((Tensor x) => x != null))
             {
                 // The previous layer generated a mask.
                 if (mask != null)
@@ -489,15 +489,15 @@ public abstract class Layer
             List<int?[]> input_shape = _collect_input_shape(inputs);
 
             // Actually call the layer, collecting output(s), mask(s), and shape(s).
-            List<UnityTFTensor> output = this.InnerCall(inputs, nextMask, training);
-            List<UnityTFTensor> output_mask = this.compute_mask(inputs, previous_mask);
+            List<Tensor> output = this.InnerCall(inputs, nextMask, training);
+            List<Tensor> output_mask = this.compute_mask(inputs, previous_mask);
 
             // If the layer returns tensors from its inputs, unmodified,
             // we copy them to avoid loss of tensor metadata.
-            var output_ls = new List<UnityTFTensor>(output);
-            var inputs_ls = new List<UnityTFTensor>(inputs);
-            var output_ls_copy = new List<UnityTFTensor>();
-            foreach (UnityTFTensor x in output_ls)
+            var output_ls = new List<Tensor>(output);
+            var inputs_ls = new List<Tensor>(inputs);
+            var output_ls_copy = new List<Tensor>();
+            foreach (Tensor x in output_ls)
             {
                 if (inputs_ls.Contains(x))
                     output_ls_copy.Add(K.Identity(x));
@@ -536,7 +536,7 @@ public abstract class Layer
             // Apply activity regularizer if any:
             if (this.activity_regularizer != null)
             {
-                List<UnityTFTensor> regularization_losses = this.activity_regularizer.Call(output);
+                List<Tensor> regularization_losses = this.activity_regularizer.Call(output);
                 this.add_loss(regularization_losses, inputs);
             }
 
@@ -553,12 +553,12 @@ public abstract class Layer
     /// 
     /// <returns>A tensor or list of tensors.</returns>
     /// 
-    protected virtual List<UnityTFTensor> InnerCall(List<UnityTFTensor> inputs, List<UnityTFTensor> mask = null, bool? training = null)
+    protected virtual List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
     {
         if (inputs.Count != 1)
             throw new InvalidCastException();
 
-        return new List<UnityTFTensor>() { InnerCall(inputs[0], mask?[0], training) };
+        return new List<Tensor>() { InnerCall(inputs[0], mask?[0], training) };
     }
 
     /// <summary>
@@ -569,7 +569,7 @@ public abstract class Layer
     /// 
     /// <returns>A tensor or list of tensors.</returns>
     /// 
-    protected virtual UnityTFTensor InnerCall(UnityTFTensor inputs, UnityTFTensor mask = null, bool? training = null)
+    protected virtual Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
         return inputs;
     }
@@ -586,14 +586,14 @@ public abstract class Layer
     /// <param name="input_shapes">List of output shape arrays.</param>
     /// <param name="arguments">Dictionary of keyword arguments that were passed to the `call` method of the layer at the call that created the node.</param>
     /// 
-    private void _add_inbound_node(List<UnityTFTensor> input_tensors, List<UnityTFTensor> output_tensors, List<UnityTFTensor> input_masks,
-        List<UnityTFTensor> output_masks, List<int?[]> input_shapes, List<int?[]> output_shapes, object arguments = null)
+    private void _add_inbound_node(List<Tensor> input_tensors, List<Tensor> output_tensors, List<Tensor> input_masks,
+        List<Tensor> output_masks, List<int?[]> input_shapes, List<int?[]> output_shapes, object arguments = null)
     {
         // Collect input tensor(s) coordinates.
         var inbound_layers = new List<Layer>();
         var node_indices = new List<int?>();
         var tensor_indices = new List<int?>();
-        foreach (UnityTFTensor x in input_tensors)
+        foreach (Tensor x in input_tensors)
         {
             if (x.KerasHistory != null)
             {
@@ -683,11 +683,11 @@ public abstract class Layer
     /// 
     /// <returns>null or a tensor (or list of tensors, one per output tensor of the layer).</returns>
     /// 
-    public virtual List<UnityTFTensor> compute_mask(UnityTFTensor inputs, UnityTFTensor mask = null)
+    public virtual List<Tensor> compute_mask(Tensor inputs, Tensor mask = null)
     {
         if (mask == null)
-            return compute_mask(new List<UnityTFTensor>() { inputs });
-        return compute_mask(new List<UnityTFTensor>() { inputs }, new List<UnityTFTensor>() { mask });
+            return compute_mask(new List<Tensor>() { inputs });
+        return compute_mask(new List<Tensor>() { inputs }, new List<Tensor>() { mask });
     }
 
     /// <summary>
@@ -699,13 +699,13 @@ public abstract class Layer
     /// 
     /// <returns>null or a tensor (or list of tensors, one per output tensor of the layer).</returns>
     /// 
-    public virtual List<UnityTFTensor> compute_mask(List<UnityTFTensor> inputs, List<UnityTFTensor> mask = null)
+    public virtual List<Tensor> compute_mask(List<Tensor> inputs, List<Tensor> mask = null)
     {
         if (!this.supports_masking)
         {
             if (mask != null && !(mask.Count == 1 && mask[0] == null))
             {
-                foreach (UnityTFTensor m in mask)
+                foreach (Tensor m in mask)
                     throw new Exception("Layer {this.name} does not support masking, but was passed an input_mask: " + m);
             }
         }
@@ -787,7 +787,7 @@ public abstract class Layer
     ///   
     /// <returns>A tensor(or list of tensors if the layer has multiple inputs).</returns>
     /// 
-    public List<UnityTFTensor> get_input_at(int node_index)
+    public List<Tensor> get_input_at(int node_index)
     {
         return this.inbound_nodes[node_index].input_tensors;
     }
@@ -801,7 +801,7 @@ public abstract class Layer
     ///   
     /// <returns>A tensor(or list of tensors if the layer has multiple outputs).</returns>
     /// 
-    public List<UnityTFTensor> get_output_at(int node_index)
+    public List<Tensor> get_output_at(int node_index)
     {
         return this.inbound_nodes[node_index].output_tensors;
     }
@@ -815,7 +815,7 @@ public abstract class Layer
     ///   
     /// <returns>A mask tensor (or list of tensors if the layer has multiple inputs).</returns>
     /// 
-    public List<UnityTFTensor> get_input_mask_at(int node_index)
+    public List<Tensor> get_input_mask_at(int node_index)
     {
         return this.inbound_nodes[node_index].input_masks;
     }
@@ -828,7 +828,7 @@ public abstract class Layer
     ///   
     /// <returns>A mask tensor (or list of tensors if the layer has multiple outputs).</returns>
     /// 
-    public List<UnityTFTensor> get_output_mask_at(int node_index)
+    public List<Tensor> get_output_mask_at(int node_index)
     {
         return this.inbound_nodes[node_index].output_masks;
     }
@@ -843,7 +843,7 @@ public abstract class Layer
     /// 
     /// <returns>Input tensor or list of input tensors.</returns>
     /// 
-    public List<UnityTFTensor> input
+    public List<Tensor> input
     {
         get
         {
@@ -863,7 +863,7 @@ public abstract class Layer
     /// 
     /// <returns>Output tensor or list of output tensors.</returns>
     /// 
-    public List<UnityTFTensor> output
+    public List<Tensor> output
     {
         get
         {
@@ -886,7 +886,7 @@ public abstract class Layer
     /// 
     /// <returns>Input mask tensor (potentially null) or list of input mask tensors.</returns>
     /// 
-    public List<UnityTFTensor> input_mask
+    public List<Tensor> input_mask
     {
         get
         {
@@ -906,7 +906,7 @@ public abstract class Layer
     /// 
     /// <returns>Output mask tensor (potentially null) or list of output mask tensors.</returns>
     /// 
-    public List<UnityTFTensor> output_mask
+    public List<Tensor> output_mask
     {
         get
         {
@@ -981,7 +981,7 @@ public abstract class Layer
     /// 
     /// <remarks>The loss may potentially be conditional on some inputs tensors, for instance activity losses are conditional on the layer"s inputs.</remarks>
     /// 
-    public void add_loss(List<UnityTFTensor> losses, List<UnityTFTensor> inputs = null)
+    public void add_loss(List<Tensor> losses, List<Tensor> inputs = null)
     {
         if (losses == null || losses.Count == 0)
             return;
@@ -1007,12 +1007,12 @@ public abstract class Layer
             }
 
             if (!this._per_input_losses.ContainsKey(inputs_hash))
-                this._per_input_losses[inputs_hash] = new List<UnityTFTensor>();
+                this._per_input_losses[inputs_hash] = new List<Tensor>();
             this._per_input_losses[inputs_hash].AddRange(losses);
         }
     }
 
-    private string _object_list_uid(UnityTFTensor[] inputs)
+    private string _object_list_uid(Tensor[] inputs)
     {
         throw new NotImplementedException();
     }
@@ -1029,7 +1029,7 @@ public abstract class Layer
     /// <param name="inputs">Input tensor or list of inputs tensors to mark the updates as 
     ///   conditional on these inputs. If null is passed, the updates are assumed unconditional.</param>
     /// 
-    public void add_update(List<List<UnityTFTensor>> updates, List<UnityTFTensor> inputs = null)
+    public void add_update(List<List<Tensor>> updates, List<Tensor> inputs = null)
     {
         if (updates == null || updates.Count == 0)
             return;
@@ -1055,17 +1055,17 @@ public abstract class Layer
         }
 
         if (!this._per_input_updates.ContainsKey(inputs_hash))
-            this._per_input_updates[inputs_hash] = new List<List<UnityTFTensor>>();
+            this._per_input_updates[inputs_hash] = new List<List<Tensor>>();
         this._per_input_updates[inputs_hash].AddRange(updates);
     }
 
-    private string _object_list_uid(List<UnityTFTensor> inputs)
+    private string _object_list_uid(List<Tensor> inputs)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L2706
         return String.Join(", ", inputs.Select(x => UnityTFUtils.ToString(UnityTFUtils.GetId(x))));
     }
 
-    public virtual List<List<UnityTFTensor>> get_updates_for(List<UnityTFTensor> inputs)
+    public virtual List<List<Tensor>> get_updates_for(List<Tensor> inputs)
     {
         string inputs_hash;
         if (inputs != null)
@@ -1075,11 +1075,11 @@ public abstract class Layer
 
         if (this._per_input_updates.ContainsKey(inputs_hash))
             return this._per_input_updates[inputs_hash];
-        return new List<List<UnityTFTensor>>();
+        return new List<List<Tensor>>();
     }
 
 
-    public virtual List<UnityTFTensor> get_losses_for(List<UnityTFTensor> inputs)
+    public virtual List<Tensor> get_losses_for(List<Tensor> inputs)
     {
         string inputs_hash = String.Empty;
         if (inputs != null)
@@ -1087,7 +1087,7 @@ public abstract class Layer
 
         if (this._per_input_losses.ContainsKey(inputs_hash))
             return this._per_input_losses[inputs_hash];
-        return new List<UnityTFTensor>();
+        return new List<Tensor>();
     }
 
     /// <summary>
@@ -1097,7 +1097,7 @@ public abstract class Layer
     ///   Weights values as a list of numpy arrays.
     /// </returns>
     /// 
-    public virtual List<UnityTFTensor> weights
+    public virtual List<Tensor> weights
     {
         get { return this.trainable_weights.Concat(this.non_trainable_weights).ToList(); }
     }
@@ -1118,14 +1118,14 @@ public abstract class Layer
         if (this.weights.Count == 0)
             return;
 
-        var weight_value_tuples = new List<ValueTuple<UnityTFTensor, Array>>();
+        var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
 
         List<Array> param_values = K.BatchGetValue(this.weights);
 
         for (int i = 0; i < param_values.Count; i++)
         {
             Array pv = param_values[i];
-            UnityTFTensor p = this.weights[i];
+            Tensor p = this.weights[i];
             Array w = value[i];
             if (pv.GetLength().IsEqual(w.GetLength()))
                 throw new Exception($"Layer weight shape {pv.GetLength()} not compatible with provided weight shape {w.GetLength()}");
@@ -1143,11 +1143,11 @@ public abstract class Layer
     ///
     /// <returns>A mask tensor or list of mask tensors.</returns>
     ///
-    private static List<UnityTFTensor> _collect_previous_mask(List<UnityTFTensor> input_tensors)
+    private static List<Tensor> _collect_previous_mask(List<Tensor> input_tensors)
     {
-        var masks = new List<UnityTFTensor>();
+        var masks = new List<Tensor>();
 
-        foreach (UnityTFTensor x in input_tensors)
+        foreach (Tensor x in input_tensors)
         {
             if (x.KerasHistory.HasValue)
             {
@@ -1172,11 +1172,11 @@ public abstract class Layer
     /// 
     /// <returns>List of shape tuples(or single tuple), one tuple per input.</returns>
     /// 
-    private static List<int?[]> _collect_input_shape(List<UnityTFTensor> input_tensors)
+    private static List<int?[]> _collect_input_shape(List<Tensor> input_tensors)
     {
         var shapes = new List<int?[]>();
 
-        foreach (UnityTFTensor x in input_tensors)
+        foreach (Tensor x in input_tensors)
         {
             try
             {

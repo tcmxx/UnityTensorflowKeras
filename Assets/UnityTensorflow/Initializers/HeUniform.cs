@@ -24,7 +24,7 @@ public class HeUniform : IWeightInitializer
     /// and element data type <paramref name="dtype" /> that has been initialized using this
     /// strategy.</returns>
     /// 
-    public UnityTFTensor Call(int[] shape, DataType? dtype = null)
+    public Tensor Call(int[] shape, DataType? dtype = null)
     {
         return new VarianceScaling(scale: 2.0, mode: "fan_in", distribution: "uniform", seed: seed).Call(shape, dtype);
     }

@@ -21,7 +21,7 @@ public class Zeros : IWeightInitializer
     /// and element data type <paramref name="dtype" /> that has been initialized using this
     /// strategy.</returns>
     /// 
-    public UnityTFTensor Call(int[] shape, DataType? dtype = null)
+    public Tensor Call(int[] shape, DataType? dtype = null)
     {
         return K.Constant(0, shape: shape, dtype: dtype);
     }

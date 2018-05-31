@@ -59,7 +59,7 @@ public abstract class Function
     {
     }
 
-    public abstract List<UnityTFTensor> Call(List<Array> ins);
+    public abstract List<Tensor> Call(List<Array> ins);
 }
 
 /// <summary>
@@ -74,20 +74,20 @@ public partial class Model : Container
     public Dictionary<string, string> sample_weight_mode;
     public Dictionary<string, ILoss> loss;
     public Dictionary<string, double> loss_weights;
-    public UnityTFTensor total_loss;
-    public List<UnityTFTensor> sample_weights;
+    public Tensor total_loss;
+    public List<Tensor> sample_weights;
     protected List<ILoss> loss_functions;
-    protected List<UnityTFTensor> _feed_outputs;
+    protected List<Tensor> _feed_outputs;
     protected List<string> _feed_output_names;
     protected List<int?[]> _feed_output_shapes;
     protected List<ILoss> _feed_loss_fns;
-    public List<UnityTFTensor> targets;
-    protected List<UnityTFTensor> _feed_targets;
+    public List<Tensor> targets;
+    protected List<Tensor> _feed_targets;
     public Dictionary<string, List<IMetric>> metrics;
     public virtual List<string> metrics_names { get; set; }
-    public List<UnityTFTensor> metrics_tensors;
-    protected List<UnityTFTensor> _feed_sample_weights;
-    protected List<UnityTFTensor> _collected_trainable_weights;
+    public List<Tensor> metrics_tensors;
+    protected List<Tensor> _feed_sample_weights;
+    protected List<Tensor> _collected_trainable_weights;
     protected Function train_function;
     protected Function test_function;
     protected Function predict_function;
@@ -102,7 +102,7 @@ public partial class Model : Container
     {
     }
 
-    public Model(List<UnityTFTensor> inputs, List<UnityTFTensor> outputs, string name = null)
+    public Model(List<Tensor> inputs, List<Tensor> outputs, string name = null)
         : base(inputs, outputs, name)
     {
     }
@@ -214,7 +214,7 @@ public partial class Model : Container
         List<ILoss> weighted_losses = loss_functions.Select(fn => _weighted_masked_objective(fn)).ToList();
 
         var skip_indices = new List<int>();
-        this._feed_outputs = new List<UnityTFTensor>();
+        this._feed_outputs = new List<Tensor>();
         this._feed_output_names = new List<string>();
         this._feed_output_shapes = new List<int?[]>();
         this._feed_loss_fns = new List<ILoss>();
@@ -238,7 +238,7 @@ public partial class Model : Container
         var masks = this.compute_mask(this.inputs, mask: null);
 
         if (masks == null)
-            masks = this.output.Select(x => (UnityTFTensor)null).ToList();
+            masks = this.output.Select(x => (Tensor)null).ToList();
 
         // Prepare loss weights.
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L781
@@ -273,7 +273,7 @@ public partial class Model : Container
 
         // Prepare sample weights.
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L807
-        var sample_weights = new List<UnityTFTensor>();
+        var sample_weights = new List<Tensor>();
         var sample_weight_modes = new List<string>();
         if (sample_weight_mode.is_dict())
         {
@@ -290,7 +290,7 @@ public partial class Model : Container
             {
                 string name = this.output_names[i];
 
-                UnityTFTensor weight;
+                Tensor weight;
                 if (skip_indices.Contains(i))
                 {
                     weight = null;
@@ -323,7 +323,7 @@ public partial class Model : Container
 
             for (int i = 0; i < this.output_names.Count; i++)
             {
-                UnityTFTensor weight;
+                Tensor weight;
                 if (skip_indices.Contains(i))
                 {
                     weight = null;
@@ -384,8 +384,8 @@ public partial class Model : Container
 
         // Prepare targets of model.
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L882
-        this.targets = new List<UnityTFTensor>();
-        this._feed_targets = new List<UnityTFTensor>();
+        this.targets = new List<Tensor>();
+        this._feed_targets = new List<Tensor>();
         for (int i = 0; i < this.output_names.Count; i++)
         {
             string name = this.output_names[i];
@@ -398,7 +398,7 @@ public partial class Model : Container
             {
                 int?[] shape = this.internal_output_shapes[i];
                 //Tensor target = K.Placeholder(ndim: shape.Length, name: name + "_target", sparse: K.IsSparse(this.outputs[i]), dtype: K.DType(this.outputs[i]));
-                UnityTFTensor target = K.Placeholder(shape: shape, ndim: shape.Length, name: name + "_target", sparse: K.IsSparse(this.outputs[i]), dtype: K.DType(this.outputs[i]));
+                Tensor target = K.Placeholder(shape: shape, ndim: shape.Length, name: name + "_target", sparse: K.IsSparse(this.outputs[i]), dtype: K.DType(this.outputs[i]));
                 this.targets.Add(target);
                 this._feed_targets.Add(target);
             }
@@ -407,11 +407,11 @@ public partial class Model : Container
         // Prepare metrics.
         this.metrics = metrics;
         this.metrics_names = new List<string>() { "loss" };
-        this.metrics_tensors = new List<UnityTFTensor>();
+        this.metrics_tensors = new List<Tensor>();
 
         // Compute total loss.
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L903
-        UnityTFTensor total_loss = null;
+        Tensor total_loss = null;
         using (K.NameScope("loss"))
         {
             for (int i = 0; i < this.outputs.Count; i++)
@@ -419,14 +419,14 @@ public partial class Model : Container
                 if (skip_indices.Contains(i))
                     continue;
 
-                UnityTFTensor y_true = this.targets[i];
-                UnityTFTensor y_pred = this.outputs[i];
+                Tensor y_true = this.targets[i];
+                Tensor y_pred = this.outputs[i];
                 ILoss weighted_loss = weighted_losses[i];
-                UnityTFTensor sample_weight = sample_weights[i];
-                UnityTFTensor mask = masks[i];
+                Tensor sample_weight = sample_weights[i];
+                Tensor mask = masks[i];
                 double loss_weight = loss_weights_list[i];
 
-                UnityTFTensor output_loss;
+                Tensor output_loss;
                 using (K.NameScope(this.output_names[i] + "_loss"))
                 {
                     output_loss = weighted_loss.Call(y_true, y_pred, sample_weight, mask);
@@ -459,7 +459,7 @@ public partial class Model : Container
 
             // Add regularization penalties
             // and other layer-specific losses.
-            foreach (UnityTFTensor loss_tensor in this.losses)
+            foreach (Tensor loss_tensor in this.losses)
                 total_loss += loss_tensor;
 
             total_loss = K.Identity(total_loss, "total_loss");
@@ -479,8 +479,8 @@ public partial class Model : Container
                 if (skip_indices.Contains(i))
                     continue;
 
-                UnityTFTensor y_true = this.targets[i];
-                UnityTFTensor y_pred = this.outputs[i];
+                Tensor y_true = this.targets[i];
+                Tensor y_pred = this.outputs[i];
                 List<IMetric> output_metrics = nested_metrics[i];
 
                 for (int j = 0; j < output_metrics.Count; j++)
@@ -526,7 +526,7 @@ public partial class Model : Container
         // Prepare gradient updates and state updates.
         this.total_loss = total_loss;
         this.sample_weights = sample_weights;
-        this._feed_sample_weights = new List<UnityTFTensor>();
+        this._feed_sample_weights = new List<Tensor>();
         for (int i = 0; i < this.sample_weights.Count; i++)
         {
             if (!skip_indices.Contains(i))
@@ -553,7 +553,7 @@ public partial class Model : Container
         }
     }
 
-    private void append_metric(int layer_num, string metric_name, UnityTFTensor metric_tensor)
+    private void append_metric(int layer_num, string metric_name, Tensor metric_tensor)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L939
         if (this.output_names.Count > 1)
@@ -618,12 +618,12 @@ public partial class Model : Container
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L459
 
-        Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor> masked = delegate(UnityTFTensor y_true, UnityTFTensor y_pred, UnityTFTensor mask) {
+        Func<Tensor, Tensor, Tensor, Tensor> masked = delegate(Tensor y_true, Tensor y_pred, Tensor mask) {
             y_true = K.Identity(y_true, "y_true");
             y_pred = K.Identity(y_pred, "y_pred");
 
             // score_array has ndim >= 2
-            UnityTFTensor score_array = metric_fn.Call(y_true, y_pred);
+            Tensor score_array = metric_fn.Call(y_true, y_pred);
 
             if (mask != null)
             {
@@ -682,14 +682,14 @@ public partial class Model : Container
         if (fn == null)
             return null;
 
-        Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor> weighted = delegate (UnityTFTensor y_true, UnityTFTensor y_pred, UnityTFTensor weights, UnityTFTensor mask)
+        Func<Tensor, Tensor, Tensor, Tensor, Tensor> weighted = delegate (Tensor y_true, Tensor y_pred, Tensor weights, Tensor mask)
         {
             y_true = K.Identity(y_true, "y_true");
             y_pred = K.Identity(y_pred, "y_pred");
             weights = K.Identity(weights, "weights");
 
             // score_array has ndim >= 2
-            UnityTFTensor score_array = fn.Call(y_true, y_pred);
+            Tensor score_array = fn.Call(y_true, y_pred);
 
             if (mask != null)
             {
@@ -770,10 +770,10 @@ public partial class Model : Container
             var inputs = (Enumerable.Concat(this._feed_inputs, this._feed_targets).Concat(this._feed_sample_weights)).ToList();
 
             if (this.uses_learning_phase && !(K.LearningPhase() is int))
-                inputs.Add((UnityTFTensor)K.LearningPhase());
+                inputs.Add((Tensor)K.LearningPhase());
 
-            List<List<UnityTFTensor>> training_updates = this.optimizer.get_updates(this._collected_trainable_weights, this.constraints, this.total_loss);
-            List<List<UnityTFTensor>> updates = Enumerable.Concat(this.updates, training_updates).ToList();
+            List<List<Tensor>> training_updates = this.optimizer.get_updates(this._collected_trainable_weights, this.constraints, this.total_loss);
+            List<List<Tensor>> updates = Enumerable.Concat(this.updates, training_updates).ToList();
 
             // Gets loss and metrics. Updates weights at each call.	
             this.train_function = K.Function(inputs, ((new[] { this.total_loss }).Concat(this.metrics_tensors)).ToList(),
@@ -788,7 +788,7 @@ public partial class Model : Container
         {
             var inputs = this._feed_inputs.Concat(this._feed_targets).Concat(this._feed_sample_weights).ToList();
             if (this.uses_learning_phase && !(K.LearningPhase() is int))
-                inputs.Add((UnityTFTensor)K.LearningPhase());
+                inputs.Add((Tensor)K.LearningPhase());
 
             // Return loss and metrics, no gradient updates.
             // Does update the network states.
@@ -803,7 +803,7 @@ public partial class Model : Container
         {
             if (this.uses_learning_phase && !(K.LearningPhase() is int))
             {
-                inputs = this._feed_inputs.Concat(new List<UnityTFTensor>() { (UnityTFTensor)K.LearningPhase() }).ToList();
+                inputs = this._feed_inputs.Concat(new List<Tensor>() { (Tensor)K.LearningPhase() }).ToList();
             }
             else
             {
@@ -954,7 +954,7 @@ public partial class Model : Container
                 batch_logs["batch"] = batch_index;
                 batch_logs["size"] = batch_ids.Length;
                 callbacks.on_batch_begin(batch_index, batch_logs);
-                List<UnityTFTensor> outs = f.Call(ins_batch);
+                List<Tensor> outs = f.Call(ins_batch);
 
                 for (int i = 0; i < out_labels.Count; i++)
                 {
@@ -1110,7 +1110,7 @@ public partial class Model : Container
             List<Array> ins_batch = _slice_arrays(ins, batch_ids);
             //}
 
-            List<UnityTFTensor> batch_outs = f.Call(ins_batch);
+            List<Tensor> batch_outs = f.Call(ins_batch);
 
 
             if (batch_index == 0)
@@ -1170,7 +1170,7 @@ public partial class Model : Container
             verbose = 2;
         }
 
-        var outs = new List<UnityTFTensor>();
+        var outs = new List<Tensor>();
         Progbar progbar = null;
         if (verbose == 1)
             progbar = new Progbar(target: samples);
@@ -1197,17 +1197,17 @@ public partial class Model : Container
             var ins_batch = _slice_arrays(ins, batch_ids);
             //}
 
-            List<UnityTFTensor> batch_outs = f.Call(ins_batch);
+            List<Tensor> batch_outs = f.Call(ins_batch);
 
             if (batch_index == 0)
             {
-                foreach (UnityTFTensor batch_out in batch_outs)
+                foreach (Tensor batch_out in batch_outs)
                     outs.Add(K.Constant(0));
             }
 
             for (int i = 0; i < batch_outs.Count; i++)
             {
-                UnityTFTensor batch_out = batch_outs[i];
+                Tensor batch_out = batch_outs[i];
                 outs[i] += batch_out * batch_ids.Length;
             }
 
@@ -1221,7 +1221,7 @@ public partial class Model : Container
         return outs.Select(x => x.Eval().To<double>()).ToList().ToArray();
     }
 
-    private object _slice_arrays(List<UnityTFTensor> ins, int[] batch_ids)
+    private object _slice_arrays(List<Tensor> ins, int[] batch_ids)
     {
         throw new NotImplementedException();
     }
@@ -1373,17 +1373,17 @@ public partial class Model : Container
         }
     }
 
-    private double _standardize_weights(Array yy, UnityTFTensor sw, UnityTFTensor cw, object mode)
+    private double _standardize_weights(Array yy, Tensor sw, Tensor cw, object mode)
     {
         throw new NotImplementedException();
     }
 
-    private object _standardize_class_weights(Dictionary<int, UnityTFTensor> class_weight, List<string> feed_output_names)
+    private object _standardize_class_weights(Dictionary<int, Tensor> class_weight, List<string> feed_output_names)
     {
         throw new NotImplementedException();
     }
 
-    private List<UnityTFTensor> _standardize_sample_weights(List<UnityTFTensor> sample_weight, List<string> feed_output_names)
+    private List<Tensor> _standardize_sample_weights(List<Tensor> sample_weight, List<string> feed_output_names)
     {
         throw new NotImplementedException();
     }
@@ -1806,12 +1806,12 @@ y_binary = to_categorical(y_int)
                               initial_epoch: initial_epoch);
     }
 
-    private List<UnityTFTensor> _slice_arrays(List<UnityTFTensor> sample_weightsx, int split_at)
+    private List<Tensor> _slice_arrays(List<Tensor> sample_weightsx, int split_at)
     {
         throw new NotImplementedException();
     }
 
-    private List<UnityTFTensor> _slice_arrays(List<UnityTFTensor> sample_weightsx, int v, int split_at)
+    private List<Tensor> _slice_arrays(List<Tensor> sample_weightsx, int v, int split_at)
     {
         throw new NotImplementedException();
     }
@@ -1957,7 +1957,7 @@ y_binary = to_categorical(y_int)
     /// 
     /// <returns>Scalar training loss (if the model has a single output and no metrics) or list of scalars (if the model has multiple outputs and/or metrics). The attribute `model.metrics_names` will give you the display labels for the scalar outputs.</returns>
     /// 
-    public virtual List<UnityTFTensor> train_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null, Dictionary<string, Dictionary<string, double>> class_weight = null)
+    public virtual List<Tensor> train_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null, Dictionary<string, Dictionary<string, double>> class_weight = null)
     {
         //var (xx, yy, sample_weights) = this._standardize_user_data(x, y, sample_weight: sample_weight, class_weight: class_weight, check_batch_axis: true);
         var tempTuple = this._standardize_user_data(x, y, sample_weight: sample_weight, class_weight: class_weight, check_batch_axis: true);
@@ -1966,7 +1966,7 @@ y_binary = to_categorical(y_int)
         return train_on_batch(xx, yy, sample_weights);
     }
 
-    public virtual List<UnityTFTensor> train_on_batch(List<Array> x, List<Array> y, List<Array> sample_weightsx, Dictionary<string, UnityTFTensor> class_weight = null)
+    public virtual List<Tensor> train_on_batch(List<Array> x, List<Array> y, List<Array> sample_weightsx, Dictionary<string, Tensor> class_weight = null)
     {
         var ins = new List<Array>();
         if (this.uses_learning_phase && !(K.LearningPhase() is int))
@@ -1996,7 +1996,7 @@ y_binary = to_categorical(y_int)
     //    and/or metrics). The attribute `model.metrics_names` will give you the display labels for the scalar outputs.
     /// </returns>
     ///   
-    public virtual List<UnityTFTensor> test_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null)
+    public virtual List<Tensor> test_on_batch(Dictionary<string, Array> x, Dictionary<string, Array> y, Dictionary<string, Array> sample_weight = null)
     {
         //var (xx, yy, sample_weights) = this._standardize_user_data(x, y, sample_weight: sample_weight, check_batch_axis: true);
         var tempTuple = this._standardize_user_data(x, y, sample_weight: sample_weight, check_batch_axis: true);
@@ -2006,7 +2006,7 @@ y_binary = to_categorical(y_int)
         return test_on_batch(xx, yy, sample_weights);
     }
 
-    private List<UnityTFTensor> test_on_batch(List<Array> xx, List<Array> yy, List<Array> sample_weight)
+    private List<Tensor> test_on_batch(List<Array> xx, List<Array> yy, List<Array> sample_weight)
     {
         var ins = new List<Array>();
         if (this.uses_learning_phase && !(K.LearningPhase() is int))
@@ -2023,7 +2023,7 @@ y_binary = to_categorical(y_int)
         return outputs;
     }
 
-    public virtual List<UnityTFTensor> predict_on_batch(Dictionary<string, Array> x)
+    public virtual List<Tensor> predict_on_batch(Dictionary<string, Array> x)
     {
         //"""Returns predictions for a single batch of samples.
         //// Arguments
@@ -2036,7 +2036,7 @@ y_binary = to_categorical(y_int)
         return predict_on_batch(xx);
     }
 
-    private List<UnityTFTensor> predict_on_batch(List<Array> x)
+    private List<Tensor> predict_on_batch(List<Array> x)
     {
         var ins = new List<Array>();
 
@@ -2097,7 +2097,7 @@ y_binary = to_categorical(y_int)
                               CallbackList callbacks = null,
                               IList<Dictionary<string, Array>> validation_data = null,
                               int? validation_steps = null,
-                              Dictionary<int, UnityTFTensor> class_weight = null,
+                              Dictionary<int, Tensor> class_weight = null,
                               int max_queue_size = 10,
                               int workers = 1,
                               bool use_multiprocessing = false,
@@ -2227,12 +2227,12 @@ y_binary = to_categorical(y_int)
 
                         while (steps_done < steps_per_epoch)
                         {
-                            List<List<UnityTFTensor>> generator_output = output_generator.Current;
+                            List<List<Tensor>> generator_output = output_generator.Current;
                             output_generator.MoveNext();
 
-                            List<UnityTFTensor> x = generator_output[0];
-                            List<UnityTFTensor> y = generator_output[1];
-                            List<UnityTFTensor> sample_weight = null;
+                            List<Tensor> x = generator_output[0];
+                            List<Tensor> y = generator_output[1];
+                            List<Tensor> sample_weight = null;
 
                             if (generator_output.Count == 3)
                                 sample_weight = generator_output[2];
@@ -2260,7 +2260,7 @@ y_binary = to_categorical(y_int)
 
                             callbacks.on_batch_begin(batch_index, batch_logs);
 
-                            List<UnityTFTensor> outs = this.train_on_batch(x, y,
+                            List<Tensor> outs = this.train_on_batch(x, y,
                                                        sample_weight: sample_weight,
                                                        class_weight: class_weight);
 
@@ -2330,7 +2330,7 @@ y_binary = to_categorical(y_int)
 
 
 
-    public List<UnityTFTensor> evaluate_generator(object generator, int steps,
+    public List<Tensor> evaluate_generator(object generator, int steps,
                            int max_queue_size = 10,
                            int workers = 1,
                            bool use_multiprocessing = false)
@@ -2413,12 +2413,12 @@ y_binary = to_categorical(y_int)
         */
     }
 
-    private static List<UnityTFTensor> weightedMean(List<UnityTFTensor> all_outs, List<int> batch_sizes)
+    private static List<Tensor> weightedMean(List<Tensor> all_outs, List<int> batch_sizes)
     {
         throw new NotImplementedException();
     }
 
-    public List<List<UnityTFTensor>> predict_generator(IEnumerator<List<Dictionary<string, Array>>> generator, int steps,
+    public List<List<Tensor>> predict_generator(IEnumerator<List<Dictionary<string, Array>>> generator, int steps,
                           int max_queue_size = 10,
                           int workers = 1,
                           bool use_multiprocessing = false,
@@ -2455,7 +2455,7 @@ y_binary = to_categorical(y_int)
 
         int steps_done = 0;
         double wait_time = 0.01;
-        List<List<UnityTFTensor>> all_outs = new List<List<UnityTFTensor>>();
+        List<List<Tensor>> all_outs = new List<List<Tensor>>();
         bool is_sequence = generator is Sequence;
         if (!is_sequence && use_multiprocessing)
         {
@@ -2512,7 +2512,7 @@ y_binary = to_categorical(y_int)
                 {
                     foreach (var o in outs)
                     {
-                        all_outs.Add(new List<UnityTFTensor>());
+                        all_outs.Add(new List<Tensor>());
 
                         for (int i = 0; i < outs.Count; i++)
                         {
@@ -2535,22 +2535,22 @@ y_binary = to_categorical(y_int)
         }
     }
 
-    private ValueTuple<List<UnityTFTensor>, List<UnityTFTensor>, List<UnityTFTensor>> _standardize_user_data(List<UnityTFTensor> val_x, List<UnityTFTensor> val_y, List<UnityTFTensor> val_sample_weight)
+    private ValueTuple<List<Tensor>, List<Tensor>, List<Tensor>> _standardize_user_data(List<Tensor> val_x, List<Tensor> val_y, List<Tensor> val_sample_weight)
     {
         throw new NotImplementedException();
     }
 
-    private ValueTuple<List<UnityTFTensor>, List<UnityTFTensor>, List<UnityTFTensor>> _standardize_user_data(List<UnityTFTensor> val_x, List<UnityTFTensor> val_y, List<UnityTFTensor> val_sample_weight, IEnumerable<UnityTFTensor> val_data)
+    private ValueTuple<List<Tensor>, List<Tensor>, List<Tensor>> _standardize_user_data(List<Tensor> val_x, List<Tensor> val_y, List<Tensor> val_sample_weight, IEnumerable<Tensor> val_data)
     {
         throw new NotImplementedException();
     }
 
-    private List<UnityTFTensor> train_on_batch(List<UnityTFTensor> x, List<UnityTFTensor> y, List<UnityTFTensor> sample_weight, object class_weight)
+    private List<Tensor> train_on_batch(List<Tensor> x, List<Tensor> y, List<Tensor> sample_weight, object class_weight)
     {
         throw new NotImplementedException();
     }
 
-    private List<UnityTFTensor> test_on_batch(UnityTFTensor x, UnityTFTensor y, UnityTFTensor sample_weight)
+    private List<Tensor> test_on_batch(Tensor x, Tensor y, Tensor sample_weight)
     {
         throw new NotImplementedException();
     }

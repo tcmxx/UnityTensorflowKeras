@@ -46,7 +46,7 @@ using static Current;
 public class InputLayer : Layer
 {
     private bool sparse;
-    private UnityTFTensor input_tensor;
+    private Tensor input_tensor;
 
 
     /// <summary>
@@ -62,7 +62,7 @@ public class InputLayer : Layer
     /// <param name="input_tensor">The optional tensor to use as layer input.</param>
     /// 
     public InputLayer(int?[] input_shape = null, int? batch_size = null, int?[] batch_input_shape = null, string name = null,
-        DataType? dtype = null, bool sparse = false, UnityTFTensor input_tensor = null)
+        DataType? dtype = null, bool sparse = false, Tensor input_tensor = null)
         : base(dtype: GetType(dtype, input_tensor), name: GetName(name))
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L1291
@@ -133,15 +133,15 @@ public class InputLayer : Layer
             inbound_layers: new List<Layer>(),
             node_indices: new List<int?>(),
             tensor_indices: new List<int?>(),
-            input_tensors: new List<UnityTFTensor> { input_tensor },
-            output_tensors: new List<UnityTFTensor> { input_tensor },
-            input_masks: new List<UnityTFTensor> { null },
-            output_masks: new List<UnityTFTensor> { null },
+            input_tensors: new List<Tensor> { input_tensor },
+            output_tensors: new List<Tensor> { input_tensor },
+            input_masks: new List<Tensor> { null },
+            output_masks: new List<Tensor> { null },
             input_shapes: new List<int?[]> { batch_input_shape },
             output_shapes: new List<int?[]> { batch_input_shape });
     }
 
-    private static DataType? GetType(DataType? dtype, UnityTFTensor input_tensor)
+    private static DataType? GetType(DataType? dtype, Tensor input_tensor)
     {
         if (dtype == null)
         {

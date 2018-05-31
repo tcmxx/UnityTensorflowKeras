@@ -30,7 +30,7 @@ public class MaxPooling2D : Layer
     }
 
 
-    protected override UnityTFTensor InnerCall(UnityTFTensor inputs, UnityTFTensor mask = null, bool? training = null)
+    protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
         return K.Pool2D(inputs, poolSize, strides, padding, data_format, PoolMode.Max);
     }

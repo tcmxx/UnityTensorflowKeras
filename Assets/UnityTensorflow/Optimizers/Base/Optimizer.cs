@@ -17,8 +17,8 @@ using static Current;
 [DataContract]
 public abstract class OptimizerBase
 {
-    protected List<List<UnityTFTensor>> updates;
-    protected List<UnityTFTensor> weights;
+    protected List<List<Tensor>> updates;
+    protected List<Tensor> weights;
     public double clipnorm;
     public double clipvalue;
 
@@ -31,8 +31,8 @@ public abstract class OptimizerBase
         //        throw new Exception("Unexpected keyword argument passed to optimizer: " + k);
         // this.__dict__.update(kwargs)
 
-        this.updates = new List<List<UnityTFTensor>>();
-        this.weights = new List<UnityTFTensor>();
+        this.updates = new List<List<Tensor>>();
+        this.weights = new List<Tensor>();
     }
 
     public virtual void get_updates(object param, IWeightConstraint constraints, ILoss loss)
@@ -40,9 +40,9 @@ public abstract class OptimizerBase
         throw new NotImplementedException();
     }
 
-    public List<UnityTFTensor> get_gradients(UnityTFTensor loss, List<UnityTFTensor> param)
+    public List<Tensor> get_gradients(Tensor loss, List<Tensor> param)
     {
-        List<UnityTFTensor> grads = K.Gradients(loss, param);
+        List<Tensor> grads = K.Gradients(loss, param);
 
         if (this.clipnorm > 0)
         {
@@ -71,13 +71,13 @@ public abstract class OptimizerBase
     public void set_weights(List<Array> weights)
     {
         var param = this.weights;
-        var weight_value_tuples = new List<ValueTuple<UnityTFTensor, Array>>();
+        var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
         var param_values = K.BatchGetValue(param);
 
         for (int i = 0; i < param_values.Count; i++)
         {
             Array pv = param_values[i];
-            UnityTFTensor p = param[i];
+            Tensor p = param[i];
             Array w = weights[i];
 
             if (pv.GetLength().IsEqual(w.GetLength()))

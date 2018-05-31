@@ -43,7 +43,7 @@ public interface IActivationFunction
     /// 
     /// <returns>The output tensor with the activation function applied.</returns>
     /// 
-    UnityTFTensor Call(UnityTFTensor inputs, UnityTFTensor mask);
+    Tensor Call(Tensor inputs, Tensor mask);
 
     /// <summary>
     ///   Wires the activation function to the graph.
@@ -53,5 +53,5 @@ public interface IActivationFunction
     /// 
     /// <returns>The output tensor with the activation function applied.</returns>
     /// 
-    List<UnityTFTensor> Call(List<UnityTFTensor> inputs, List<UnityTFTensor> mask);
+    List<Tensor> Call(List<Tensor> inputs, List<Tensor> mask);
 }

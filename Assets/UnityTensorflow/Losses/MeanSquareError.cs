@@ -8,7 +8,7 @@ public class MeanSquareError : ILoss
     {
     }
 
-    public UnityTFTensor Call(UnityTFTensor y_true, UnityTFTensor y_pred, UnityTFTensor sample_weight = null, UnityTFTensor mask = null)
+    public Tensor Call(Tensor y_true, Tensor y_pred, Tensor sample_weight = null, Tensor mask = null)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/losses.py#L7
 

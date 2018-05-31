@@ -89,8 +89,8 @@ public static class UnityTFUtils
     /// <param name="tensor">Optional existing tensor to wrap into the `Input` layer.
     ///   If set, the layer will not create a placeholder tensor.</param>
     ///   
-    public static List<UnityTFTensor> Input(int?[] shape = null, int?[] batch_shape = null, string name = null,
-        DataType? dtype = null, bool sparse = false, UnityTFTensor tensor = null)
+    public static List<Tensor> Input(int?[] shape = null, int?[] batch_shape = null, string name = null,
+        DataType? dtype = null, bool sparse = false, Tensor tensor = null)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/topology.py#L1416
 
@@ -114,20 +114,27 @@ public static class UnityTFUtils
     }
 
 
-    //
+    /// <summary>
+    /// None flat array will be flatten
+    /// </summary>
+    /// <param name="array"></param>
+    /// <param name="shape"></param>
+    /// <param name="start"></param>
+    /// <param name="length"></param>
+    /// <returns></returns>
     public static TFTensor TFTensorFromArray(Array array, TFShape shape, int start, int length)
     {
         
         if (array.GetType().GetElementType() == typeof(float))
         {
-           return TFTensor.FromBuffer(shape, (float[])array, start, (int)length);
+           return TFTensor.FromBuffer(shape, (float[])array.DeepFlatten(), start, (int)length);
         }
         else if (array.GetType().GetElementType() == typeof(double))
         {
-            return TFTensor.FromBuffer(shape, (double[])array, start, (int)length);
+            return TFTensor.FromBuffer(shape, (double[])array.DeepFlatten(), start, (int)length);
         }else if(array.GetType().GetElementType() == typeof(int))
         {
-            return TFTensor.FromBuffer(shape, (int[])array, start, (int)length);
+            return TFTensor.FromBuffer(shape, (int[])array.DeepFlatten(), start, (int)length);
         }
         else
         {
@@ -269,11 +276,11 @@ public static class UnityTFUtils
 
         if (typeof(T) == typeof(IMetric))
         {
-            var f2 = obj as Func<UnityTFTensor, UnityTFTensor, UnityTFTensor>;
+            var f2 = obj as Func<Tensor, Tensor, Tensor>;
             if (f2 != null)
                 return new CustomMetric(f2) as T;
 
-            var f3 = obj as Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor>;
+            var f3 = obj as Func<Tensor, Tensor, Tensor, Tensor>;
             if (f3 != null)
                 return new CustomMetric(f3) as T;
         }

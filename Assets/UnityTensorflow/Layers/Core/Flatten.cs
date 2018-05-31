@@ -39,7 +39,7 @@ using static Current;
 [DataContract]
 public class Flatten : Layer
 {
-    protected override UnityTFTensor InnerCall(UnityTFTensor inputs, UnityTFTensor mask = null, bool? training = null)
+    protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
         return K.BatchFlatten(inputs);
     }

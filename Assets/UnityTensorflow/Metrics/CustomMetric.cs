@@ -29,19 +29,19 @@ using System;
 
 public class CustomMetric : IMetric
 {
-    private Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor> func;
+    private Func<Tensor, Tensor, Tensor, Tensor> func;
 
-    public CustomMetric(Func<UnityTFTensor, UnityTFTensor, UnityTFTensor> func)
+    public CustomMetric(Func<Tensor, Tensor, Tensor> func)
     {
-        this.func = (UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor mask) => func(expected, actual);
+        this.func = (Tensor expected, Tensor actual, Tensor mask) => func(expected, actual);
     }
 
-    public CustomMetric(Func<UnityTFTensor, UnityTFTensor, UnityTFTensor, UnityTFTensor> func)
+    public CustomMetric(Func<Tensor, Tensor, Tensor, Tensor> func)
     {
         this.func = func;
     }
 
-    public UnityTFTensor Call(UnityTFTensor expected, UnityTFTensor actual, UnityTFTensor mask = null)
+    public Tensor Call(Tensor expected, Tensor actual, Tensor mask = null)
     {
         return func(expected, actual, mask);
     }
