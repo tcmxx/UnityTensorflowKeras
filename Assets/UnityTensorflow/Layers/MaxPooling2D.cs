@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,7 +23,7 @@ public class MaxPooling2D : Layer
     public MaxPooling2D(int[] pool_size, int[] strides, PaddingType padding, DataFormatType? data_format = null)
     {
         poolSize = pool_size.Copy();
-        strides = strides.Copy();
+        this.strides = strides.Copy();
         this.padding = padding;
         this.data_format = data_format;
     }

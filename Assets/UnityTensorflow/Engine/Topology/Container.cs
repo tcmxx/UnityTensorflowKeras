@@ -134,7 +134,8 @@ public class Container : Layer
             //var (layer, node_index, tensor_index) = x._keras_history.Value;
 
             var history = x._keras_history.Value;
-            var layer = history.Item1; var node_index = history.Item2; var tensor_index = history.Item3;
+            var layer = history.Item1; //var node_index = history.Item2;var tensor_index = history.Item3;
+
 
             if (layer.inbound_nodes.Count > 1 || (layer.inbound_nodes != null && layer.inbound_nodes[0].inbound_layers != null))
             {

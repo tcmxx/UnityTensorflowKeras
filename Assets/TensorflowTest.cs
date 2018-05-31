@@ -89,7 +89,7 @@ public class TensorflowTest : MonoBehaviour {
 
         var lossM = new MeanSquareError();
 
-        var loss = lossM.Call(target[0], o[0]);
+        lossM.Call(target[0], o[0]);
 
 
 
@@ -112,7 +112,7 @@ public class TensorflowTest : MonoBehaviour {
         var pred = conv2.Call(conv1.Call(inputLayer[0])[0])[0];
         var lossM = new MeanSquareError();
 
-        var loss = lossM.Call(target[0], pred);
+        lossM.Call(target[0], pred);
 
 
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/convLayer.pb");
@@ -182,13 +182,13 @@ public class TensorflowTest : MonoBehaviour {
         print("fit 2");
         model.fit(x, y, batch_size: 4, epochs: 30, verbose: 1);
         // Use the model to make predictions
-        var test = model.predict(x)[0];
-        float[,] pred = model.predict(x)[0].To<float[,]>();
+        //var test = model.predict(x)[0];
+        //float[,] pred = model.predict(x)[0].To<float[,]>();
 
 
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");
         // Evaluate the model
         double[] scores = model.evaluate(x, y);
-        //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
+        Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
     }
 }
