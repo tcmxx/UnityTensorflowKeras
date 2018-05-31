@@ -33,13 +33,13 @@
     {
         public Tensor Call(Tensor y_true, Tensor y_pred, Tensor mask = null)
         {
-            using (K.NameScope("binary_accuracy"))
+            using (K.name_scope("binary_accuracy"))
             {
                 if (mask != null)
                     throw new NotSupportedException();
 
                 // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/metrics.py#L20
-                return K.Mean(K.Cast(K.Equal(y_true, K.Round(y_pred)),DataType.Float), axis: -1, name: "value");
+                return K.mean(K.cast(K.equal(y_true, K.round(y_pred)),DataType.Float), axis: -1, name: "value");
             }
         }
     }

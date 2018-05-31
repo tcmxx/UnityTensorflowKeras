@@ -25,18 +25,34 @@
 //
 
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Accord.Math;
 
-using static Current;
-
-public class CategoricalAccuracy : IMetric
+public abstract class BackendBase
 {
-    public Tensor Call(Tensor y_true, Tensor y_pred, Tensor mask = null)
+    float eps = 10e-8f;
+    DataFormatType format = DataFormatType.ChannelsLast;
+
+    /// <summary>
+    ///   Returns the value of the fuzz factor used in numeric expressions.
+    /// </summary>
+    /// 
+    public float epsilon()
     {
-        // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/metrics.py#L24
-        return K.cast(K.equal(K.argmax(y_true, axis: -1),
-                     K.argmax(y_pred, axis: -1)),
-             K.floatx());
+        return eps;
+    }
+
+    /// <summary>
+    ///   Returns the default image data format convention ('channels_first' or 'channels_last').
+    /// </summary>
+    /// 
+    public DataFormatType image_data_format()
+    {
+        // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/backend/common.py#L111
+        return format;
     }
 }
-

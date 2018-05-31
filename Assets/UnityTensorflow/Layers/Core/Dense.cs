@@ -175,10 +175,10 @@ public class Dense : Layer
     protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
         // https://github.com/fchollet/keras/blob/2382f788b4f14646fa8b6b2d8d65f1fc138b35c4/keras/layers/core.py#L840
-        Tensor output = K.Dot(inputs, this.kernel, name: "dot");
+        Tensor output = K.dot(inputs, this.kernel, name: "dot");
 
         if (this.use_bias)
-            output = K.BiasAdd(output, this.bias, name: "bias_add");
+            output = K.bias_add(output, this.bias, name: "bias_add");
         if (this.activation != null)
             output = this.activation.Call(output, mask);
         return output;

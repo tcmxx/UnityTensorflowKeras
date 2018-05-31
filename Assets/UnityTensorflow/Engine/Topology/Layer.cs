@@ -155,7 +155,7 @@ public abstract class Layer
         if (name == null)
         {
             string prefix = this.GetType().Name;
-            name = _to_snake_case(prefix) + "_" + K.GetUid(prefix);
+            name = _to_snake_case(prefix) + "_" + K.get_uid(prefix);
         }
 
         this.name = name;
@@ -175,7 +175,7 @@ public abstract class Layer
         if (dtype == null)
             dtype = input_dtype;
         if (dtype == null)
-            dtype = K.Floatx();
+            dtype = K.floatx();
         this.dtype = dtype.Value;
 
         if (weights != null)
@@ -271,7 +271,7 @@ public abstract class Layer
         IWeightInitializer initializer = null, IWeightRegularizer regularizer = null,
                bool trainable = true, IWeightConstraint constraint = null)
     {
-        Tensor weight = K.Variable(tensor: initializer.Call(shape), dtype: dtype, name: name);
+        Tensor weight = K.variable(tensor: initializer.Call(shape), dtype: dtype, name: name);
 
         if (regularizer != null)
             this.add_loss(new List<Tensor>() { regularizer.Call(weight) });
@@ -318,35 +318,35 @@ public abstract class Layer
 
             // Check ndim.
             if (spec.ndim != null)
-                if (K.NDim(x) != spec.ndim)
-                    throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected ndim={spec.ndim}, found ndim={K.NDim(x)}");
+                if (K.ndim(x) != spec.ndim)
+                    throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected ndim={spec.ndim}, found ndim={K.ndim(x)}");
 
             int? ndim = null;
             if (spec.max_ndim != null)
-                ndim = K.NDim(x);
+                ndim = K.ndim(x);
 
             if (ndim != null && ndim > spec.max_ndim)
-                throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected max_ndim={ spec.max_ndim }, found ndim={K.NDim(x)}");
+                throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected max_ndim={ spec.max_ndim }, found ndim={K.ndim(x)}");
 
             if (spec.min_ndim != null)
             {
-                ndim = K.NDim(x);
+                ndim = K.ndim(x);
                 if (ndim != null && ndim < spec.min_ndim)
-                    throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected min_ndim={spec.min_ndim}, found ndim={K.NDim(x)}");
+                    throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected min_ndim={spec.min_ndim}, found ndim={K.ndim(x)}");
             }
 
             // Check dtype.
             if (spec.dtype != null)
             {
-                if (K.DType(x) != spec.dtype)
-                    throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected dtype={spec.dtype}, found dtype={K.DType(x)}");
+                if (K.dtype(x) != spec.dtype)
+                    throw new Exception($"Input {input_index} is incompatible with layer {this.name}: expected dtype={spec.dtype}, found dtype={K.dtype(x)}");
             }
 
             // Check specific shape axes.
             // https://github.com/fchollet/keras/blob/2382f788b4f14646fa8b6b2d8d65f1fc138b35c4/keras/engine/topology.py#L467
             if (spec.axes != null)
             {
-                int?[] x_shape = K.IntShape(x);
+                int?[] x_shape = K.int_shape(x);
 
                 if (x_shape != null)
                 {
@@ -371,7 +371,7 @@ public abstract class Layer
             // Check shape.
             if (spec.shape != null)
             {
-                int?[] x_shape = K.IntShape(x);
+                int?[] x_shape = K.int_shape(x);
 
                 if (x_shape != null)
                 {
@@ -436,7 +436,7 @@ public abstract class Layer
     ///  
     public List<Tensor> Call(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
     {
-        using (K.NameScope(this.name))
+        using (K.name_scope(this.name))
         {
             // Handle laying building (weight creating, input spec locking).
             if (!this.built)
@@ -450,10 +450,10 @@ public abstract class Layer
             var input_shapes = new List<int?[]>();
             foreach (Tensor x_elem in inputs)
             {
-                if (x_elem.KerasShape != null)
-                    input_shapes.Add(x_elem.KerasShape);
-                else if (x_elem.IntShape != null)
-                    input_shapes.Add(K.IntShape(x_elem));
+                if (x_elem._keras_shape != null)
+                    input_shapes.Add(x_elem._keras_shape);
+                else if (x_elem.int_shape != null)
+                    input_shapes.Add(K.int_shape(x_elem));
                 else
                     throw new Exception($"You tried to call layer {this.name}. This layer has no information about its expected input shape, and thus cannot be built. You can build it manually via: `layer.build(batch_input_shape)`");
             }
@@ -500,7 +500,7 @@ public abstract class Layer
             foreach (Tensor x in output_ls)
             {
                 if (inputs_ls.Contains(x))
-                    output_ls_copy.Add(K.Identity(x));
+                    output_ls_copy.Add(K.identity(x));
                 else output_ls_copy.Add(x);
             }
 
@@ -595,9 +595,9 @@ public abstract class Layer
         var tensor_indices = new List<int?>();
         foreach (Tensor x in input_tensors)
         {
-            if (x.KerasHistory != null)
+            if (x._keras_history != null)
             {
-                var history = x.KerasHistory.Value;
+                var history = x._keras_history.Value;
                 //var (inbound_layer, node_index, tensor_index) = x._keras_history.Value;
                 inbound_layers.Add(history.Item1);
                 node_indices.Add(history.Item2);
@@ -626,11 +626,11 @@ public abstract class Layer
         // Update tensor history, _keras_shape and _uses_learning_phase.
         for (int i = 0; i < output_tensors.Count; i++)
         {
-            output_tensors[i].KerasShape = output_shapes[i];
-            bool uses_lp = input_tensors.Any(x => x.UsesLearningPhase);
+            output_tensors[i]._keras_shape = output_shapes[i];
+            bool uses_lp = input_tensors.Any(x => x._uses_learning_phase);
             uses_lp = this.uses_learning_phase || uses_lp;
-            output_tensors[i].UsesLearningPhase = output_tensors[i].UsesLearningPhase || uses_lp;
-            output_tensors[i].KerasHistory = ValueTuple.Create(this, this.inbound_nodes.Count - 1, i);
+            output_tensors[i]._uses_learning_phase = output_tensors[i]._uses_learning_phase || uses_lp;
+            output_tensors[i]._keras_history = ValueTuple.Create(this, this.inbound_nodes.Count - 1, i);
         }
     }
 
@@ -1120,7 +1120,7 @@ public abstract class Layer
 
         var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
 
-        List<Array> param_values = K.BatchGetValue(this.weights);
+        List<Array> param_values = K.batch_get_value(this.weights);
 
         for (int i = 0; i < param_values.Count; i++)
         {
@@ -1132,7 +1132,7 @@ public abstract class Layer
             weight_value_tuples.Add(ValueTuple.Create(p, w));
         }
 
-        K.BatchSetValue(weight_value_tuples);
+        K.batch_set_value(weight_value_tuples);
     }
 
     /// <summary>
@@ -1149,9 +1149,9 @@ public abstract class Layer
 
         foreach (Tensor x in input_tensors)
         {
-            if (x.KerasHistory.HasValue)
+            if (x._keras_history.HasValue)
             {
-                var history = x.KerasHistory.Value;
+                var history = x._keras_history.Value;
                 //var (inbound_layer, node_index, tensor_index) = x.KerasHistory.Value;
                 var node = history.Item1.inbound_nodes[history.Item2];
                 var mask = node.output_masks[history.Item3];
@@ -1180,7 +1180,7 @@ public abstract class Layer
         {
             try
             {
-                shapes.Add(K.IntShape(x));
+                shapes.Add(K.int_shape(x));
             }
             catch
             {

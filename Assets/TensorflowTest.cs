@@ -18,9 +18,10 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestConv2D();
 
-        //TestSetAndGetValue();
+        //
+        TestSetAndGetValue();
 
-        TestModelCompileAndFit();
+        //TestModelCompileAndFit();
     }
 	
 
@@ -34,17 +35,17 @@ public class TensorflowTest : MonoBehaviour {
     public void TestBasicBackendAndOptimizerAndExportGraph()
     {
         //create model first
-        var input = K.Placeholder(new int?[] { -1, 3 });
-        var target = K.Placeholder(new int?[] { -1, 1 });
-        var weight = K.Variable((new Constant(1)).Call(new int[] { 3, 1 }, DataType.Float));
-        var output = K.Dot(input, weight);
-        output = K.Reshape(output, new int[] { -1 });
-        target = K.Reshape(target, new int[] { -1 });
+        var input = K.placeholder(new int?[] { -1, 3 });
+        var target = K.placeholder(new int?[] { -1, 1 });
+        var weight = K.variable((new Constant(1)).Call(new int[] { 3, 1 }, DataType.Float));
+        var output = K.dot(input, weight);
+        output = K.reshape(output, new int[] { -1 });
+        target = K.reshape(target, new int[] { -1 });
 
         var lossM = new MeanSquareError();
         var loss = lossM.Call(target, output);
 
-        loss = K.Constant(1.0f) * loss;
+        loss = K.constant(1.0f) * loss;
 
         //training related
         var weights = new List<Tensor>();
@@ -59,7 +60,7 @@ public class TensorflowTest : MonoBehaviour {
         outputs.Add(loss);
 
 
-        var function = K.Function(inputs, outputs, updates, "Train");
+        var function = K.function(inputs, outputs, updates, "Train");
 
         var inputData = new List<Array>();
         inputData.Add(new float[] { 1.2f, 3.3f, 4.3f, 5, 5, 5 });
@@ -68,10 +69,10 @@ public class TensorflowTest : MonoBehaviour {
         for (int i = 0; i < 20; ++i)
         {
             var functionResult = function.Call(inputData);
-            float resultLoss = (float)functionResult[0].Eval();
+            float resultLoss = (float)functionResult[0].eval();
             print(resultLoss);
         }
-        K.ExportGraphDef("SavedGraph/test.pb");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/test.pb");
     }
 
     public void TestLayer()
@@ -92,9 +93,9 @@ public class TensorflowTest : MonoBehaviour {
 
 
 
-        
 
-        K.ExportGraphDef("SavedGraph/testLayer.pb");
+
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/testLayer.pb");
     }
 
 
@@ -114,21 +115,21 @@ public class TensorflowTest : MonoBehaviour {
         var loss = lossM.Call(target[0], pred);
 
 
-        K.ExportGraphDef("SavedGraph/convLayer.pb");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/convLayer.pb");
     }
 
     public void TestSetAndGetValue()
     {
-        var weight1 = K.Variable((new Constant(1)).Call(new int[] { 3 }, DataType.Float));
-        var weight2 = K.Variable((new Constant(1)).Call(new int[] { 5 }, DataType.Float));
+        var weight1 = K.variable((new Constant(1)).Call(new int[] { 3 }, DataType.Float));
+        var weight2 = K.variable((new Constant(1)).Call(new int[] { 5 }, DataType.Float));
         //call eval once for intiaization
-        K.BatchGetValue(new List<Tensor>() { weight1, weight2 });
+        K.batch_get_value(new List<Tensor>() { weight1, weight2 });
 
         print("Test SetValue() and GetValue()");
         var inputValue1 = new float[] { 8.8f, 9.9f, 1.1f };
-        K.SetValue(weight1, inputValue1);
+        K.set_value(weight1, inputValue1);
 
-        var result1 = (float[])K.GetValue(weight1);
+        var result1 = (float[])K.get_value(weight1);
 
         print("---Input value:" + string.Join(", ", inputValue1));
         print("---Output value:" + string.Join(", ", result1));
@@ -137,14 +138,14 @@ public class TensorflowTest : MonoBehaviour {
 
 
 
-        print("Test BatchSetValue() and BatchGetValue()");
+        print("Test batch_set_value() and batch_get_value()");
         inputValue1 = new float[] { 2.2f, 3.9f, 4.1f };
         var inputValue2 = new float[] { 4.2f, 3.2f, 14.5f, 44.5f, 74.3f };
-        K.BatchSetValue(new List<ValueTuple<Tensor, Array>>() {
+        K.batch_set_value(new List<ValueTuple<Tensor, Array>>() {
             ValueTuple.Create(weight1,inputValue1),ValueTuple.Create(weight2,inputValue2),
         });
 
-        var resultBatch = K.BatchGetValue(new List<Tensor>() { weight1 , weight2 });
+        var resultBatch = K.batch_get_value(new List<Tensor>() { weight1 , weight2 });
 
         
         print("---Input value1:" + string.Join(", ", inputValue1));
@@ -185,7 +186,7 @@ public class TensorflowTest : MonoBehaviour {
         float[,] pred = model.predict(x)[0].To<float[,]>();
 
 
-        K.ExportGraphDef("SavedGraph/sequentialtest.pb");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");
         // Evaluate the model
         double[] scores = model.evaluate(x, y);
         //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");

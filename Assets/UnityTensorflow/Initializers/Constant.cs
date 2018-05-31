@@ -33,7 +33,7 @@ public class Constant : IWeightInitializer
     /// 
     public Tensor Call(int[] shape, DataType? dtype = null)
     {
-        return K.Constant(value, shape: shape, dtype: dtype);
+        return K.constant(value, shape: shape, dtype: dtype);
     }
 }
 

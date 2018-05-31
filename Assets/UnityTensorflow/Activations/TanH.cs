@@ -25,18 +25,32 @@
 //
 
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
 
 using static Current;
 
-public class CategoricalAccuracy : IMetric
+/// <summary>
+///   Hyperbolic tangent activation function.
+/// </summary>
+/// 
+/// <seealso cref="KerasSharp.IActivationFunction" />
+/// 
+[DataContract]
+public class TanH : ActivationFunctionBase, IActivationFunction
 {
-    public Tensor Call(Tensor y_true, Tensor y_pred, Tensor mask = null)
+    /// <summary>
+    /// Wires the activation function to the graph.
+    /// </summary>
+    /// <param name="x">The input tensor.</param>
+    /// <returns>The output tensor with the activation function applied.</returns>
+    public override Tensor Call(Tensor x, Tensor mask)
     {
-        // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/metrics.py#L24
-        return K.cast(K.equal(K.argmax(y_true, axis: -1),
-                     K.argmax(y_pred, axis: -1)),
-             K.floatx());
+        return K.tanh(x);
     }
 }
-

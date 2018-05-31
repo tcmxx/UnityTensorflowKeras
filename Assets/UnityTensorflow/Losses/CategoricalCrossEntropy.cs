@@ -24,7 +24,7 @@ public class CategoricalCrossEntropy : ILoss
         if (sample_weight != null || mask != null)
             throw new NotImplementedException();
 
-        using (K.NameScope("categorical_crossentropy"))
-            return K.CategoricalCrossentropy(expected, actual);
+        using (K.name_scope("categorical_crossentropy"))
+            return K.categorical_crossentropy(expected, actual);
     }
 }

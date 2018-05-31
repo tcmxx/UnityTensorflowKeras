@@ -23,7 +23,7 @@ public class Zeros : IWeightInitializer
     /// 
     public Tensor Call(int[] shape, DataType? dtype = null)
     {
-        return K.Constant(0, shape: shape, dtype: dtype);
+        return K.constant(0, shape: shape, dtype: dtype);
     }
 }
 

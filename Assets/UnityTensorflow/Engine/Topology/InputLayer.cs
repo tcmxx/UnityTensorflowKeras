@@ -85,7 +85,7 @@ public class InputLayer : Layer
             // Attempt automatic input shape inference.
             try
             {
-                batch_input_shape = K.IntShape(input_tensor);
+                batch_input_shape = K.int_shape(input_tensor);
             }
             catch
             {
@@ -113,7 +113,7 @@ public class InputLayer : Layer
         if (input_tensor == null)
         {
             this.is_placeholder = true;
-            input_tensor = K.Placeholder(shape: batch_input_shape,
+            input_tensor = K.placeholder(shape: batch_input_shape,
                                     dtype: dtype,
                                     sparse: this.sparse,
                                     name: this.name);
@@ -121,13 +121,13 @@ public class InputLayer : Layer
         else
         {
             this.is_placeholder = false;
-            input_tensor.KerasShape = batch_input_shape;
+            input_tensor._keras_shape = batch_input_shape;
         }
 
         // Create an input node to add to this.outbound_node
         // and set output_tensors" _keras_history.
-        input_tensor.UsesLearningPhase = false;
-        input_tensor.KerasHistory = ValueTuple.Create((Layer)this, 0, 0);
+        input_tensor._uses_learning_phase = false;
+        input_tensor._keras_history = ValueTuple.Create((Layer)this, 0, 0);
 
         var node = new Node(this,
             inbound_layers: new List<Layer>(),
@@ -146,9 +146,9 @@ public class InputLayer : Layer
         if (dtype == null)
         {
             if (input_tensor == null)
-                dtype = K.Floatx();
+                dtype = K.floatx();
             else
-                dtype = K.DType(input_tensor);
+                dtype = K.dtype(input_tensor);
         }
 
         return dtype.Value;
@@ -159,7 +159,7 @@ public class InputLayer : Layer
         string prefix = "";
         if (name == null)
             prefix = "input";
-        name = prefix + "_" + K.GetUid(prefix);
+        name = prefix + "_" + K.get_uid(prefix);
         return name;
     }
 

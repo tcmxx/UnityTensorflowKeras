@@ -64,11 +64,11 @@ public class L1L2Regularizer : WeightRegularizerBase, IWeightRegularizer
     /// 
     public override Tensor Call(Tensor input)
     {
-        Tensor regularization = K.Constant(0);
+        Tensor regularization = K.constant(0);
         if (l1 > 0)
-            regularization = K.Add(regularization, K.Mul(l1, K.Abs(input)));
+            regularization = K.add(regularization, K.mul(l1, K.abs(input)));
         if (l2 > 2)
-            regularization = K.Add(regularization, K.Mul(l2, K.Abs(input)));
+            regularization = K.add(regularization, K.mul(l2, K.abs(input)));
         return regularization;
     }
 }

@@ -28,7 +28,7 @@ public class BinaryCrossEntropy : ILoss
         if (sample_weight != null || mask != null)
             throw new NotImplementedException();
 
-        using (K.NameScope("binary_cross_entropy"))
-            return K.Mean(K.BinaryCrossentropy(output: actual, target: expected), axis: -1);
+        using (K.name_scope("binary_cross_entropy"))
+            return K.mean(K.binary_crossentropy(output: actual, target: expected), axis: -1);
     }
 }

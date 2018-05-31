@@ -83,7 +83,7 @@ public class VarianceScaling : IWeightInitializer
     /// 
     public Tensor Call(int[] shape, DataType? dtype = null)
     {
-        using (K.NameScope("variance_scaling"))
+        using (K.name_scope("variance_scaling"))
         {
             var temp = _compute_fans(shape);
             var fan_in = temp.Item1; var fan_out = temp.Item2;
@@ -100,12 +100,12 @@ public class VarianceScaling : IWeightInitializer
             if (this.distribution == "normal")
             {
                 var stddev = Math.Sqrt(scale);
-                return K.TruncatedNormal(shape, 0.0, stddev, dtype: dtype, seed: this.seed);
+                return K.truncated_normal(shape, 0.0, stddev, dtype: dtype, seed: this.seed);
             }
             else
             {
                 var limit = Math.Sqrt(3.0 * scale);
-                return K.RandomUniform(shape, -limit, limit, dtype: dtype, seed: this.seed);
+                return K.random_uniform(shape, -limit, limit, dtype: dtype, seed: this.seed);
             }
         }
     }

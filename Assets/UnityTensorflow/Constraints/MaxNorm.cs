@@ -44,9 +44,9 @@ public class MaxNorm : IWeightConstraint
     /// 
     public Tensor Call(Tensor w)
     {
-        Tensor norms = K.Sqrt(K.Sum(K.Square(w), axis: this.axis, keepdims: true));
-        Tensor desired = K.Clip(norms, 0, this.max_value);
-        w = K.Mul(w, K.Div(desired, K.Add(K.EPS, norms)));
+        Tensor norms = K.sqrt(K.sum(K.square(w), axis: this.axis, keepdims: true));
+        Tensor desired = K.clip(norms, 0, this.max_value);
+        w = K.mul(w, K.div(desired, K.add(K.epsilon(), norms)));
         return w;
     }
 }

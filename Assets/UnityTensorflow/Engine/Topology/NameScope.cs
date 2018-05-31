@@ -25,18 +25,22 @@
 //
 
 
-using System.Collections.Generic;
 
-using static Current;
+using System;
+using System.Runtime.Serialization;
+using System.Diagnostics;
 
-public class CategoricalAccuracy : IMetric
+[DataContract]
+[DebuggerDisplay("{ToString()}")]
+public abstract class NameScope : IDisposable
 {
-    public Tensor Call(Tensor y_true, Tensor y_pred, Tensor mask = null)
+    public abstract string Name { get; }
+
+    public abstract void Dispose();
+
+    public override string ToString()
     {
-        // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/metrics.py#L24
-        return K.cast(K.equal(K.argmax(y_true, axis: -1),
-                     K.argmax(y_pred, axis: -1)),
-             K.floatx());
+        return Name;
     }
 }
 

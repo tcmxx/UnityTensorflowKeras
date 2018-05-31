@@ -22,7 +22,7 @@ public class Ones : IWeightInitializer
     /// 
     public Tensor Call(int[] shape, DataType? dtype = null)
     {
-        return K.Constant(1, shape: shape, dtype: dtype);
+        return K.constant(1, shape: shape, dtype: dtype);
     }
 }
 

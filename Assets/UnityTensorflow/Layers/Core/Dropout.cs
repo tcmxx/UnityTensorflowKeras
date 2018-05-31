@@ -76,8 +76,8 @@ public class Dropout : Layer
         if (0.0 < this.rate && this.rate < 1.0)
         {
             var noise_shape = this._get_noise_shape(inputs);
-            return K.InTrainPhase(
-                () => K.Dropout(inputs, this.rate, noise_shape, seed: this.seed),
+            return K.in_train_phase(
+                () => K.dropout(inputs, this.rate, noise_shape, seed: this.seed),
                 () => inputs,
                 training: training);
         }

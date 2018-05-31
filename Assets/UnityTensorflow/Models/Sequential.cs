@@ -77,7 +77,7 @@ public class Sequential : Model, IEnumerable<Layer>
         if (name == null)
         {
             string prefix = "sequential_";
-            name = prefix + K.GetUid(prefix);
+            name = prefix + K.get_uid(prefix);
         }
 
         this.name = name;
@@ -114,14 +114,14 @@ public class Sequential : Model, IEnumerable<Layer>
                 var x = UnityTFUtils.Input(batch_shape: layer.batch_input_shape, dtype: layer.dtype, name: $"{layer.name}_input");
 
                 //Debug.Assert(x[0]._keras_history.Value.layer.GetType() == typeof(InputLayer));
-                Debug.Assert(x[0].KerasHistory.Value.Item1.GetType() == typeof(InputLayer));
+                Debug.Assert(x[0]._keras_history.Value.Item1.GetType() == typeof(InputLayer));
 
                 // This will build the current layer and create the node connecting 
                 // the current layer to the input layer we just created.
                 layer.Call(x);
 
                 //Debug.Assert(x[0]._keras_history.Value.layer.GetType() == typeof(InputLayer));
-                Debug.Assert(x[0].KerasHistory.Value.Item1.GetType() == typeof(InputLayer));
+                Debug.Assert(x[0]._keras_history.Value.Item1.GetType() == typeof(InputLayer));
             }
 
 
@@ -149,8 +149,8 @@ public class Sequential : Model, IEnumerable<Layer>
                                 // no model-level masking for now
                                 input_masks: this.inputs.Select(x => (Tensor)null).ToList(),
                                 output_masks: new List<Tensor>() { null },
-                                input_shapes: this.inputs.Select(x => x.KerasShape).ToList(),
-                                output_shapes: this.outputs.Select(x => x.KerasShape).ToList()
+                                input_shapes: this.inputs.Select(x => x._keras_shape).ToList(),
+                                output_shapes: this.outputs.Select(x => x._keras_shape).ToList()
             );
         }
         else
@@ -165,7 +165,7 @@ public class Sequential : Model, IEnumerable<Layer>
 
             // update this.inbound_nodes
             this.inbound_nodes[0].output_tensors = this.outputs;
-            this.inbound_nodes[0].output_shapes = new List<int?[]> { this.outputs[0].KerasShape };
+            this.inbound_nodes[0].output_shapes = new List<int?[]> { this.outputs[0]._keras_shape };
         }
 
         this.layers.Add(layer);
@@ -197,7 +197,7 @@ public class Sequential : Model, IEnumerable<Layer>
         }
 
         this.inbound_nodes[0].output_tensors = this.outputs;
-        this.inbound_nodes[0].output_shapes = new List<int?[]>() { this.outputs[0].KerasShape };
+        this.inbound_nodes[0].output_shapes = new List<int?[]>() { this.outputs[0]._keras_shape };
         this.built = false;
     }
 

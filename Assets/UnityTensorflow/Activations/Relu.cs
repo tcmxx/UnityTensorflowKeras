@@ -50,6 +50,6 @@ public class ReLU : ActivationFunctionBase, IActivationFunction
         if (mask != null)
             throw new NotSupportedException();
 
-        return K.Relu(x);
+        return K.relu(x);
     }
 }

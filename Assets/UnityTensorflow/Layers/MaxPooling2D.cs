@@ -32,7 +32,7 @@ public class MaxPooling2D : Layer
 
     protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
-        return K.Pool2D(inputs, poolSize, strides, padding, data_format, PoolMode.Max);
+        return K.pool2D(inputs, poolSize, strides, padding, data_format, PoolMode.Max);
     }
 
 

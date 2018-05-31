@@ -42,16 +42,16 @@ public abstract class OptimizerBase
 
     public List<Tensor> get_gradients(Tensor loss, List<Tensor> param)
     {
-        List<Tensor> grads = K.Gradients(loss, param);
+        List<Tensor> grads = K.gradients(loss, param);
 
         if (this.clipnorm > 0)
         {
-            var norm = K.Sqrt(K.Sum(grads.Select(g => K.Sum(K.Square(g))).ToList()));
-            grads = grads.Select(g => K.ClipNorm(g, this.clipnorm, norm)).ToList();
+            var norm = K.sqrt(K.sum(grads.Select(g => K.sum(K.square(g))).ToList()));
+            grads = grads.Select(g => K.clip_norm(g, this.clipnorm, norm)).ToList();
         }
 
         if (clipvalue > 0)
-            grads = grads.Select(g => K.Clip(g, -this.clipvalue, this.clipvalue)).ToList();
+            grads = grads.Select(g => K.clip(g, -this.clipvalue, this.clipvalue)).ToList();
 
         return grads;
     }
@@ -72,7 +72,7 @@ public abstract class OptimizerBase
     {
         var param = this.weights;
         var weight_value_tuples = new List<ValueTuple<Tensor, Array>>();
-        var param_values = K.BatchGetValue(param);
+        var param_values = K.batch_get_value(param);
 
         for (int i = 0; i < param_values.Count; i++)
         {
@@ -86,7 +86,7 @@ public abstract class OptimizerBase
             weight_value_tuples.Add(ValueTuple.Create(p, w));
         }
 
-        K.BatchSetValue(weight_value_tuples);
+        K.batch_set_value(weight_value_tuples);
     }
 
     /// <summary>
@@ -94,6 +94,6 @@ public abstract class OptimizerBase
     /// </summary>
     public List<Array> get_weights()
     {
-        return K.BatchGetValue(this.weights);
+        return K.batch_get_value(this.weights);
     }
 }

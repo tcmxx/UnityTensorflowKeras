@@ -46,17 +46,17 @@ public class SGD : OptimizerBase, IOptimizer
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/optimizers.py#L144
 
-        this.iterations = K.Variable(0, name: "iterations");
-        this.lr = K.Variable(lr, name: "lr");
-        this.momentum = K.Variable(momentum, name: "momentum");
-        this.decay = K.Variable(decay, name: "decay");
+        this.iterations = K.variable(0, name: "iterations");
+        this.lr = K.variable(lr, name: "lr");
+        this.momentum = K.variable(momentum, name: "momentum");
+        this.decay = K.variable(decay, name: "decay");
         this.initial_decay = decay;
         this.nesterov = nesterov;
     }
 
     public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
     {
-        using (K.NameScope($"SGD"))
+        using (K.name_scope($"SGD"))
         {
             var grads = this.get_gradients(loss, param);
             this.updates = new List<List<Tensor>>();
@@ -64,22 +64,22 @@ public class SGD : OptimizerBase, IOptimizer
             if (this.initial_decay > 0)
                 this.lr *= (1 / (1 + this.decay * this.iterations));
 
-            this.updates.Add(new List<Tensor> { K.UpdateAdd(this.iterations, 1f, name: "iterations/update") });
+            this.updates.Add(new List<Tensor> { K.update_add(this.iterations, 1f, name: "iterations/update") });
 
             // momentum
             List<Tensor> moments;
 
-            using (K.NameScope("moments"))
+            using (K.name_scope("moments"))
             {
-                List<int?[]> shapes = param.Select(p => K.GetVariableShape(p)).ToList();
-                moments = shapes.Select(s => K.Zeros(s)).ToList();
+                List<int?[]> shapes = param.Select(p => K.get_variable_shape(p)).ToList();
+                moments = shapes.Select(s => K.zeros(s)).ToList();
             }
 
             this.weights = new[] { this.iterations }.Concat(moments).ToList();
 
             for (int i = 0; i < param.Count; i++)
             {
-                using (K.NameScope($"{param[i].Name}"))
+                using (K.name_scope($"{param[i].name}"))
                 {
                     Tensor p = param[i];
                     Tensor g = grads[i];
@@ -87,7 +87,7 @@ public class SGD : OptimizerBase, IOptimizer
 
                     Tensor v = this.momentum * m - lr * g;  // velocity
 
-                    this.updates.Add(new List<Tensor> { K.Update(m, v, "momentum/update") });
+                    this.updates.Add(new List<Tensor> { K.update(m, v, "momentum/update") });
 
                     Tensor new_p;
                     if (this.nesterov)
@@ -99,7 +99,7 @@ public class SGD : OptimizerBase, IOptimizer
                     if (constraints.ContainsKey(p))
                         new_p = constraints[p].Call(new_p);
 
-                    updates.Add(new List<Tensor> { K.Update(p, new_p, "parameter/update") });
+                    updates.Add(new List<Tensor> { K.update(p, new_p, "parameter/update") });
                 }
             }
 

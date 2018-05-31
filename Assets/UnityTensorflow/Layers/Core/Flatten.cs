@@ -41,7 +41,7 @@ public class Flatten : Layer
 {
     protected override Tensor InnerCall(Tensor inputs, Tensor mask = null, bool? training = null)
     {
-        return K.BatchFlatten(inputs);
+        return K.batch_flatten(inputs);
     }
 
     public override List<int?[]> compute_output_shape(List<int?[]> input_shapes)

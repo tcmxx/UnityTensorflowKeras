@@ -34,23 +34,23 @@ public class RMSProp : OptimizerBase, IOptimizer
 
     public RMSProp(double lr, double rho = 0.9, double epsilon = 1e-8, double decay = 0.0)
     {
-        this.lr = K.Variable(lr, name: "lr");
-        this.rho = K.Variable(rho, name: "rho");
+        this.lr = K.variable(lr, name: "lr");
+        this.rho = K.variable(rho, name: "rho");
         this.epsilon = epsilon;
-        this.decay = K.Variable(decay, name: "decay");
+        this.decay = K.variable(decay, name: "decay");
         this.initial_decay = decay;
-        this.iterations = K.Variable(0.0, name: "iterations");
+        this.iterations = K.variable(0.0, name: "iterations");
     }
 
     public List<List<Tensor>> get_updates(List<Tensor> param, Dictionary<Tensor, IWeightConstraint> constraints, Tensor loss)
     {
-        using (K.NameScope($"rmsprop"))
+        using (K.name_scope($"rmsprop"))
         {
             // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/optimizers.py#L221
 
             List<Tensor> grads = this.get_gradients(loss, param);
-            List<int?[]> shapes = param.Select(p => K.GetVariableShape(p)).ToList();
-            List<Tensor> accumulators = shapes.Select(shape => K.Zeros(shape)).ToList();
+            List<int?[]> shapes = param.Select(p => K.get_variable_shape(p)).ToList();
+            List<Tensor> accumulators = shapes.Select(shape => K.zeros(shape)).ToList();
             this.weights = accumulators;
             this.updates = new List<List<Tensor>>();
 
@@ -58,21 +58,21 @@ public class RMSProp : OptimizerBase, IOptimizer
             if (this.initial_decay > 0)
             {
                 lr = lr * (1.0 / (1.0 + this.decay * this.iterations));
-                this.updates.Add(new List<Tensor> { K.UpdateAdd(this.iterations, 1) });
+                this.updates.Add(new List<Tensor> { K.update_add(this.iterations, 1) });
             }
 
             for (int i = 0; i < param.Count; i++)
             {
-                using (K.NameScope($"{param[i].Name}"))
+                using (K.name_scope($"{param[i].name}"))
                 {
                     Tensor p = param[i];
                     Tensor g = grads[i];
                     Tensor a = accumulators[i];
 
                     // update accumulator
-                    Tensor new_a = this.rho * a + (1.0 - this.rho) * K.Square(g);
-                    this.updates.Add(new List<Tensor> { K.Update(a, new_a) });
-                    Tensor new_p = p - lr * g / (K.Sqrt(new_a) + this.epsilon);
+                    Tensor new_a = this.rho * a + (1.0 - this.rho) * K.square(g);
+                    this.updates.Add(new List<Tensor> { K.update(a, new_a) });
+                    Tensor new_p = p - lr * g / (K.sqrt(new_a) + this.epsilon);
 
                     // apply constraints
                     if (constraints.ContainsKey(p))
@@ -81,7 +81,7 @@ public class RMSProp : OptimizerBase, IOptimizer
                         new_p = c.Call(new_p);
                     }
 
-                    this.updates.Add(new List<Tensor> { K.Update(p, new_p) });
+                    this.updates.Add(new List<Tensor> { K.update(p, new_p) });
                 }
             }
 

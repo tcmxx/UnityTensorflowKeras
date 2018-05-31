@@ -205,7 +205,7 @@ public class _Conv : Layer
 
         if (this.rank == 1)
         {
-            outputs = K.Conv1d(
+            outputs = K.conv1d(
                 inputs,
                 this.kernel,
                 strides: this.strides[0],
@@ -215,7 +215,7 @@ public class _Conv : Layer
         }
         if (this.rank == 2)
         {
-            outputs = K.Conv2d(
+            outputs = K.conv2d(
                 inputs,
                 this.kernel,
                 strides: this.strides,
@@ -225,7 +225,7 @@ public class _Conv : Layer
         }
         if (this.rank == 3)
         {
-            outputs = K.Conv3d(
+            outputs = K.conv3d(
                 inputs,
                 this.kernel,
                 strides: this.strides,
@@ -235,7 +235,7 @@ public class _Conv : Layer
         }
         if (this.use_bias)
         {
-            outputs = K.BiasAdd(
+            outputs = K.bias_add(
                 outputs,
                 this.bias,
                 data_format: this.data_format);

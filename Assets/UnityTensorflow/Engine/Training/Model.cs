@@ -303,12 +303,12 @@ public partial class Model : Container
 
                     if (sample_weight_mode[name] == "temporal")
                     {
-                        weight = K.Placeholder(ndim: 2, name: name + "_sample_weights");
+                        weight = K.placeholder(ndim: 2, name: name + "_sample_weights");
                         sample_weight_modes.Add("temporal");
                     }
                     else
                     {
-                        weight = K.Placeholder(ndim: 1, name: name + "_sample_weights");
+                        weight = K.placeholder(ndim: 1, name: name + "_sample_weights");
                         sample_weight_modes.Add(null);
                     }
                 }
@@ -335,12 +335,12 @@ public partial class Model : Container
                     name = this.output_names[i];
                     if (mode == "temporal")
                     {
-                        weight = K.Placeholder(ndim: 2, name: name + "_sample_weights");
+                        weight = K.placeholder(ndim: 2, name: name + "_sample_weights");
                         sample_weight_modes.Add("temporal");
                     }
                     else
                     {
-                        weight = K.Placeholder(ndim: 1, name: name + "_sample_weights");
+                        weight = K.placeholder(ndim: 1, name: name + "_sample_weights");
                         sample_weight_modes.Add(null);
                     }
                 }
@@ -364,12 +364,12 @@ public partial class Model : Container
                 {
                     if (swm == "temporal")
                     {
-                        sample_weights.Add(K.Placeholder(ndim: 2, name: name + "_sample_weights"));
+                        sample_weights.Add(K.placeholder(ndim: 2, name: name + "_sample_weights"));
                         sample_weight_modes.Add("temporal");
                     }
                     else
                     {
-                        sample_weights.Add(K.Placeholder(ndim: 1, name: name + "_sample_weights"));
+                        sample_weights.Add(K.placeholder(ndim: 1, name: name + "_sample_weights"));
                         sample_weight_modes.Add(null);
                     }
                 }
@@ -397,8 +397,8 @@ public partial class Model : Container
             else
             {
                 int?[] shape = this.internal_output_shapes[i];
-                //Tensor target = K.Placeholder(ndim: shape.Length, name: name + "_target", sparse: K.IsSparse(this.outputs[i]), dtype: K.DType(this.outputs[i]));
-                Tensor target = K.Placeholder(shape: shape, ndim: shape.Length, name: name + "_target", sparse: K.IsSparse(this.outputs[i]), dtype: K.DType(this.outputs[i]));
+                //Tensor target = K.placeholder(ndim: shape.Length, name: name + "_target", sparse: K.is_sparse(this.outputs[i]), dtype: K.dtype(this.outputs[i]));
+                Tensor target = K.placeholder(shape: shape, ndim: shape.Length, name: name + "_target", sparse: K.is_sparse(this.outputs[i]), dtype: K.dtype(this.outputs[i]));
                 this.targets.Add(target);
                 this._feed_targets.Add(target);
             }
@@ -412,7 +412,7 @@ public partial class Model : Container
         // Compute total loss.
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L903
         Tensor total_loss = null;
-        using (K.NameScope("loss"))
+        using (K.name_scope("loss"))
         {
             for (int i = 0; i < this.outputs.Count; i++)
             {
@@ -427,10 +427,10 @@ public partial class Model : Container
                 double loss_weight = loss_weights_list[i];
 
                 Tensor output_loss;
-                using (K.NameScope(this.output_names[i] + "_loss"))
+                using (K.name_scope(this.output_names[i] + "_loss"))
                 {
                     output_loss = weighted_loss.Call(y_true, y_pred, sample_weight, mask);
-                    output_loss = K.Identity(output_loss, "final");
+                    output_loss = K.identity(output_loss, "final");
                 }
 
                 total_loss = output_loss;
@@ -452,21 +452,21 @@ public partial class Model : Container
                 if (this.losses.Count == 0)
                     throw new Exception($"The model cannot be compiled because it has no loss to optimize.");
                 else
-                    total_loss = K.Constant(0);
+                    total_loss = K.constant(0);
             }
 
-            total_loss = K.Identity(total_loss, "output_loss");
+            total_loss = K.identity(total_loss, "output_loss");
 
             // Add regularization penalties
             // and other layer-specific losses.
             foreach (Tensor loss_tensor in this.losses)
                 total_loss += loss_tensor;
 
-            total_loss = K.Identity(total_loss, "total_loss");
+            total_loss = K.identity(total_loss, "total_loss");
         }
 
         // Collect metrics
-        using (K.NameScope("metrics"))
+        using (K.name_scope("metrics"))
         {
             // List of same size as output_names.
             // contains tuples (metrics for output, names of metrics).
@@ -512,7 +512,7 @@ public partial class Model : Container
                         }
                     }
 
-                    using (K.NameScope($"{this.output_names[i]}_{metricName}"))
+                    using (K.name_scope($"{this.output_names[i]}_{metricName}"))
                     {
                         // Different from the original Keras implementation:
                         var masked_metric_fn = _masked_objective(metric);
@@ -548,7 +548,7 @@ public partial class Model : Container
         // Sort weights by name.
         if (trainable_weights.Count > 0)
         {
-            trainable_weights.OrderBy(keySelector: x => x.Name);
+            trainable_weights.OrderBy(keySelector: x => x.name);
             this._collected_trainable_weights = trainable_weights;
         }
     }
@@ -619,46 +619,46 @@ public partial class Model : Container
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L459
 
         Func<Tensor, Tensor, Tensor, Tensor> masked = delegate(Tensor y_true, Tensor y_pred, Tensor mask) {
-            y_true = K.Identity(y_true, "y_true");
-            y_pred = K.Identity(y_pred, "y_pred");
+            y_true = K.identity(y_true, "y_true");
+            y_pred = K.identity(y_pred, "y_pred");
 
             // score_array has ndim >= 2
             Tensor score_array = metric_fn.Call(y_true, y_pred);
 
             if (mask != null)
             {
-                // Cast the mask to floatX to avoid float64 upcasting in theano
-                mask = K.Cast(mask, K.Floatx());
+                // cast the mask to floatX to avoid float64 upcasting in theano
+                mask = K.cast(mask, K.floatx());
                 // mask should have the same shape as score_array
                 score_array *= mask;
                 //  the loss per batch should be proportional
                 //  to the number of unmasked samples.
-                score_array /= K.Mean(mask);
+                score_array /= K.mean(mask);
             }
 
-            return K.Mean(K.Cast(score_array, K.Floatx()), name: "score_array/mean");
+            return K.mean(K.cast(score_array, K.floatx()), name: "score_array/mean");
         };
 
         /*UnityTFTensor masked(UnityTFTensor y_true, UnityTFTensor y_pred, UnityTFTensor mask = null)
         {
-            y_true = K.Identity(y_true, "y_true");
-            y_pred = K.Identity(y_pred, "y_pred");
+            y_true = K.identity(y_true, "y_true");
+            y_pred = K.identity(y_pred, "y_pred");
 
             // score_array has ndim >= 2
             UnityTFTensor score_array = metric_fn.Call(y_true, y_pred);
 
             if (mask != null)
             {
-                // Cast the mask to floatX to avoid float64 upcasting in theano
-                mask = K.Cast(mask, K.Floatx());
+                // cast the mask to floatX to avoid float64 upcasting in theano
+                mask = K.cast(mask, K.floatx());
                 // mask should have the same shape as score_array
                 score_array *= mask;
                 //  the loss per batch should be proportional
                 //  to the number of unmasked samples.
-                score_array /= K.Mean(mask);
+                score_array /= K.mean(mask);
             }
 
-            return K.Mean(K.Cast(score_array, K.Floatx()), name: "score_array/mean");
+            return K.mean(K.cast(score_array, K.floatx()), name: "score_array/mean");
         }*/
 
         return new CustomMetric(masked);
@@ -684,78 +684,78 @@ public partial class Model : Container
 
         Func<Tensor, Tensor, Tensor, Tensor, Tensor> weighted = delegate (Tensor y_true, Tensor y_pred, Tensor weights, Tensor mask)
         {
-            y_true = K.Identity(y_true, "y_true");
-            y_pred = K.Identity(y_pred, "y_pred");
-            weights = K.Identity(weights, "weights");
+            y_true = K.identity(y_true, "y_true");
+            y_pred = K.identity(y_pred, "y_pred");
+            weights = K.identity(weights, "weights");
 
             // score_array has ndim >= 2
             Tensor score_array = fn.Call(y_true, y_pred);
 
             if (mask != null)
             {
-                // Cast the mask to floatX to avoid float64 upcasting in theano
-                mask = K.Cast(mask, K.Floatx());
+                // cast the mask to floatX to avoid float64 upcasting in theano
+                mask = K.cast(mask, K.floatx());
                 // mask should have the same shape as score_array
                 score_array = score_array * mask;
                 //  the loss per batch should be proportional
                 //  to the number of unmasked samples.
-                score_array = score_array / K.Mean(mask);
+                score_array = score_array / K.mean(mask);
             }
 
             // reduce score_array to same ndim as weight array
-            int? ndim = K.NDim(score_array);
-            int? weight_ndim = K.NDim(weights);
+            int? ndim = K.ndim(score_array);
+            int? weight_ndim = K.ndim(weights);
             if (ndim != weight_ndim)
-                score_array = K.Mean(score_array, axis: UnityTFUtils.Range(weight_ndim, ndim));
+                score_array = K.mean(score_array, axis: UnityTFUtils.Range(weight_ndim, ndim));
 
             // apply sample weighting
             if (weights != null)
             {
-                var weightMean = K.Mean(K.Cast(K.NotEqual(weights, K.Constant(0)), K.Floatx()), name: "weightMean");
+                var weightmean = K.mean(K.cast(K.not_equal(weights, K.constant(0)), K.floatx()), name: "weightmean");
                 score_array *= weights;
-                score_array /= weightMean;
-                score_array = K.Identity(score_array, name: "weighted_score_array");
+                score_array /= weightmean;
+                score_array = K.identity(score_array, name: "weighted_score_array");
             }
 
-            return K.Mean(score_array, name: "score_array/mean");
+            return K.mean(score_array, name: "score_array/mean");
         };
 
         /*UnityTFTensor weighted(UnityTFTensor y_true, UnityTFTensor y_pred, UnityTFTensor weights, UnityTFTensor mask = null)
         {
-            y_true = K.Identity(y_true, "y_true");
-            y_pred = K.Identity(y_pred, "y_pred");
-            weights = K.Identity(weights, "weights");
+            y_true = K.identity(y_true, "y_true");
+            y_pred = K.identity(y_pred, "y_pred");
+            weights = K.identity(weights, "weights");
 
             // score_array has ndim >= 2
             UnityTFTensor score_array = fn.Call(y_true, y_pred);
 
             if (mask != null)
             {
-                // Cast the mask to floatX to avoid float64 upcasting in theano
-                mask = K.Cast(mask, K.Floatx());
+                // cast the mask to floatX to avoid float64 upcasting in theano
+                mask = K.cast(mask, K.floatx());
                 // mask should have the same shape as score_array
                 score_array = score_array * mask;
                 //  the loss per batch should be proportional
                 //  to the number of unmasked samples.
-                score_array = score_array / K.Mean(mask);
+                score_array = score_array / K.mean(mask);
             }
 
             // reduce score_array to same ndim as weight array
-            int? ndim = K.NDim(score_array);
-            int? weight_ndim = K.NDim(weights);
+            int? ndim = K.ndim(score_array);
+            int? weight_ndim = K.ndim(weights);
             if (ndim != weight_ndim)
-                score_array = K.Mean(score_array, axis: range(weight_ndim, ndim));
+                score_array = K.mean(score_array, axis: range(weight_ndim, ndim));
 
             // apply sample weighting
             if (weights != null)
             {
-                var weightMean = K.Mean(K.Cast(K.NotEqual(weights, K.Constant(0)), K.Floatx()), name: "weightMean");
+                var weightmean = K.mean(K.cast(K.NotEqual(weights, K.constant(0)), K.floatx()), name: "weightmean");
                 score_array *= weights;
-                score_array /= weightMean;
-                score_array = K.Identity(score_array, name: "weighted_score_array");
+                score_array /= weightmean;
+                score_array = K.identity(score_array, name: "weighted_score_array");
             }
 
-            return K.Mean(score_array, name: "score_array/mean");
+            return K.mean(score_array, name: "score_array/mean");
         }*/
 
         return new CustomLoss(weighted);
@@ -769,14 +769,14 @@ public partial class Model : Container
         {
             var inputs = (Enumerable.Concat(this._feed_inputs, this._feed_targets).Concat(this._feed_sample_weights)).ToList();
 
-            if (this.uses_learning_phase && !(K.LearningPhase() is int))
-                inputs.Add((Tensor)K.LearningPhase());
+            if (this.uses_learning_phase && !(K.learning_phase() is int))
+                inputs.Add((Tensor)K.learning_phase());
 
             List<List<Tensor>> training_updates = this.optimizer.get_updates(this._collected_trainable_weights, this.constraints, this.total_loss);
             List<List<Tensor>> updates = Enumerable.Concat(this.updates, training_updates).ToList();
 
             // Gets loss and metrics. Updates weights at each call.	
-            this.train_function = K.Function(inputs, ((new[] { this.total_loss }).Concat(this.metrics_tensors)).ToList(),
+            this.train_function = K.function(inputs, ((new[] { this.total_loss }).Concat(this.metrics_tensors)).ToList(),
                 updates: updates, name: "train_function"); //, **this._function_kwargs)
         }
     }
@@ -787,12 +787,12 @@ public partial class Model : Container
         if (this.test_function == null)
         {
             var inputs = this._feed_inputs.Concat(this._feed_targets).Concat(this._feed_sample_weights).ToList();
-            if (this.uses_learning_phase && !(K.LearningPhase() is int))
-                inputs.Add((Tensor)K.LearningPhase());
+            if (this.uses_learning_phase && !(K.learning_phase() is int))
+                inputs.Add((Tensor)K.learning_phase());
 
             // Return loss and metrics, no gradient updates.
             // Does update the network states.
-            this.test_function = K.Function(inputs, new[] { this.total_loss }.Concat(this.metrics_tensors).ToList(),
+            this.test_function = K.function(inputs, new[] { this.total_loss }.Concat(this.metrics_tensors).ToList(),
                 updates: this.state_updates(), name: "test_function"); //, **this._function_kwargs);
         }
     }
@@ -801,9 +801,9 @@ public partial class Model : Container
     {
         if (this.predict_function == null)
         {
-            if (this.uses_learning_phase && !(K.LearningPhase() is int))
+            if (this.uses_learning_phase && !(K.learning_phase() is int))
             {
-                inputs = this._feed_inputs.Concat(new List<Tensor>() { (Tensor)K.LearningPhase() }).ToList();
+                inputs = this._feed_inputs.Concat(new List<Tensor>() { (Tensor)K.learning_phase() }).ToList();
             }
             else
             {
@@ -813,7 +813,7 @@ public partial class Model : Container
             // Does update the network states.
             // kwargs = getattr( "_function_kwargs', { });
 
-            this.predict_function = K.Function(inputs, this.outputs,
+            this.predict_function = K.function(inputs, this.outputs,
                 updates: this.state_updates(), name: "predict_function"); //, **kwargs);
         }
     }
@@ -1117,7 +1117,7 @@ public partial class Model : Container
             {
                 foreach (var batch_out in batch_outs)
                 {
-                    var shape = new int[] { samples }.Concatenate(batch_out.Shape.Apply(x => x.Value).Get(1, 0));
+                    var shape = new int[] { samples }.Concatenate(batch_out.shape.Apply(x => x.Value).Get(1, 0));
                    // outs.Add(Matrix.Zeros(batch_out.dtype.Value.ToType(), shape));
                     outs.Add(Array.CreateInstance(batch_out.dtype.Value.ToType(), shape));
                 }
@@ -1126,7 +1126,7 @@ public partial class Model : Container
             for (int i = 0; i < batch_outs.Count; i++)
             {
                 var batch_out = batch_outs[i];
-                Array array = (Array)batch_out.Eval();
+                Array array = (Array)batch_out.eval();
                 outs[i].SetEx(dimension: 0, start: batch_start, end: batch_end, value: array);
                 if (verbose == 1)
                     progbar.update(batch_end);
@@ -1202,7 +1202,7 @@ public partial class Model : Container
             if (batch_index == 0)
             {
                 foreach (Tensor batch_out in batch_outs)
-                    outs.Add(K.Constant(0));
+                    outs.Add(K.constant(0));
             }
 
             for (int i = 0; i < batch_outs.Count; i++)
@@ -1218,7 +1218,7 @@ public partial class Model : Container
         for (int i = 0; i < outs.Count; i++)
             outs[i] = outs[i] / samples;
 
-        return outs.Select(x => x.Eval().To<double>()).ToList().ToArray();
+        return outs.Select(x => x.eval().To<double>()).ToList().ToArray();
     }
 
     private object _slice_arrays(List<Tensor> ins, int[] batch_ids)
@@ -1720,7 +1720,7 @@ y_binary = to_categorical(y_int)
             val_f = this.test_function;
 
             val_ins = new List<Array>();
-            if (this.uses_learning_phase && !(K.LearningPhase() is int))
+            if (this.uses_learning_phase && !(K.learning_phase() is int))
             {
                 val_ins = (val_xx.Concat(val_yy).Concat(val_sample_weightsx).Concat(new List<Array>() { new[] { 0 } })).ToList();
             }
@@ -1753,7 +1753,7 @@ y_binary = to_categorical(y_int)
             this._make_test_function();
             val_f = this.test_function;
 
-            if (this.uses_learning_phase && !(K.LearningPhase() is int))
+            if (this.uses_learning_phase && !(K.learning_phase() is int))
             {
                 val_ins = val_xx.Concat(val_yy).Concat(val_sample_weights).Concat(new List<Array>() { new[] { 0 } }).ToList();
             }
@@ -1772,7 +1772,7 @@ y_binary = to_categorical(y_int)
         List<Array> ins;
 
         // Prepare input arrays and training function.
-        if (this.uses_learning_phase && !(K.LearningPhase() is int))
+        if (this.uses_learning_phase && !(K.learning_phase() is int))
         {
             ins = xx.Concat(yy).Concat(sample_weightsx).Concat(new List<Array>() { new[] { 1 } }).ToList();
         }
@@ -1878,7 +1878,7 @@ y_binary = to_categorical(y_int)
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/engine/training.py#L1546
         // Prepare inputs, delegate logic to `_test_loop`.
         var ins = new List<Array>();
-        if (this.uses_learning_phase && !(K.LearningPhase() is int))
+        if (this.uses_learning_phase && !(K.learning_phase() is int))
             ins = x.Concat(y).Concat(sample_weight).Concat(new List<int[]> { new[] { 0 } }).ToList();
         else
             ins = x.Concat(y).Concat(sample_weight.ToArray()).ToList();
@@ -1936,7 +1936,7 @@ y_binary = to_categorical(y_int)
         List<Array> ins;
 
         // Prepare inputs, delegate logic to `_predict_loop`.
-        if (this.uses_learning_phase && !(K.LearningPhase() is int))
+        if (this.uses_learning_phase && !(K.learning_phase() is int))
             ins = xx.Concat(new List<int[]> { new[] { 0 } }).ToList();
         else
             ins = xx.ToList();
@@ -1969,7 +1969,7 @@ y_binary = to_categorical(y_int)
     public virtual List<Tensor> train_on_batch(List<Array> x, List<Array> y, List<Array> sample_weightsx, Dictionary<string, Tensor> class_weight = null)
     {
         var ins = new List<Array>();
-        if (this.uses_learning_phase && !(K.LearningPhase() is int))
+        if (this.uses_learning_phase && !(K.learning_phase() is int))
             ins = x.Concat(y).Concat(sample_weightsx).Concat(new List<Array>() { new[] { 1 } }).ToList();
         else
             ins = x.Concat(y).Concat(sample_weightsx).ToList();
@@ -2009,7 +2009,7 @@ y_binary = to_categorical(y_int)
     private List<Tensor> test_on_batch(List<Array> xx, List<Array> yy, List<Array> sample_weight)
     {
         var ins = new List<Array>();
-        if (this.uses_learning_phase && !(K.LearningPhase() is int))
+        if (this.uses_learning_phase && !(K.learning_phase() is int))
         {
             ins = xx.Concat(yy).Concat(sample_weight).Concat(new List<Array>() { new[] { 0 } }).ToList();
         }
@@ -2040,7 +2040,7 @@ y_binary = to_categorical(y_int)
     {
         var ins = new List<Array>();
 
-        if (this.uses_learning_phase && !(K.LearningPhase() is int))
+        if (this.uses_learning_phase && !(K.learning_phase() is int))
         {
             ins = x.Concat(new List<Array>() { new[] { 0 } }).ToList();
         }
@@ -2180,7 +2180,7 @@ y_binary = to_categorical(y_int)
 
             List<Array> val_data = val_xx.Concat(val_yy).Concat(val_sample_weights).ToList();
 
-            if (this.uses_learning_phase && !(K.LearningPhase() is int))
+            if (this.uses_learning_phase && !(K.learning_phase() is int))
             {
                 val_data.Add(new[] { 0 });
 
@@ -2243,15 +2243,15 @@ y_binary = to_categorical(y_int)
                             int batch_size;
                             if (x is IList)
                             {
-                                batch_size = x[0].Shape[0].Value;
+                                batch_size = x[0].shape[0].Value;
                             }
                             else if (x is IDictionary)
                             {
-                                batch_size = x[0].Shape[0].Value;
+                                batch_size = x[0].shape[0].Value;
                             }
                             else
                             {
-                                batch_size = x[0].Shape[0].Value;
+                                batch_size = x[0].shape[0].Value;
                             }
 
 
@@ -2405,15 +2405,15 @@ y_binary = to_categorical(y_int)
             if (enqueuer != null)
                 enqueuer.stop();
         }
-        return weightedMean(all_outs, batch_sizes);
+        return weightedmean(all_outs, batch_sizes);
         //var averages = new List<object>();
         //foreach (int i in Vector.Range(outs))
-        //    averages.Add(weightedMean(all_outs.Select(o => o[i]).ToList(), batch_sizes: batch_sizes));
+        //    averages.Add(weightedmean(all_outs.Select(o => o[i]).ToList(), batch_sizes: batch_sizes));
         //return averages;
         */
     }
 
-    private static List<Tensor> weightedMean(List<Tensor> all_outs, List<int> batch_sizes)
+    private static List<Tensor> weightedmean(List<Tensor> all_outs, List<int> batch_sizes)
     {
         throw new NotImplementedException();
     }

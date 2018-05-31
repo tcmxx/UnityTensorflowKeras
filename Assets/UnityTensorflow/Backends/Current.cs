@@ -5,7 +5,7 @@ using System.Reflection;
 
 public static class Current
 {
-    private static ThreadLocal<UnityTFBackend> backend;
+    private static ThreadLocal<IBackend> backend;
 
     private static string[] assemblyNames =
     {
@@ -14,7 +14,7 @@ public static class Current
 
     public static string Name = "UnityTFBackend";
 
-    public static UnityTFBackend K
+    public static IBackend K
     {
         get { return backend.Value; }
         set { backend.Value = value; }
@@ -22,7 +22,7 @@ public static class Current
 
     static Current()
     {
-        backend = new ThreadLocal<UnityTFBackend>(() => load(Name));
+        backend = new ThreadLocal<IBackend>(() => load(Name));
     }
 
     public static void Switch<T>()
@@ -38,11 +38,11 @@ public static class Current
 
 
 
-    private static UnityTFBackend load(string typeName)
+    private static IBackend load(string typeName)
     {
         //Type type = find(typeName);
         Type type = typeof(UnityTFBackend);
-        UnityTFBackend obj = (UnityTFBackend)Activator.CreateInstance(type);
+        IBackend obj = (IBackend)Activator.CreateInstance(type);
 
         return obj;
     }

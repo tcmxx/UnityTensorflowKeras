@@ -25,18 +25,29 @@
 //
 
 
-using System.Collections.Generic;
+    using static Current;
 
-using static Current;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.Serialization;
+    using System.Text;
+    using System.Threading.Tasks;
 
-public class CategoricalAccuracy : IMetric
-{
-    public Tensor Call(Tensor y_true, Tensor y_pred, Tensor mask = null)
+
+    /// <summary>
+    ///   Scaled Exponential Linear Unit (SeLU) activation function.
+    /// </summary>
+    /// 
+    /// <seealso cref="KerasSharp.IActivationFunction" />
+    /// 
+    [DataContract]
+    public class SeLU : ActivationFunctionBase, IActivationFunction
     {
-        // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/metrics.py#L24
-        return K.cast(K.equal(K.argmax(y_true, axis: -1),
-                     K.argmax(y_pred, axis: -1)),
-             K.floatx());
+        public override Tensor Call(Tensor x, Tensor mask = null)
+        {
+            double alpha = 1.6732632423543772848170429916717;
+            double scale = 1.0507009873554804934193349852946;
+            return K.mul(scale, K.elu(x, alpha));
+        }
     }
-}
-
