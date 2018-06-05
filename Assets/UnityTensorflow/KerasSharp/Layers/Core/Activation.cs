@@ -56,12 +56,12 @@ public class Activation : Layer
         this.activation = activation;
     }
 
-    public Activation(string name)
+    /*public Activation(string name)
     {
         this.activation = Create(name);
-    }
+    }*/
 
-    public static IActivationFunction Create(string name)
+    /*public static IActivationFunction Create(string name)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/activations.py#L90
         Type type = typeof(IActivationFunction);
@@ -76,7 +76,7 @@ public class Activation : Layer
 
         var activationFunction = (IActivationFunction)Activator.CreateInstance(activationType);
         return activationFunction;
-    }
+    }*/
 
     protected override List<Tensor> InnerCall(List<Tensor> inputs, List<Tensor> mask = null, bool? training = null)
     {

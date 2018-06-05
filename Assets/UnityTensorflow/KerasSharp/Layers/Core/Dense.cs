@@ -115,7 +115,7 @@ public class Dense : Layer
         this.supports_masking = true;
     }
 
-    /// <summary>
+    /*/// <summary>
     /// Initializes a new instance of the <see cref="Dense"/> class.
     /// </summary>
     /// 
@@ -137,7 +137,7 @@ public class Dense : Layer
                kernel_constraint: kernel_constraint, bias_constraint: bias_constraint,
                input_dim: input_dim, input_shape: input_shape, batch_input_shape: batch_input_shape)
     {
-    }
+    }*/
 
     protected override void build(List<int?[]> input_shape)
     {

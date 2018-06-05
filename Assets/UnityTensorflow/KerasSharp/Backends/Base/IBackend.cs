@@ -47,6 +47,10 @@ public interface IBackend : IDisposable
 
 
     Tensor clip(Tensor norms, int v, int maxValue);
+    Tensor clip(Tensor norms, double min_value, double max_value);
+    Tensor clip(Tensor norms, Tensor min_value, Tensor max_value);
+    Tensor clip_norm(Tensor g, double clipnorm, Tensor norm);
+    
 
     Tensor zeros(int[] shape, DataType? dtype = null, string name = null);
 
@@ -69,13 +73,12 @@ public interface IBackend : IDisposable
     Tensor softmax(Tensor x);
 
 
-    Tensor max(Tensor x, int v, object p);
 
     Tensor reshape(Tensor x, int[] shape);
 
     int? ndim(Tensor x);
 
-    Tensor max(Tensor x, int axis, bool keepdims);
+    
 
 
     Tensor elu(Tensor x);
@@ -146,7 +149,7 @@ public interface IBackend : IDisposable
 
 
 
-    Tensor clip(Tensor norms, double min_value, double max_value);
+    
 
 
 
@@ -165,8 +168,12 @@ public interface IBackend : IDisposable
     Tensor categorical_crossentropy(Tensor target, Tensor output, bool from_logits = false);
 
     Tensor max(Tensor tensor, int axis);
-
+    Tensor max(Tensor x, int v, object p);
+    Tensor max(Tensor x, int axis, bool keepdims);
     Tensor maximum(double v, Tensor tensor);
+
+    Tensor min(Tensor a, Tensor b);
+    Tensor min(Tensor x, int axis, bool keepdims);
 
     Tensor binary_crossentropy(Tensor output, Tensor target, bool from_logits = false);
 
@@ -196,7 +203,7 @@ public interface IBackend : IDisposable
 
     NameScope name_scope(string name);
 
-    Tensor clip_norm(Tensor g, double clipnorm, Tensor norm);
+    
 
     Tensor identity(Tensor x, string name = null);
 
@@ -248,4 +255,6 @@ public interface IBackend : IDisposable
     Tensor pool2D(Tensor input, int[] poolSize, int[] strides,
                PaddingType padding, DataFormatType? dataFormat = null,
                PoolMode poolMode = PoolMode.Max);
+
+    
 }

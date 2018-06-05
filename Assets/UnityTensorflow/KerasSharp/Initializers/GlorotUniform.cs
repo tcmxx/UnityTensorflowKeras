@@ -14,16 +14,17 @@ using System.Runtime.Serialization;
 public class GlorotUniform : IWeightInitializer
 {
     private int? seed;
-
+    private float scale;
     /// <summary>
     /// Initializes a new instance of the <see cref="GlorotUniform"/> class.
     /// </summary>
     /// 
     /// <param name="seed">The integer used to seed the random generator.</param>
     /// 
-    public GlorotUniform(int? seed = null)
+    public GlorotUniform(int? seed = null, float scale = 1)
     {
         this.seed = seed;
+        this.scale = scale;
     }
 
     /// <summary>
@@ -38,7 +39,7 @@ public class GlorotUniform : IWeightInitializer
     /// 
     public Tensor Call(int[] shape, DataType? dtype = null)
     {
-        return new VarianceScaling(scale: 1.0, mode: "fan_avg", distribution: "uniform", seed: seed).Call(shape, dtype);
+        return new VarianceScaling(scale: this.scale, mode: "fan_avg", distribution: "uniform", seed: seed).Call(shape, dtype);
     }
 }
 

@@ -6,16 +6,17 @@ using UnityEngine;
 
 public struct TakeActionOutput
 {
-    public float[] outputAction;
-    public float[] allProbabilities;
-    public float[] value;
-    public float[] entropy;
 
-    public float[] learningRate;
 
-    public float[] memory;
 
-    public string[] textAction;
+    public Dictionary<Agent,float[]> outputAction;
+    public Dictionary<Agent, float[]> allProbabilities;
+    public Dictionary<Agent, float> value;
+    //public Dictionary<Agent, float> entropy;
+    
+    //public Dictionary<Agent, float[]> memory;
+
+    //public Dictionary<Agent, string> textAction;
 }
 
 public abstract class Trainer:MonoBehaviour {

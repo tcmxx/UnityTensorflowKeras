@@ -11,17 +11,8 @@ using System.Linq;
 /// CoreBrain which decides actions using internally embedded TensorFlow model.
 public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 {
-    
+
     bool hasRecurrent;
-    bool hasState;
-    bool hasBatchSize;
-    bool hasPrevAction;
-    float[,] inputState;
-    int[] inputPrevAction;
-    List<float[,,,]> observationMatrixList;
-    float[,] inputOldMemories;
-    List<Texture2D> texturesHolder;
-    int memorySize;
 
     /// Reference to the brain that uses this CoreBrainInternal
     public Brain brain;
@@ -42,8 +33,6 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     /// Loads the tensorflow graph model to generate a TFGraph object
     public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
     {
-        observationMatrixList = new List<float[,,,]>();
-        texturesHolder = new List<Texture2D>();
     }
 
 
@@ -52,6 +41,8 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     /// the actions.
     public void DecideAction(Dictionary<Agent, AgentInfo> agentInfo)
     {
+
+        
         trainer.AddExperience(currentInfo, agentInfo, prevActionOutput);
         trainer.ProcessExperience(currentInfo, agentInfo);
 
@@ -77,6 +68,22 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         prevActionOutput = trainer.TakeAction(currentInfo);
 
         //TODO Update the agent action
+        List<Agent> agentList = agentInfo.Keys.ToList();
+        if (hasRecurrent)
+        {
+            foreach (Agent agent in agentList)
+            {
+                //agent.UpdateMemoriesAction(prevActionOutput.memory[agent].ToList());
+            }
+        }
+
+
+        foreach (Agent agent in agentList)
+        {
+            agent.UpdateVectorAction(prevActionOutput.outputAction[agent]);
+
+        }
+
     }
 
     /// Displays the parameters of the CoreBrainInternal in the Inspector 
@@ -86,8 +93,8 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
         var serializedBrain = new SerializedObject(this);
-        
-        
+
+
 
         var trainerProperty = serializedBrain.FindProperty("trainer");
         serializedBrain.Update();

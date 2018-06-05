@@ -381,7 +381,7 @@ public class Conv2D : _Conv
         this.input_spec = new List<InputSpec> { new InputSpec(ndim: 4) };
     }
 
-    public Conv2D(int filters,
+    /*public Conv2D(int filters,
      int[] kernel_size = null,
      int[] strides = null,
      PaddingType padding = PaddingType.Valid,
@@ -414,6 +414,6 @@ public class Conv2D : _Conv
     bias_constraint: bias_constraint,
     input_shape: input_shape)
     {
-    }
+    }*/
 
 }

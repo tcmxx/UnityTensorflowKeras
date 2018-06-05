@@ -299,7 +299,12 @@ public class UnityTFBackend : BackendBase, IBackend
         o = Graph.Minimum(o, _constant(max_value));
         return Out(o);
     }
-
+    public Tensor clip(Tensor norms, Tensor min_value, Tensor max_value)
+    {
+        TFOutput o = Graph.Maximum(In(norms), In(min_value));
+        o = Graph.Minimum(o, In(max_value));
+        return Out(o);
+    }
     public Tensor clip_norm(Tensor g, double clipnorm, Tensor norm)
     {
         throw new NotImplementedException();
@@ -686,13 +691,27 @@ public class UnityTFBackend : BackendBase, IBackend
 
     public Tensor max(Tensor x, int axis, bool keepdims)
     {
-        throw new NotImplementedException();
+        var o = Graph.Max(In(x), Graph.Const(axis), keepdims);
+        return Out(o);
     }
 
     public Tensor max(Tensor tensor, int axis)
     {
-        throw new NotImplementedException();
+        var o = Graph.Max(In(tensor), Graph.Const(axis), false);
+        return Out(o);
     }
+
+    public Tensor min(Tensor a, Tensor b)
+    {
+        var o = Graph.Minimum(In(a), In(b));
+        return Out(o);
+    }
+    public Tensor min(Tensor x, int axis, bool keepdims)
+    {
+       var o = Graph.Min(In(x), Graph.Const(axis), keepdims);
+        return Out(o);
+    }
+
 
     public Tensor maximum(double v, Tensor tensor)
     {
@@ -1015,6 +1034,7 @@ public class UnityTFBackend : BackendBase, IBackend
     public Tensor sum(List<Tensor> x, int[] axis = null, bool keepdims = false, string name = null)
     {
         throw new NotImplementedException();
+        
     }
 
     public Tensor sum(Tensor tensor)
@@ -1424,7 +1444,10 @@ private TFOutput _postprocess_conv2d_output(TFOutput x, DataFormatType data_form
         return Out(Graph.Round(In(x)));
     }
 
-    public DataType floatx()
+
+
+
+public DataType floatx()
     {
         return DataType.Float;
     }
