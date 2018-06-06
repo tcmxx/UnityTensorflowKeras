@@ -17,9 +17,13 @@ public class TrainingStats
 public class TrainerPPO : Trainer
 {
 
-    public ModelPPO model;
+    public ModelPPO modelRef;
     public TrainerParamsPPO parameters;
+    [HideInInspector]
     public Brain brain;
+
+
+
 
     protected DataBuffer dataBuffer;
     public int DataCountStored { get { return dataBuffer.CurrentCount; } }
@@ -41,6 +45,7 @@ public class TrainerPPO : Trainer
         statesEpisodeHistory = new Dictionary<Agent, List<float>>();
         rewardsEpisodeHistory = new Dictionary<Agent, List<float>>();
         actionsEpisodeHistory = new Dictionary<Agent, List<float>>();
+        actionprobsEpisodeHistory = new Dictionary<Agent, List<float>>();
         valuesEpisodeHistory = new Dictionary<Agent, List<float>>();
 
 
@@ -56,16 +61,28 @@ public class TrainerPPO : Trainer
 
 
         //stats = new TrainingStats();
+        modelRef.Initialize(brain);
     }
 
 
-
+    public override void SetBrain(Brain brain)
+    {
+        this.brain = brain;
+    }
 
     public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
         {
+            if (!statesEpisodeHistory.ContainsKey(agent))
+            {
+                statesEpisodeHistory[agent] = new List<float>();
+                rewardsEpisodeHistory[agent] = new List<float>();
+                actionsEpisodeHistory[agent] = new List<float>();
+                actionprobsEpisodeHistory[agent] = new List<float>();
+                valuesEpisodeHistory[agent] = new List<float>();
+            }
             statesEpisodeHistory[agent].AddRange(currentInfo[agent].vectorObservation.ToArray());
             rewardsEpisodeHistory[agent].Add(newInfo[agent].reward);
             actionsEpisodeHistory[agent].AddRange(actionOutput.outputAction[agent]);
@@ -105,7 +122,7 @@ public class TrainerPPO : Trainer
             {
                 //update process the episode data for PPO.
 
-                float nextValue = model.EvaluateValue(agentNewInfo.vectorObservation.ToArray())[0];
+                float nextValue = modelRef.EvaluateValueOne(agentNewInfo.vectorObservation.ToArray())[0];
                 var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
                     valuesEpisodeHistory[agent].ToArray(), parameters.rewardDiscountFactor, parameters.rewardGAEFactor, nextValue);
                 float[] targetValues = new float[advantages.Length];
@@ -150,12 +167,12 @@ public class TrainerPPO : Trainer
             //get the action from model
             float[] states = agentInfos[agent].vectorObservation.ToArray();
             float[] actionProbs = null;
-            float[] tempAction = model.EvaluateAction(states, out actionProbs, brain.brainParameters.vectorActionSpaceType);
+            float[] tempAction = modelRef.EvaluateActionOne(states, out actionProbs, brain.brainParameters.vectorActionSpaceType);
             result.allProbabilities[agent] = actionProbs;
             result.outputAction[agent] = tempAction;
 
             //get the expected value from model
-            float[] value = model.EvaluateValue(states);
+            float[] value = modelRef.EvaluateValueOne(states);
             result.value[agent] = value[0];
         }
         
@@ -191,11 +208,12 @@ public class TrainerPPO : Trainer
             int actionUnitSize = (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? brain.brainParameters.vectorActionSize : 1);
             for (int j = 0; j < batchCount; ++j)
             {
-                model.TrainBatch(SubArray(states, j * parameters.batchSize * brain.brainParameters.vectorObservationSize, parameters.batchSize * brain.brainParameters.vectorObservationSize),
+                float loss = modelRef.TrainBatch(SubArray(states, j * parameters.batchSize * brain.brainParameters.vectorObservationSize, parameters.batchSize * brain.brainParameters.vectorObservationSize),
                     SubArray(actions, j * parameters.batchSize * actionUnitSize, parameters.batchSize * actionUnitSize),
                     SubArray(actionProbs, j * parameters.batchSize * actionUnitSize, parameters.batchSize * actionUnitSize),
                     SubArray(targetValues, j * parameters.batchSize, parameters.batchSize),
                     SubArray(advantages, j * parameters.batchSize, parameters.batchSize));
+                
             }
         }
 

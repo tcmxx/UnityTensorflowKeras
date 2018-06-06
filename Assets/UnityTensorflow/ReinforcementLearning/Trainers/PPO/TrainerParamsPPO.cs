@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+[CreateAssetMenu()]
 public class TrainerParamsPPO : ScriptableObject {
 
     public int maxTotalSteps = 100000000;

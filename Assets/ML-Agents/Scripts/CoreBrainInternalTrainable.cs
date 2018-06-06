@@ -11,26 +11,26 @@ using System.Linq;
 /// CoreBrain which decides actions using internally embedded TensorFlow model.
 public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 {
-
-    bool hasRecurrent;
-
     /// Reference to the brain that uses this CoreBrainInternal
     public Brain brain;
     public Trainer trainer;
-
-    public bool trainModel = true;  //whether to train the model
-
+    
     private Dictionary<Agent, AgentInfo> currentInfo;
     private TakeActionOutput prevActionOutput;
+
+
+
+    
 
 
     /// Create the reference to the brain
     public void SetBrain(Brain b)
     {
         brain = b;
+        trainer.SetBrain(b);
     }
 
-    /// Loads the tensorflow graph model to generate a TFGraph object
+    
     public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
     {
     }
@@ -41,19 +41,28 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     /// the actions.
     public void DecideAction(Dictionary<Agent, AgentInfo> agentInfo)
     {
+        int currentBatchSize = agentInfo.Count();
+        List<Agent> agentList = agentInfo.Keys.ToList();
+        if (currentBatchSize == 0)
+        {
+            return;
+        }
 
-        
-        trainer.AddExperience(currentInfo, agentInfo, prevActionOutput);
-        trainer.ProcessExperience(currentInfo, agentInfo);
 
-        if (trainer.IsReadyUpdate() && trainModel && trainer.GetStep() <= trainer.GetStep())
+        if (trainer.GetStep() > 0 && trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
+        {
+            trainer.AddExperience(currentInfo, agentInfo, prevActionOutput);
+            trainer.ProcessExperience(currentInfo, agentInfo);
+        }
+
+        if (trainer.IsReadyUpdate() && trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
         {
             trainer.UpdateModel();
         }
 
         trainer.WriteSummary();
 
-        if (trainModel && trainer.GetStep() <= trainer.GetStep())
+        if (trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
         {
             trainer.IncrementStep();
             trainer.UpdateLastReward();
@@ -67,17 +76,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 
         prevActionOutput = trainer.TakeAction(currentInfo);
 
-        //TODO Update the agent action
-        List<Agent> agentList = agentInfo.Keys.ToList();
-        if (hasRecurrent)
-        {
-            foreach (Agent agent in agentList)
-            {
-                //agent.UpdateMemoriesAction(prevActionOutput.memory[agent].ToList());
-            }
-        }
-
-
+        //TODO Update the agent's other info
         foreach (Agent agent in agentList)
         {
             agent.UpdateVectorAction(prevActionOutput.outputAction[agent]);

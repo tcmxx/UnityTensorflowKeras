@@ -19,9 +19,9 @@ public class TensorflowTest : MonoBehaviour {
         //TestConv2D();
 
         //
-        TestSetAndGetValue();
+        //TestSetAndGetValue();
 
-        //TestModelCompileAndFit();
+        TestModelCompileAndFit();
     }
 	
 
@@ -165,11 +165,11 @@ public class TensorflowTest : MonoBehaviour {
         print("Test base Squential Model");
 
         float[,] x = { { 2, 3, 4, 5 },{ 4,3,2,1}, { 8, 44, 22, 11 }, { 1, 3, 3, 1 } };
-        float[] y = { 0.2f, 0.4f,0.8f,0.1f };
+        float[,] y = { { 0.2f,0.2f }, { 0.4f, 0.4f }, { 0.8f, 0.8f }, { 0.1f, 0.1f } };
         var model = new Sequential();
         model.Add(new Dense(12, input_dim: 4, activation: new ReLU()));
         model.Add(new Dense(8, activation: new ReLU()));
-        model.Add(new Dense(1,  activation: new Sigmoid()));
+        model.Add(new Dense(2,  activation: new Sigmoid()));
 
         // Compile the model (for the moment, only the mean square 
         // error loss is supported, but this should be solved soon)
@@ -189,6 +189,6 @@ public class TensorflowTest : MonoBehaviour {
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");
         // Evaluate the model
         double[] scores = model.evaluate(x, y);
-        Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
+        //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
     }
 }

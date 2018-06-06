@@ -65,7 +65,7 @@ public class Adam : OptimizerBase, IOptimizer
 
                     var new_p = p_t;
                     // apply constraints
-                    if (constraints.Keys.Contains(p))
+                    if (constraints != null && constraints.Keys.Contains(p))
                     {
                         var c = constraints[p];
                         new_p = c.Call(new_p);

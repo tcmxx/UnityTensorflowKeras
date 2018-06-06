@@ -21,6 +21,24 @@ public struct TakeActionOutput
 
 public abstract class Trainer:MonoBehaviour {
 
+    public Academy academyRef;
+    public bool isTraining;
+    protected bool prevIsTraining;
+
+    private void Start()
+    {
+        prevIsTraining = isTraining;
+    }
+    private void Update()
+    {
+        if(prevIsTraining != isTraining)
+        {
+            prevIsTraining = isTraining;
+            academyRef.SetIsInference(!isTraining);
+        }
+    }
+
+    public abstract void SetBrain(Brain brain);
     public abstract int GetStep();
     public abstract int GetMaxStep();
 
