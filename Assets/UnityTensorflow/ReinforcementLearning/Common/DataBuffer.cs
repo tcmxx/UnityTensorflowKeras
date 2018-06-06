@@ -185,6 +185,12 @@ public class DataBuffer
         return result;
     }
 
+    /// <summary>
+    /// sample as many batches as possible with data reordered
+    /// </summary>
+    /// <param name="batchSize"></param>
+    /// <param name="fetchAndOffset"></param>
+    /// <returns></returns>
     public Dictionary<string, Array> SampleBatchesReordered(int batchSize, params ValueTuple<string, int, string>[] fetchAndOffset)
     {
         Debug.Assert(batchSize <= CurrentCount, "Not enough data to sample");

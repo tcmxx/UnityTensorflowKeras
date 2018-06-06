@@ -11,6 +11,7 @@ public class TrainingStats
     public List<float> value = new List<float>();
     public List<float> valueLoss = new List<float>();
     public List<float> policyLoss = new List<float>();
+    public List<float> loss = new List<float>();
 }
 
 
@@ -37,8 +38,9 @@ public class TrainerPPO : Trainer
     protected Dictionary<Agent, List<float>> valuesEpisodeHistory;
 
 
-    //TrainingStats stats;
-
+    TrainingStats stats;
+    protected Dictionary<Agent, float> accumulatedRewards;
+    protected Dictionary<Agent, int> episodeSteps;
 
     private void Awake()
     {
@@ -47,6 +49,9 @@ public class TrainerPPO : Trainer
         actionsEpisodeHistory = new Dictionary<Agent, List<float>>();
         actionprobsEpisodeHistory = new Dictionary<Agent, List<float>>();
         valuesEpisodeHistory = new Dictionary<Agent, List<float>>();
+
+        accumulatedRewards = new Dictionary<Agent, float>();
+        episodeSteps = new Dictionary<Agent, int>();
 
 
         var brainParameters = brain.brainParameters;
@@ -60,7 +65,7 @@ public class TrainerPPO : Trainer
             );
 
 
-        //stats = new TrainingStats();
+        stats = new TrainingStats();
         modelRef.Initialize(brain);
     }
 
@@ -88,6 +93,9 @@ public class TrainerPPO : Trainer
             actionsEpisodeHistory[agent].AddRange(actionOutput.outputAction[agent]);
             actionprobsEpisodeHistory[agent].AddRange(actionOutput.allProbabilities[agent]);
             valuesEpisodeHistory[agent].Add(actionOutput.value[agent]);
+
+            accumulatedRewards[agent] += newInfo[agent].reward;
+            episodeSteps[agent] = agent.GetStepCount();
         }
 
     }
@@ -146,6 +154,10 @@ public class TrainerPPO : Trainer
                 actionsEpisodeHistory[agent].Clear();
                 actionprobsEpisodeHistory[agent].Clear();
                 valuesEpisodeHistory[agent].Clear();
+
+                //update stats
+                stats.cumulativeReward.Add(accumulatedRewards[agent]); accumulatedRewards[agent] = 0;
+                stats.episodeLength.Add(episodeSteps[agent]); episodeSteps[agent] = 0;
             }
         }
     }
@@ -180,11 +192,7 @@ public class TrainerPPO : Trainer
         return result;
     }
 
-    public override void UpdateLastReward()
-    {
-        //throw new System.NotImplementedException();
 
-    }
 
     public override void UpdateModel()
     {
@@ -195,6 +203,7 @@ public class TrainerPPO : Trainer
         fetches.Add(new ValueTuple<string, int, string>("TargetValue", 0, "TargetValue"));
         fetches.Add(new ValueTuple<string, int, string>("Advantage", 0, "Advantage"));
 
+        float loss = 0, policyLoss = 0, valueLoss = 0;
         for (int i = 0; i < parameters.numEpochPerTrain; ++i)
         {
             var samples = dataBuffer.SampleBatchesReordered(parameters.batchSize, fetches.ToArray());
@@ -206,26 +215,31 @@ public class TrainerPPO : Trainer
 
             int batchCount = targetValues.Length / parameters.batchSize;
             int actionUnitSize = (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? brain.brainParameters.vectorActionSize : 1);
+
+            float tempLoss = 0, tempPolicyLoss = 0, tempValueLoss = 0;
+
             for (int j = 0; j < batchCount; ++j)
             {
-                float loss = modelRef.TrainBatch(SubArray(states, j * parameters.batchSize * brain.brainParameters.vectorObservationSize, parameters.batchSize * brain.brainParameters.vectorObservationSize),
+                float[] losses = modelRef.TrainBatch(SubArray(states, j * parameters.batchSize * brain.brainParameters.vectorObservationSize, parameters.batchSize * brain.brainParameters.vectorObservationSize),
                     SubArray(actions, j * parameters.batchSize * actionUnitSize, parameters.batchSize * actionUnitSize),
                     SubArray(actionProbs, j * parameters.batchSize * actionUnitSize, parameters.batchSize * actionUnitSize),
                     SubArray(targetValues, j * parameters.batchSize, parameters.batchSize),
                     SubArray(advantages, j * parameters.batchSize, parameters.batchSize));
-                
+                tempLoss += losses[0];
+                tempPolicyLoss += losses[1];
+                tempValueLoss += losses[2];
             }
+
+            loss += tempLoss / batchCount; policyLoss += tempPolicyLoss / batchCount; valueLoss += tempValueLoss / batchCount;
         }
+
+        stats.loss.Add(loss / parameters.numEpochPerTrain);
+        stats.policyLoss.Add(policyLoss / parameters.numEpochPerTrain);
+        stats.valueLoss.Add(valueLoss / parameters.numEpochPerTrain);
+
 
         dataBuffer.ClearData();
     }
-
-    public override void WriteSummary()
-    {
-        //throw new System.NotImplementedException();
-    }
-
-
 
 
     private static T[] SubArray<T>(T[] data, int index, int length)

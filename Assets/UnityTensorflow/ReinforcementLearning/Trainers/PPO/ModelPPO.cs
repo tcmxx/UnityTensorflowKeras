@@ -112,7 +112,7 @@ public class ModelPPO : MonoBehaviour
         var optimizer = new Adam();
         var updates = optimizer.get_updates(updateParameters, null, OutputLoss); ;
         UpdateFunction = K.function(allInputs, new List<Tensor> { OutputLoss }, updates, "UpdateFunction");
-        ValueFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputValue }, null, "ValueFunction");
+        ValueFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputValue, OutputValueLoss, OutputPolicyLoss }, null, "ValueFunction");
         ActionFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
         //test
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
@@ -148,9 +148,9 @@ public class ModelPPO : MonoBehaviour
     }
 
 
-    public float TrainBatch(float[] states, float[] actions, float[] actionProbs, float[] targetValues, float[] advantages)
+    public float[] TrainBatch(float[] states, float[] actions, float[] actionProbs, float[] targetValues, float[] advantages)
     {
         var loss = UpdateFunction.Call(new List<Array> { states, actions, actionProbs, targetValues, advantages });
-        return (float)loss[0].eval();
+        return new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
     }
 }

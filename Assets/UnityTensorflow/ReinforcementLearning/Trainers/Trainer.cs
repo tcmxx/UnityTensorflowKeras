@@ -47,7 +47,5 @@ public abstract class Trainer:MonoBehaviour {
     public abstract void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
     public abstract bool IsReadyUpdate();
     public abstract void UpdateModel();
-    public abstract void WriteSummary();
     public abstract void IncrementStep();
-    public abstract void UpdateLastReward();
 }

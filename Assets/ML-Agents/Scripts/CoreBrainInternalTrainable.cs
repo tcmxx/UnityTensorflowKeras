@@ -59,13 +59,10 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         {
             trainer.UpdateModel();
         }
-
-        trainer.WriteSummary();
-
+        
         if (trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
         {
             trainer.IncrementStep();
-            trainer.UpdateLastReward();
         }
 
         //TODO: Save the model every certain amount of steps
