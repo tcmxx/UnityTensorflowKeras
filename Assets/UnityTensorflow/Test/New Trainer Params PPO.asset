@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Name: New Trainer Params PPO
   m_EditorClassIdentifier: 
   maxTotalSteps: 100000000
-  rewardDiscountFactor: 0.995
+  rewardDiscountFactor: 0.99
   rewardGAEFactor: 0.95
   valueLossWeight: 1
   entroyLossWeight: 0
   clipEpsilon: 0.2
-  batchSize: 512
-  bufferSizeForTrain: 5120
-  numEpochPerTrain: 3
-  learningRate: 0.0003
+  batchSize: 256
+  bufferSizeForTrain: 5000
+  numEpochPerTrain: 5
+  learningRate: 0.005

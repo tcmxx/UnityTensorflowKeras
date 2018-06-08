@@ -68,9 +68,13 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 
         //TODO: Save the model every certain amount of steps
 
-        //shallow copy the info
-        currentInfo = new Dictionary<Agent, AgentInfo>(agentInfo);
+        //copy the info
+        currentInfo = new Dictionary<Agent, AgentInfo>();
+        foreach (Agent agent in agentList)
+        {
+            currentInfo[agent] = CopyAngentInfo(agentInfo[agent]);
 
+        }
 
         prevActionOutput = trainer.TakeAction(currentInfo);
 
@@ -166,4 +170,25 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         return result;
     }
 
+
+
+    public static AgentInfo CopyAngentInfo(AgentInfo agentInfo)
+    {
+        var result = new AgentInfo()
+        {
+            vectorObservation = new List<float>(agentInfo.vectorObservation),
+            stackedVectorObservation = new List<float>(agentInfo.stackedVectorObservation),
+            visualObservations = new List<Texture2D>(agentInfo.visualObservations),
+            textObservation = (string)agentInfo.textObservation?.Clone(),
+            storedVectorActions = (float[])agentInfo.storedVectorActions.Clone(),
+            storedTextActions = (string)agentInfo.storedTextActions?.Clone(),
+            memories = new List<float>(agentInfo.memories),
+            reward = agentInfo.reward,
+            done = agentInfo.done,
+            maxStepReached = agentInfo.maxStepReached,
+            id = agentInfo.id
+        };
+
+        return result;
+    }
 }
