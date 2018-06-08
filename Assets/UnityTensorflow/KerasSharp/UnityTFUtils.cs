@@ -115,31 +115,67 @@ public static class UnityTFUtils
 
 
     /// <summary>
-    /// None flat array will be flatten
+    /// create a tensor based on input array and shape.
+    /// If the array is not 1D, the array dimension need to match the shape
     /// </summary>
     /// <param name="array"></param>
     /// <param name="shape"></param>
     /// <param name="start"></param>
     /// <param name="length"></param>
     /// <returns></returns>
-    public static TFTensor TFTensorFromArray(Array array, TFShape shape, int start, int length)
+    public static TFTensor TFTensorFromArray(Array array, TFShape shape)
     {
-        
-        if (array.GetType().GetElementType() == typeof(float))
+
+        if (array.Rank != 1)
         {
-           return TFTensor.FromBuffer(shape, (float[])array.DeepFlatten(), start, (int)length);
-        }
-        else if (array.GetType().GetElementType() == typeof(double))
-        {
-            return TFTensor.FromBuffer(shape, (double[])array.DeepFlatten(), start, (int)length);
-        }else if(array.GetType().GetElementType() == typeof(int))
-        {
-            return TFTensor.FromBuffer(shape, (int[])array.DeepFlatten(), start, (int)length);
+            //check the dimensions
+            Debug.Assert(shape.NumDimensions == array.Rank, "the input array is not 1d and the input shape and input array is not compatible");
+            for(int i = 0; i < array.Rank; ++i)
+            {
+                if(array.GetLength(i) != shape[i] && shape[i] >= 0)
+                {
+                    Debug.LogError("the input shape and input array has no compatible");
+                }
+            }
+
+            return new TFTensor(array);
         }
         else
         {
-            Debug.LogError("Data type of _constant input " + array.GetType().GetElementType() + " is not support with shape input");
-            return null;
+            //get the shape based on the tensor and input data length
+            long[] actualShape = shape.ToArray();
+            if (actualShape == null)
+                actualShape = new long[] { array.Length };
+            int oneBacthLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n * s));
+            bool hasBatch = false;
+            int indexOfBatch = actualShape.IndexOf(-1);
+            if (indexOfBatch >= 0)
+            {
+                actualShape[indexOfBatch] = array.Length / oneBacthLength;
+                hasBatch = true;
+            }
+            Debug.Assert(oneBacthLength <= array.Length, "Feed array does not have enough data");
+            Debug.Assert(hasBatch || oneBacthLength == array.Length, "The array length should match the shape's elements count if the shape does not have dynamic axis");
+
+
+
+            if (array.GetType().GetElementType() == typeof(float))
+            {
+                return TFTensor.FromBuffer(shape, (float[])array, 0, oneBacthLength * (array.Length / oneBacthLength));
+            }
+            else if (array.GetType().GetElementType() == typeof(double))
+            {
+                return TFTensor.FromBuffer(shape, (double[])array, 0, oneBacthLength * (array.Length / oneBacthLength));
+            }
+            else if (array.GetType().GetElementType() == typeof(int))
+            {
+                return TFTensor.FromBuffer(shape, (int[])array, 0, oneBacthLength * (array.Length / oneBacthLength));
+            }
+            else
+            {
+                Debug.LogError("Data type of _constant input " + array.GetType().GetElementType() + " is not support with shape input");
+                return null;
+            }
         }
     }
 

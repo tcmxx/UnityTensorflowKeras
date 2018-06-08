@@ -17,7 +17,7 @@ public class TrainingStats
 public class TrainerPPO : Trainer
 {
 
-    public ModelPPO modelRef;
+    public RLModelPPO modelRef;
     public TrainerParamsPPO parameters;
     [HideInInspector]
     public Brain brain;

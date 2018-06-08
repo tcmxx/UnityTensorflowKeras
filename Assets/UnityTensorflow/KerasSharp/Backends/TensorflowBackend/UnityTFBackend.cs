@@ -149,7 +149,7 @@ public class UnityTFBackend : BackendBase, IBackend
         //value = np.asarray(value, dtype = dtype(x))
         //var tf_dtype = tf.as_dtype(x.dtype.name.split('_')[0])
         var shape = new TFShape(x.TF_Shape);
-        var valueTensor = UnityTFUtils.TFTensorFromArray(value, shape, 0,value.Length);
+        var valueTensor = UnityTFUtils.TFTensorFromArray(value, shape);
 
         TFOutput assignPlaceholder;
         TFOperation assignOperation;
@@ -183,7 +183,7 @@ public class UnityTFBackend : BackendBase, IBackend
         {
             var i1 = In(p.Item1);
             var shape = new TFShape(i1.TF_Shape);
-            var valueTensor = UnityTFUtils.TFTensorFromArray(p.Item2, shape, 0, p.Item2.Length); //np.asarray(value, dtype = dtype(x))
+            var valueTensor = UnityTFUtils.TFTensorFromArray(p.Item2, shape); //np.asarray(value, dtype = dtype(x))
             TFOutput assignPlaceholder;
             TFOperation assignOperation;
 
@@ -386,7 +386,7 @@ public class UnityTFBackend : BackendBase, IBackend
             long length = shape.Aggregate((a, b) => (a * b));
             var dataArray = value as Array;
             Debug.Assert(dataArray != null, "Only support array input when shape is specified");
-            t = UnityTFUtils.TFTensorFromArray(dataArray, new TFShape(shape), 0, (int)length);
+            t = UnityTFUtils.TFTensorFromArray(dataArray, new TFShape(shape));
             
         }
        // Debug.Log(string.Join(",",t.Shape));

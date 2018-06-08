@@ -4,10 +4,15 @@ using UnityEngine;
 using Accord.Statistics.Distributions.Univariate;
 using System;
 using System.Linq;
+using Accord;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 
 using static Current;
 
-public class ModelPPO : MonoBehaviour
+public class RLModelPPO : MonoBehaviour
 {
 
     private int stateSize = 4;
@@ -19,6 +24,7 @@ public class ModelPPO : MonoBehaviour
 
     public Adam optimizer;
 
+    public RLNetworkAC network;
 
     public void Initialize(Brain brain)
     {
@@ -30,33 +36,24 @@ public class ModelPPO : MonoBehaviour
         var inputStateTensor = UnityTFUtils.Input(new int?[] { stateSize }, name: "InputStates")[0];
 
         //actor network output mean
-        var actorDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        var actorDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        var actorOutput = new Dense(units: actionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
+        ///var actorDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        ///var actorDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        ///var actorOutput = new Dense(units: actionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
+        ///var OutputMean = actorOutput.Call(actorDense2.Call(actorDense1.Call(inputStateTensor)[0])[0])[0];
 
-        var OutputMean = actorOutput.Call(actorDense2.Call(actorDense1.Call(inputStateTensor)[0])[0])[0];
-
-
+        //value networkoutput value
+        //var valueDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        //var valueDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        //var valueOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
+        //var OutputValue = valueOutput.Call(valueDense2.Call(valueDense1.Call(inputStateTensor)[0])[0])[0];
 
 
         //actor network output variance
         var log_sigma_sq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
         var OutputVariance = K.exp(log_sigma_sq);
-
-
-
-
-        //value networkoutput value
-        var valueDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        var valueDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        var valueOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
-
-        var OutputValue = valueOutput.Call(valueDense2.Call(valueDense1.Call(inputStateTensor)[0])[0])[0];
-
-
-
-
-
+        
+        Tensor OutputValue = null, OutputMean = null;
+        network.BuildNetwork(inputStateTensor, null, null, null, actionSize, out OutputMean, out OutputValue);
 
         //training needed inputs
         var InputAction = UnityTFUtils.Input(new int?[] { actionSize }, name: "InputAction")[0];
@@ -101,10 +98,10 @@ public class ModelPPO : MonoBehaviour
         List<Tensor> updateParameters = new List<Tensor>();
         List<Tensor> allInputs = new List<Tensor>();
 
-        updateParameters.AddRange(actorDense1.weights);
-        updateParameters.AddRange(actorOutput.weights);
-        updateParameters.AddRange(valueDense1.weights);
-        updateParameters.AddRange(valueOutput.weights);
+        updateParameters.AddRange(network.GetWeights());
+        //updateParameters.AddRange(actorOutput.weights);
+        //updateParameters.AddRange(valueDense1.weights);
+        //updateParameters.AddRange(valueOutput.weights);
         updateParameters.Add(log_sigma_sq);
 
         allInputs.Add(inputStateTensor);
@@ -119,7 +116,7 @@ public class ModelPPO : MonoBehaviour
         ValueFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputValue }, null, "ValueFunction");
         ActionFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
         //test
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
 
     public float[] EvaluateValueOne(float[] state)
@@ -161,4 +158,6 @@ public class ModelPPO : MonoBehaviour
         var loss = UpdateFunction.Call(new List<Array> { states, actions, actionProbs, targetValues, advantages });
         return new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
     }
+
+    
 }

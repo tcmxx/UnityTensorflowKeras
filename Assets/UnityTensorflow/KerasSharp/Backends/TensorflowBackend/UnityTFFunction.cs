@@ -116,7 +116,7 @@ public class UnityTFFunction: Function
             //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
 
             //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
-            TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape), 0, totalLength * (pair.Value.Length / totalLength));
+            TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape));
 
 
             runner.AddInput(t.Output, data);

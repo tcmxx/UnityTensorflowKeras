@@ -14,7 +14,10 @@ public class TrainerEditor : Editor
     {
         TrainerPPO myBrain = (TrainerPPO)target;
         base.OnInspectorGUI();
-        myBrain.parameters.OnInspector();
+
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        EditorGUILayout.LabelField("Training Parameters", GUI.skin.box);
+        myBrain.parameters?.OnInspector();
         
     }
 }
