@@ -18,6 +18,7 @@ public class TrainerEditor : Editor
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         EditorGUILayout.LabelField("Training Parameters", GUI.skin.box);
         myBrain.parameters?.OnInspector();
-        
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
     }
 }

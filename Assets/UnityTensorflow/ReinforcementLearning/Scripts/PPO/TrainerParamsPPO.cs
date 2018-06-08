@@ -8,6 +8,7 @@ using UnityEditor;
 [CreateAssetMenu()]
 public class TrainerParamsPPO : ScriptableObject {
 
+    [Header("Learning related")]
     public int maxTotalSteps = 100000000;
 
     public float rewardDiscountFactor = 0.99f;
@@ -21,6 +22,10 @@ public class TrainerParamsPPO : ScriptableObject {
     public int numEpochPerTrain = 100;
 
     public float learningRate = 0.001f;
+
+    [Header("Log related")]
+    public int lossLogInterval = 1;
+    public int rewardLogInterval = 10;
 
     /// Displays the parameters of the CoreBrainInternal in the Inspector 
     public void OnInspector()

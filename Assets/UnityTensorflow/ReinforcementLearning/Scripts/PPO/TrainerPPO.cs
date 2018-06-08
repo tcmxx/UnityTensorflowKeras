@@ -3,15 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TrainingStats
-{
-    public List<float> cumulativeReward = new List<float>();
-    public List<float> episodeLength = new List<float>();
-    public List<float> value = new List<float>();
-    public List<float> valueLoss = new List<float>();
-    public List<float> policyLoss = new List<float>();
-    public List<float> loss = new List<float>();
-}
 
 
 public class TrainerPPO : Trainer
@@ -34,7 +25,7 @@ public class TrainerPPO : Trainer
     protected Dictionary<Agent, List<float>> valuesEpisodeHistory;
 
 
-    TrainingStats stats;
+    StatsLogger stats;
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
 
@@ -61,7 +52,7 @@ public class TrainerPPO : Trainer
             );
 
 
-        stats = new TrainingStats();
+        stats = new StatsLogger();
         modelRef.Initialize(brain);
 
         
@@ -160,13 +151,11 @@ public class TrainerPPO : Trainer
                 valuesEpisodeHistory[agent].Clear();
 
                 //update stats
-                stats.cumulativeReward.Add(accumulatedRewards[agent]);
+                stats.AddData("accumulatedRewards",accumulatedRewards[agent],parameters.rewardLogInterval);
                 accumulatedRewards[agent] = 0;
-                stats.episodeLength.Add(episodeSteps[agent]);
+                stats.AddData("episodeSteps", episodeSteps[agent], parameters.rewardLogInterval);
                 episodeSteps[agent] = 0;
-
-                Grapher.Log(stats.cumulativeReward[stats.cumulativeReward.Count - 1],"Cumulated Reward");
-                Grapher.Log(stats.episodeLength[stats.episodeLength.Count - 1], "episodeLength");
+                
             }
         }
     }
@@ -241,14 +230,10 @@ public class TrainerPPO : Trainer
 
             loss += tempLoss / batchCount; policyLoss += tempPolicyLoss / batchCount; valueLoss += tempValueLoss / batchCount;
         }
-
-        stats.loss.Add(loss / parameters.numEpochPerTrain);
-        stats.policyLoss.Add(policyLoss / parameters.numEpochPerTrain);
-        stats.valueLoss.Add(valueLoss / parameters.numEpochPerTrain);
-
-        Grapher.Log(stats.loss[stats.loss.Count - 1], "loss");
-        Grapher.Log(stats.policyLoss[stats.policyLoss.Count - 1], "policyLoss");
-        Grapher.Log(stats.valueLoss[stats.valueLoss.Count - 1], "valueLoss");
+        
+        stats.AddData("loss", loss / parameters.numEpochPerTrain,parameters.lossLogInterval);
+        stats.AddData("policyLoss", policyLoss / parameters.numEpochPerTrain, parameters.lossLogInterval);
+        stats.AddData("valueLoss", valueLoss / parameters.numEpochPerTrain, parameters.lossLogInterval);
 
         dataBuffer.ClearData();
     }
