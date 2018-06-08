@@ -75,7 +75,6 @@ public class InputLayer : Layer
         this.trainable = false;
         this.built = true;
         this.sparse = sparse;
-
         if (input_shape != null && batch_input_shape != null)
             throw new Exception("Only provide the input_shape OR batch_input_shape argument to  InputLayer, not both at the same time.");
 
@@ -129,6 +128,7 @@ public class InputLayer : Layer
         input_tensor._uses_learning_phase = false;
         input_tensor._keras_history = ValueTuple.Create((Layer)this, 0, 0);
 
+        
         var node = new Node(this,
             inbound_layers: new List<Layer>(),
             node_indices: new List<int?>(),

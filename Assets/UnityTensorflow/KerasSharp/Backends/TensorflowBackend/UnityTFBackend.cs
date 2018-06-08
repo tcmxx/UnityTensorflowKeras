@@ -1222,7 +1222,14 @@ public class UnityTFBackend : BackendBase, IBackend
     public object eval(Tensor tensor)
     {
         var _tensor = In(tensor);
-        return eval(_tensor.Output);
+        if (_tensor.ValueOnly)
+        {
+            return _tensor.TensorTF.GetValue();
+        }
+        else
+        {
+            return eval(_tensor.Output);
+        }
     }
 
     public object eval(TFOutput output)
@@ -1494,11 +1501,6 @@ public DataType floatx()
         };
     }
 
-    public Tensor Out(TFTensor output)
-    {
-        return Out(Graph.Const(output));
-    }
-    
     public UnityTFTensor In(TFOutput output)
     {
         return new UnityTFTensor(this) { Output = output };

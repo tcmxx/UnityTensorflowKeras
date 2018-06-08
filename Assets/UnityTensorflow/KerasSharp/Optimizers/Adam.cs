@@ -78,4 +78,9 @@ public class Adam : OptimizerBase, IOptimizer
             return this.updates;
         }
     }
+
+    public void SetLearningRate(float lr)
+    {
+        K.set_value(this.lr, new float[] { lr });
+    }
 }

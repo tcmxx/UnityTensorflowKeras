@@ -106,7 +106,7 @@ public class UnityTFFunction: Function
 
             //get the shape based on the tensor and input data length
             long[] actualShape = t.TF_Shape.Copy();
-            int totalLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n*s));
+            int totalLength = Mathf.Abs((int)actualShape.Aggregate((s, n) => n * s));
 
             int indexOfBatch = actualShape.IndexOf(-1);
             if (indexOfBatch >= 0)
@@ -116,7 +116,7 @@ public class UnityTFFunction: Function
             //Debug.Log("totalLength:"+totalLength + "  Shape:" + string.Join(",", actualShape));
 
             //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
-            TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape), 0, totalLength * (pair.Value.Length / totalLength)); 
+            TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape), 0, totalLength * (pair.Value.Length / totalLength));
 
 
             runner.AddInput(t.Output, data);
@@ -145,7 +145,11 @@ public class UnityTFFunction: Function
         //Console.WriteLine("After:");
         //PrintVariables(feed_dict, session);
 
-        return updated.Get(0, this.outputs.Count).Select(t => backend.Out(t)).ToList();
+        return updated.Get(0, this.outputs.Count).Select(t => {
+            var result = new UnityTFTensor(backend);
+            result.TensorTF = t;
+            return (Tensor)result;
+        }).ToList();
 
         // Console.ReadKey();
     }

@@ -1170,7 +1170,8 @@ public partial class Model : Container
             verbose = 2;
         }
 
-        var outs = new List<Tensor>();
+        //var outs = new List<Tensor>();
+        List<double> outsDouble = new List<double>();
         Progbar progbar = null;
         if (verbose == 1)
             progbar = new Progbar(target: samples);
@@ -1198,27 +1199,36 @@ public partial class Model : Container
             //}
 
             List<Tensor> batch_outs = f.Call(ins_batch);
-
+            
             if (batch_index == 0)
             {
                 foreach (Tensor batch_out in batch_outs)
-                    outs.Add(K.constant(0));
+                {
+                    //outs.Add(K.constant(0));
+                    outsDouble.Add(0);
+                }
             }
 
             for (int i = 0; i < batch_outs.Count; i++)
             {
                 Tensor batch_out = batch_outs[i];
-                outs[i] += batch_out * batch_ids.Length;
+                //outs[i] += batch_out * batch_ids.Length;
+                outsDouble[i] += batch_out.eval().To<double>();
+
             }
 
             if (verbose == 1)
                 progbar.update(batch_end);
         }
 
-        for (int i = 0; i < outs.Count; i++)
-            outs[i] = outs[i] / samples;
+        for (int i = 0; i < outsDouble.Count; i++)
+        {
+            //outs[i] = outs[i] / samples;
+            outsDouble[i] = outsDouble[i] / samples;
+        }
 
-        return outs.Select(x => x.eval().To<double>()).ToList().ToArray();
+        //return outs.Select(x => x.eval().To<double>()).ToList().ToArray();
+        return outsDouble.ToArray();
     }
 
     private object _slice_arrays(List<Tensor> ins, int[] batch_ids)

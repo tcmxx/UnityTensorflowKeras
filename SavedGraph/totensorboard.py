@@ -13,7 +13,7 @@ tf.reset_default_graph() #Clear the Tensorflow graph.x
 
 with tf.Session() as sess:
 
-    with tf.gfile.FastGFile("PPOTest.pb",'rb') as f:
+    with tf.gfile.FastGFile("sequentialtest.pb",'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
         sess.graph.as_default()

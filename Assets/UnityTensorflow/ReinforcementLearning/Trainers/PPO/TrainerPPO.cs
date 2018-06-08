@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class TrainingStats
 {
     public List<float> cumulativeReward = new List<float>();
@@ -22,10 +21,7 @@ public class TrainerPPO : Trainer
     public TrainerParamsPPO parameters;
     [HideInInspector]
     public Brain brain;
-
-
-
-
+    
     protected DataBuffer dataBuffer;
     public int DataCountStored { get { return dataBuffer.CurrentCount; } }
 
@@ -67,9 +63,15 @@ public class TrainerPPO : Trainer
 
         stats = new TrainingStats();
         modelRef.Initialize(brain);
+
+        
     }
 
-
+    public override void Update()
+    {
+        modelRef.SetLearningRate(parameters.learningRate);
+        base.Update();
+    }
     public override void SetBrain(Brain brain)
     {
         this.brain = brain;
@@ -87,6 +89,7 @@ public class TrainerPPO : Trainer
                 actionsEpisodeHistory[agent] = new List<float>();
                 actionprobsEpisodeHistory[agent] = new List<float>();
                 valuesEpisodeHistory[agent] = new List<float>();
+                accumulatedRewards[agent] = 0;
             }
             statesEpisodeHistory[agent].AddRange(currentInfo[agent].vectorObservation.ToArray());
             rewardsEpisodeHistory[agent].Add(newInfo[agent].reward);
@@ -95,7 +98,8 @@ public class TrainerPPO : Trainer
             valuesEpisodeHistory[agent].Add(actionOutput.value[agent]);
 
             accumulatedRewards[agent] += newInfo[agent].reward;
-            episodeSteps[agent] = agent.GetStepCount();
+            if(agent.GetStepCount() != 0)
+                episodeSteps[agent] = agent.GetStepCount();
         }
 
     }
@@ -156,8 +160,13 @@ public class TrainerPPO : Trainer
                 valuesEpisodeHistory[agent].Clear();
 
                 //update stats
-                stats.cumulativeReward.Add(accumulatedRewards[agent]); accumulatedRewards[agent] = 0;
-                stats.episodeLength.Add(episodeSteps[agent]); episodeSteps[agent] = 0;
+                stats.cumulativeReward.Add(accumulatedRewards[agent]);
+                accumulatedRewards[agent] = 0;
+                stats.episodeLength.Add(episodeSteps[agent]);
+                episodeSteps[agent] = 0;
+
+                Grapher.Log(stats.cumulativeReward[stats.cumulativeReward.Count - 1],"Cumulated Reward");
+                Grapher.Log(stats.episodeLength[stats.episodeLength.Count - 1], "episodeLength");
             }
         }
     }
@@ -237,6 +246,9 @@ public class TrainerPPO : Trainer
         stats.policyLoss.Add(policyLoss / parameters.numEpochPerTrain);
         stats.valueLoss.Add(valueLoss / parameters.numEpochPerTrain);
 
+        Grapher.Log(stats.loss[stats.loss.Count - 1], "loss");
+        Grapher.Log(stats.policyLoss[stats.policyLoss.Count - 1], "policyLoss");
+        Grapher.Log(stats.valueLoss[stats.valueLoss.Count - 1], "valueLoss");
 
         dataBuffer.ClearData();
     }

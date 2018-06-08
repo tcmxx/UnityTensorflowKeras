@@ -186,9 +186,12 @@ public class TensorflowTest : MonoBehaviour {
         //float[,] pred = model.predict(x)[0].To<float[,]>();
 
 
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");
+        
         // Evaluate the model
         double[] scores = model.evaluate(x, y);
+        scores = model.evaluate(x, y); scores = model.evaluate(x, y); 
         //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
+
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");
     }
 }

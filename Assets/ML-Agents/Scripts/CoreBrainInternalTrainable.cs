@@ -27,7 +27,8 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     public void SetBrain(Brain b)
     {
         brain = b;
-        trainer.SetBrain(b);
+        if(trainer)
+            trainer.SetBrain(b);
     }
 
     

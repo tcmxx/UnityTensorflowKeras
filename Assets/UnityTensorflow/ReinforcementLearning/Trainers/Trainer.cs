@@ -28,8 +28,9 @@ public abstract class Trainer:MonoBehaviour {
     private void Start()
     {
         prevIsTraining = isTraining;
+        academyRef.SetIsInference(!isTraining);
     }
-    private void Update()
+    public virtual void Update()
     {
         if(prevIsTraining != isTraining)
         {

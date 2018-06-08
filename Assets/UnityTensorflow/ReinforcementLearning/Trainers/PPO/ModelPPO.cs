@@ -10,12 +10,14 @@ using static Current;
 public class ModelPPO : MonoBehaviour
 {
 
-    public int stateSize = 4;
-    public int actionSize = 2;
+    private int stateSize = 4;
+    private int actionSize = 2;
 
     public Function ValueFunction { get; set; }
     public Function ActionFunction { get; set; }
     public Function UpdateFunction { get; set; }
+
+    public Adam optimizer;
 
 
     public void Initialize(Brain brain)
@@ -28,10 +30,11 @@ public class ModelPPO : MonoBehaviour
         var inputStateTensor = UnityTFUtils.Input(new int?[] { stateSize }, name: "InputStates")[0];
 
         //actor network output mean
-        var actorDense1 = new Dense(20, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 0.01f));
-        var actorOutput = new Dense(units: actionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 0.01f));
+        var actorDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        var actorDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        var actorOutput = new Dense(units: actionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
 
-        var OutputMean = actorOutput.Call(actorDense1.Call(inputStateTensor)[0])[0];
+        var OutputMean = actorOutput.Call(actorDense2.Call(actorDense1.Call(inputStateTensor)[0])[0])[0];
 
 
 
@@ -44,10 +47,11 @@ public class ModelPPO : MonoBehaviour
 
 
         //value networkoutput value
-        var valueDense1 = new Dense(20, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 0.01f));
-        var valueOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 0.01f));
+        var valueDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        var valueDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
+        var valueOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
 
-        var OutputValue = valueOutput.Call(valueDense1.Call(inputStateTensor)[0])[0];
+        var OutputValue = valueOutput.Call(valueDense2.Call(valueDense1.Call(inputStateTensor)[0])[0])[0];
 
 
 
@@ -109,10 +113,10 @@ public class ModelPPO : MonoBehaviour
         allInputs.Add(InputTargetValue);
         allInputs.Add(InputAdvantage);
 
-        var optimizer = new Adam();
+        optimizer = new Adam(lr: 0.001);
         var updates = optimizer.get_updates(updateParameters, null, OutputLoss); ;
-        UpdateFunction = K.function(allInputs, new List<Tensor> { OutputLoss }, updates, "UpdateFunction");
-        ValueFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputValue, OutputValueLoss, OutputPolicyLoss }, null, "ValueFunction");
+        UpdateFunction = K.function(allInputs, new List<Tensor> { OutputLoss, OutputValueLoss, OutputPolicyLoss }, updates, "UpdateFunction");
+        ValueFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputValue }, null, "ValueFunction");
         ActionFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
         //test
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
@@ -147,6 +151,10 @@ public class ModelPPO : MonoBehaviour
 
     }
 
+    public void SetLearningRate(float rl)
+    {
+        optimizer.SetLearningRate(rl);
+    }
 
     public float[] TrainBatch(float[] states, float[] actions, float[] actionProbs, float[] targetValues, float[] advantages)
     {
