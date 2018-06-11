@@ -2,46 +2,33 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System.Linq;
+using System.Runtime.InteropServices;
 
 public class DataBuffer
 {
-    public enum DataType
-    {
-        Float,
-        Integer,
-        Boolean
-    }
+
     public struct DataInfo
     {
-        public DataInfo(string name, DataType type, int unitLength)
+        public DataInfo(string name, Type type, int[] dimension)
         {
             this.type = type;
-            this.unitLength = unitLength;
+            this.dimension = dimension;
             this.name = name;
+            this.unitLength = dimension.Aggregate((t, a) => t * a);
         }
         public string name;
-        public DataType type;
+        public Type type;
+        public int[] dimension;
         public int unitLength;
     }
 
     protected struct DataContainer
     {
-        public DataContainer(DataInfo info, int maxLength)
+        public DataContainer(DataInfo info, int maxDataCount)
         {
             this.info = info;
-            if (info.type == DataType.Float)
-            {
-                dataList = new float[info.unitLength * maxLength];
-            }
-            else if (info.type == DataType.Integer)
-            {
-                dataList = new int[info.unitLength * maxLength];
-            }
-            else
-            {
-                dataList = new bool[info.unitLength * maxLength];
-            }
+            dataList = Array.CreateInstance(info.type, (new int[] { maxDataCount }).Concat(info.dimension).ToArray());
         }
         public DataInfo info;
         public Array dataList;
@@ -109,9 +96,11 @@ public class DataBuffer
         foreach (var k in data)
         {
             DataContainer dd = dataset[k.Item1];
+            int typeSize = Marshal.SizeOf(dd.info.type);
             //Debug.Log(k.Item1);
             //Debug.Log("add length " + k.Item2.Length + " copy length " + (appendSize * dd.info.unitLength).ToString());
-            Array.Copy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength, appendSize * dd.info.unitLength);
+            //Array.Copy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength, appendSize * dd.info.unitLength);
+            Buffer.BlockCopy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength* typeSize, appendSize * dd.info.unitLength* typeSize);
         }
         nextBufferPointer += appendSize;
         CurrentCount += numToAdd;
@@ -121,7 +110,10 @@ public class DataBuffer
             foreach (var k in data)
             {
                 DataContainer dd = dataset[k.Item1];
-                Array.Copy(k.Item2, appendSize * dd.info.unitLength, dd.dataList, 0, fromStartSize * dd.info.unitLength);
+                int typeSize = Marshal.SizeOf(dd.info.type);
+                //Array.Copy(k.Item2, appendSize * dd.info.unitLength, dd.dataList, 0, fromStartSize * dd.info.unitLength);
+
+                Buffer.BlockCopy(k.Item2, appendSize * dd.info.unitLength* typeSize, dd.dataList,0, fromStartSize * dd.info.unitLength * typeSize);
             }
             nextBufferPointer = fromStartSize;
         }
@@ -136,19 +128,7 @@ public class DataBuffer
 
     public Type GetDataType(string key)
     {
-        DataType type = dataset[key].info.type;
-        if (type == DataType.Boolean)
-        {
-            return typeof(bool);
-        }
-        else if (type == DataType.Float)
-        {
-            return typeof(float);
-        }
-        else
-        {
-            return typeof(int);
-        }
+        return dataset[key].info.type;
     }
 
     /// <summary>
@@ -176,9 +156,12 @@ public class DataBuffer
             foreach (var d in fetchAndOffset)
             {
                 DataContainer c = dataset[d.Item1];
+                int typeSize = Marshal.SizeOf(c.info.type);
+
                 int unitLength = c.info.unitLength;
                 int actSampleInd = (sampleInd + d.Item2) % CurrentCount;
-                Array.Copy(c.dataList, actSampleInd * unitLength, result[d.Item3], i * unitLength, unitLength);
+                //Array.Copy(c.dataList, actSampleInd * unitLength, result[d.Item3], i * unitLength, unitLength);
+                Buffer.BlockCopy(c.dataList, actSampleInd * unitLength * typeSize, result[d.Item3], i * unitLength * typeSize, unitLength * typeSize);
             }
         }
 
@@ -221,9 +204,11 @@ public class DataBuffer
             foreach (var d in fetchAndOffset)
             {
                 DataContainer c = dataset[d.Item1];
+                int typeSize = Marshal.SizeOf(c.info.type);
                 int unitLength = c.info.unitLength;
                 int actSampleInd = (sampleInd + d.Item2) % CurrentCount;
-                Array.Copy(c.dataList, actSampleInd * unitLength, result[d.Item3], i * unitLength, unitLength);
+                //Array.Copy(c.dataList, actSampleInd * unitLength, result[d.Item3], i * unitLength, unitLength);
+                Buffer.BlockCopy(c.dataList, actSampleInd * unitLength * typeSize, result[d.Item3], i * unitLength * typeSize, unitLength * typeSize);
             }
         }
         return result;

@@ -43,11 +43,11 @@ public class TrainerPPO : Trainer
         var brainParameters = BrainToTrain.brainParameters;
 
         dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2,
-            new DataBuffer.DataInfo("State", DataBuffer.DataType.Float, brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize* brainParameters.numStackedVectorObservations : 1),
-            new DataBuffer.DataInfo("Action", DataBuffer.DataType.Float, brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1),
-            new DataBuffer.DataInfo("ActionProb", DataBuffer.DataType.Float, brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1),
-            new DataBuffer.DataInfo("TargetValue", DataBuffer.DataType.Float, 1),
-            new DataBuffer.DataInfo("Advantage", DataBuffer.DataType.Float, 1)
+            new DataBuffer.DataInfo("State", typeof(float), new int[] { brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations : 1 }),
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
+            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
+            new DataBuffer.DataInfo("TargetValue", typeof(float), new int[] { 1 }),
+            new DataBuffer.DataInfo("Advantage", typeof(float), new int[] { 1 })
             );
 
 
