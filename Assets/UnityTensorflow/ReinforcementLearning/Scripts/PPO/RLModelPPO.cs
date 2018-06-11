@@ -5,6 +5,7 @@ using Accord.Statistics.Distributions.Univariate;
 using System;
 using System.Linq;
 using Accord;
+using Accord.Math;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -26,34 +27,28 @@ public class RLModelPPO : MonoBehaviour
 
     public RLNetworkAC network;
 
+    public bool HasVisualObservation { get; private set; }
+    public bool HasVectorObservation { get; private set; }
+    public bool HasRecurrent { get; private set; } = false;
+
     public void Initialize(Brain brain)
     {
-
-
         actionSize = brain.brainParameters.vectorActionSize;
-        stateSize = brain.brainParameters.vectorObservationSize;
+        stateSize = brain.brainParameters.vectorObservationSize*brain.brainParameters.numStackedVectorObservations;
 
-        var inputStateTensor = UnityTFUtils.Input(new int?[] { stateSize }, name: "InputStates")[0];
+        //create basic inputs
+        var inputStateTensor = stateSize > 0?UnityTFUtils.Input(new int?[] { stateSize }, name: "InputStates")[0]:null;
+        HasVectorObservation = inputStateTensor != null;
+        var inputVisualTensors = CreateVisualInputs(brain);
+        HasVisualObservation = inputVisualTensors != null;
 
-        //actor network output mean
-        ///var actorDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        ///var actorDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        ///var actorOutput = new Dense(units: actionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
-        ///var OutputMean = actorOutput.Call(actorDense2.Call(actorDense1.Call(inputStateTensor)[0])[0])[0];
-
-        //value networkoutput value
-        //var valueDense1 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        //var valueDense2 = new Dense(128, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: 1f));
-        //var valueOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: 1f));
-        //var OutputValue = valueOutput.Call(valueDense2.Call(valueDense1.Call(inputStateTensor)[0])[0])[0];
-
+        //build the network
+        Tensor OutputValue = null, OutputMean = null;
+        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, actionSize, out OutputMean, out OutputValue);
 
         //actor network output variance
         var log_sigma_sq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
         var OutputVariance = K.exp(log_sigma_sq);
-        
-        Tensor OutputValue = null, OutputMean = null;
-        network.BuildNetwork(inputStateTensor, null, null, null, actionSize, out OutputMean, out OutputValue);
 
         //training needed inputs
         var InputAction = UnityTFUtils.Input(new int?[] { actionSize }, name: "InputAction")[0];
@@ -63,8 +58,6 @@ public class RLModelPPO : MonoBehaviour
         var InputClipEpsilon = K.constant(0.1, name: "ClipEpsilon");
         var InputValuelossWeight = K.constant(1, name: "ValueLossWeight");
         var InputEntropyLossWeight = K.constant(0, name: "EntropyLossWeight");
-
-
 
         // action probability from input action
         Tensor OutputEntropy;
@@ -97,50 +90,125 @@ public class RLModelPPO : MonoBehaviour
         //add inputs, outputs and parameters to the list
         List<Tensor> updateParameters = new List<Tensor>();
         List<Tensor> allInputs = new List<Tensor>();
-
+        List<Tensor> observationInputs = new List<Tensor>();
         updateParameters.AddRange(network.GetWeights());
-        //updateParameters.AddRange(actorOutput.weights);
-        //updateParameters.AddRange(valueDense1.weights);
-        //updateParameters.AddRange(valueOutput.weights);
         updateParameters.Add(log_sigma_sq);
 
-        allInputs.Add(inputStateTensor);
+        if (HasVectorObservation)
+        {
+            allInputs.Add(inputStateTensor);
+            observationInputs.Add(inputStateTensor);
+        }
+        if (HasVisualObservation)
+        {
+            allInputs.AddRange(inputVisualTensors);
+            observationInputs.AddRange(inputVisualTensors);
+        }
         allInputs.Add(InputAction);
         allInputs.Add(InputOldProb);
         allInputs.Add(InputTargetValue);
         allInputs.Add(InputAdvantage);
 
+        //create optimizer and create necessary functions
         optimizer = new Adam(lr: 0.001);
         var updates = optimizer.get_updates(updateParameters, null, OutputLoss); ;
         UpdateFunction = K.function(allInputs, new List<Tensor> { OutputLoss, OutputValueLoss, OutputPolicyLoss }, updates, "UpdateFunction");
-        ValueFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputValue }, null, "ValueFunction");
-        ActionFunction = K.function(new List<Tensor> { inputStateTensor }, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
+        ValueFunction = K.function(observationInputs, new List<Tensor> { OutputValue }, null, "ValueFunction");
+        ActionFunction = K.function(observationInputs, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
         //test
         //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
 
-    public float[] EvaluateValueOne(float[] state)
+    protected List<Tensor> CreateVisualInputs(Brain brain)
     {
-        var result = ValueFunction.Call(new List<Array> { state });
-        return new float[] { ((float[,])result[0].eval())[0,0] };
+        if(brain.brainParameters.cameraResolutions == null || brain.brainParameters.cameraResolutions.Length == 0)
+        {
+            return null;
+        }
+        List<Tensor> allInputs = new List<Tensor>();
+        int i = 0;
+        foreach(var r in brain.brainParameters.cameraResolutions)
+        {
+            int width = r.width;
+            int height = r.height;
+            int channels;
+            if (r.blackAndWhite)
+                channels = 1;
+            else
+                channels = 3;
+
+            var input = UnityTFUtils.Input(new int?[] { height, width, channels }, name: "InputVisual" + i)[0];
+            allInputs.Add(input);
+
+            i ++;
+        }
+
+        return allInputs;
     }
 
 
-    public float[] EvaluateActionOne(float[] state, out float[] actionProbs, SpaceType actionSpace, bool useProbability = true)
-    {
-        var result = ActionFunction.Call(new List<Array> { state });
 
-        var means = (float[,])result[0].eval();
+
+
+
+    /// <summary>
+    /// evaluate the value of current states
+    /// </summary>
+    /// <param name="vectorObservation">current states. Can be batch input</param>
+    /// <returns>values of current states</returns>
+    public float[] EvaluateValue(float[] vectorObservation, List<float[,,,]> visualObservation)
+    {
+        List<Array> inputLists = new List<Array>();
+        if (HasVectorObservation)
+        {
+            inputLists.Add(vectorObservation);
+        }
+        if (HasVisualObservation)
+        {
+            inputLists.AddRange(visualObservation);
+        }
+
+        var result = ValueFunction.Call(inputLists);
+        //return new float[] { ((float[,])result[0].eval())[0,0] };
+        return ((float[,])result[0].eval()).Flatten();
+    }
+
+    /// <summary>
+    /// Query actions based on curren states
+    /// </summary>
+    /// <param name="vectorObservation">current vector states. Can be batch input</param>
+    /// <param name="actionProbs">output actions' probabilities</param>
+    /// <param name="actionSpace">action space type.</param>
+    /// <param name="useProbability">when true, the output actions are sampled based on output mean and variance. Otherwise it uses mean directly.</param>
+    /// <returns></returns>
+    public float[] EvaluateAction(float[] vectorObservation, out float[] actionProbs, List<float[,,,]> visualObservation, SpaceType actionSpace, bool useProbability = true)
+    {
+        List<Array> inputLists = new List<Array>();
+        if (HasVectorObservation)
+        {
+            inputLists.Add(vectorObservation);
+        }
+        if (HasVisualObservation)
+        {
+            inputLists.AddRange(visualObservation);
+        }
+
+        var result = ActionFunction.Call(inputLists);
+
+        var means = ((float[,])result[0].eval()).Flatten();
         var vars = (float[])result[1].eval();
 
         float[] actions = new float[means.Length];
         actionProbs = new float[means.Length];
-        for (int j = 0; j < actionSize; ++j)
+        for (int j = 0; j < means.Length; ++j)
         {
-            var std = Mathf.Sqrt(vars[j]);
-            var dis = new NormalDistribution(means[0,j], std);
-            
-            actions[j] = (float)dis.Generate();
+            var std = Mathf.Sqrt(vars[j%actionSize]);
+            var dis = new NormalDistribution(means[j], std);
+
+            if (useProbability)
+                actions[j] = (float)dis.Generate();
+            else
+                actions[j] = means[j];
             actionProbs[j] = (float)dis.ProbabilityDensityFunction(actions[j]);
         }
 

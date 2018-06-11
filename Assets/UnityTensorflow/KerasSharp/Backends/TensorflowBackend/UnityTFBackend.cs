@@ -310,6 +310,17 @@ public class UnityTFBackend : BackendBase, IBackend
         throw new NotImplementedException();
     }
 
+    public Tensor concat(List<Tensor> tensors, int axis)
+    {
+        TFOutput[] alloutputs = new TFOutput[tensors.Count];
+        for(int i = 0; i < tensors.Count;++i)
+        {
+            alloutputs[i] = In(tensors[i]);
+        }
+        return Out(Graph.ConcatV2(alloutputs, _constant(axis)));
+    }
+
+
     public Tensor constant<T>(T value, int[] shape = null, DataType? dtype = null, string name = null)
     {
         if (dtype == null)

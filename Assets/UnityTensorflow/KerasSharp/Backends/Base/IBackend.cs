@@ -65,6 +65,8 @@ public interface IBackend : IDisposable
 
     Tensor cast(Tensor x, DataType dataType);
 
+    Tensor concat(List<Tensor> tensors, int axis);
+
 
     Tensor dropout(Tensor p, double keep_prob, int[] noise_shape, int? seed);
 
