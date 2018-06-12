@@ -12,7 +12,7 @@ public abstract class RLNetworkAC : ScriptableObject {
 
 
 
-    public abstract void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize,
+    public abstract void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize,SpaceType actionSpace,
         out Tensor outAction, out Tensor outValue);
 
 

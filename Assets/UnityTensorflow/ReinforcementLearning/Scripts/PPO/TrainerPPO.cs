@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Accord.Math;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 public class TrainerPPO : Trainer
 {
@@ -17,24 +18,31 @@ public class TrainerPPO : Trainer
 
     public int Steps { get; protected set; } = 0;
 
-    protected Dictionary<Agent, List<float>> statesEpisodeHistory;
-    protected Dictionary<Agent, List<float>> rewardsEpisodeHistory;
-    protected Dictionary<Agent, List<float>> actionsEpisodeHistory;
-    protected Dictionary<Agent, List<float>> actionprobsEpisodeHistory;
-    protected Dictionary<Agent, List<float>> valuesEpisodeHistory;
-
+    protected Dictionary<Agent, List<float>> statesEpisodeHistory = null;
+    protected Dictionary<Agent, List<float>> rewardsEpisodeHistory = null;
+    protected Dictionary<Agent, List<float>> actionsEpisodeHistory = null;
+    protected Dictionary<Agent, List<float>> actionprobsEpisodeHistory = null;
+    protected Dictionary<Agent, List<float>> valuesEpisodeHistory = null;
+    protected Dictionary<Agent, List<List<float[,,]>>> visualEpisodeHistory = null;
 
     StatsLogger stats;
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
 
-    private void Awake()
+
+
+    public override void SetBrain(Brain brain)
+    {
+        this.BrainToTrain = brain;
+    }
+    public override void Initialize()
     {
         statesEpisodeHistory = new Dictionary<Agent, List<float>>();
         rewardsEpisodeHistory = new Dictionary<Agent, List<float>>();
         actionsEpisodeHistory = new Dictionary<Agent, List<float>>();
         actionprobsEpisodeHistory = new Dictionary<Agent, List<float>>();
         valuesEpisodeHistory = new Dictionary<Agent, List<float>>();
+        visualEpisodeHistory = new Dictionary<Agent, List<List<float[,,]>>>();
 
         accumulatedRewards = new Dictionary<Agent, float>();
         episodeSteps = new Dictionary<Agent, int>();
@@ -42,13 +50,29 @@ public class TrainerPPO : Trainer
 
         var brainParameters = BrainToTrain.brainParameters;
 
-        dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2,
-            new DataBuffer.DataInfo("State", typeof(float), new int[] { brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations : 1 }),
+        List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
             new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
             new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
             new DataBuffer.DataInfo("TargetValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("Advantage", typeof(float), new int[] { 1 })
-            );
+        };
+
+        if (brainParameters.vectorObservationSize > 0)
+            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] { brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations : 1 }));
+
+        for(int i = 0; i < brainParameters.cameraResolutions.Length; ++i)
+        {
+            int width = brainParameters.cameraResolutions[i].width;
+            int height = brainParameters.cameraResolutions[i].height;
+            int channels;
+            if (brainParameters.cameraResolutions[i].blackAndWhite)
+                channels = 1;
+            else
+                channels = 3;
+
+            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation"+i, typeof(float), new int[] { height , height, channels }));
+        }
+        dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2, allBufferData.ToArray());
 
 
         stats = new StatsLogger();
@@ -62,10 +86,7 @@ public class TrainerPPO : Trainer
         modelRef.SetLearningRate(parameters.learningRate);
         base.Update();
     }
-    public override void SetBrain(Brain brain)
-    {
-        this.BrainToTrain = brain;
-    }
+
 
     public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
     {
@@ -79,13 +100,26 @@ public class TrainerPPO : Trainer
                 actionsEpisodeHistory[agent] = new List<float>();
                 actionprobsEpisodeHistory[agent] = new List<float>();
                 valuesEpisodeHistory[agent] = new List<float>();
+                visualEpisodeHistory[agent] = new List<List<float[,,]>>();
+                foreach(var c in currentInfo[agent].visualObservations)
+                {
+                    visualEpisodeHistory[agent].Add(new List<float[,,]>());
+                }
                 accumulatedRewards[agent] = 0;
             }
-            statesEpisodeHistory[agent].AddRange(currentInfo[agent].stackedVectorObservation.ToArray());
+            if(currentInfo[agent].stackedVectorObservation.Count > 0)
+                statesEpisodeHistory[agent].AddRange(currentInfo[agent].stackedVectorObservation.ToArray());
             rewardsEpisodeHistory[agent].Add(newInfo[agent].reward);
             actionsEpisodeHistory[agent].AddRange(actionOutput.outputAction[agent]);
             actionprobsEpisodeHistory[agent].AddRange(actionOutput.allProbabilities[agent]);
             valuesEpisodeHistory[agent].Add(actionOutput.value[agent]);
+
+            //add the visual observations
+            for(int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
+            {
+                var res = BrainToTrain.brainParameters.cameraResolutions[i];
+                visualEpisodeHistory[agent][i].Add(TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite));
+            }
 
             accumulatedRewards[agent] += newInfo[agent].reward;
             if(agent.GetStepCount() != 0)
@@ -123,7 +157,8 @@ public class TrainerPPO : Trainer
             if (agentNewInfo.done || agentNewInfo.maxStepReached)
             {
                 //update process the episode data for PPO.
-                float nextValue = modelRef.EvaluateValue(agentNewInfo.stackedVectorObservation.ToArray(), CreateVisualIInputBatch(newInfo, new List<Agent>() { agent }))[0];
+                float nextValue = modelRef.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
+                    CreateVisualIInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
                 var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
                     valuesEpisodeHistory[agent].ToArray(), parameters.rewardDiscountFactor, parameters.rewardGAEFactor, nextValue);
                 float[] targetValues = new float[advantages.Length];
@@ -133,21 +168,31 @@ public class TrainerPPO : Trainer
                 {
                     targetValues[i] = advantages[i] + valueHistory[i];
                 }
-                //test
+                
+                //add those processed data to the buffer
 
-                dataBuffer.AddData(ValueTuple.Create<string, Array>("State", statesEpisodeHistory[agent].ToArray()),
-                    ValueTuple.Create<string, Array>("Action", actionsEpisodeHistory[agent].ToArray()),
-                    ValueTuple.Create<string, Array>("ActionProb", actionprobsEpisodeHistory[agent].ToArray()),
-                    ValueTuple.Create<string, Array>("TargetValue", targetValues),
-                    ValueTuple.Create<string, Array>("Advantage", advantages)
-                    );
+                List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
+                dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionsEpisodeHistory[agent].ToArray()));
+                dataToAdd.Add(ValueTuple.Create<string, Array>("ActionProb", actionprobsEpisodeHistory[agent].ToArray()));
+                dataToAdd.Add(ValueTuple.Create<string, Array>("TargetValue", targetValues));
+                dataToAdd.Add(ValueTuple.Create<string, Array>("Advantage", advantages));
+                if (statesEpisodeHistory[agent].Count > 0)
+                    dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", statesEpisodeHistory[agent].ToArray()));
 
+               for(int i = 0; i < visualEpisodeHistory[agent].Count; ++i)
+                {
+                    dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, DataBuffer.ListToArray(visualEpisodeHistory[agent][i])));
+                    visualEpisodeHistory[agent][i].Clear();
+                }
+                //clear the temperary data record
                 statesEpisodeHistory[agent].Clear();
                 rewardsEpisodeHistory[agent].Clear();
                 actionsEpisodeHistory[agent].Clear();
                 actionprobsEpisodeHistory[agent].Clear();
                 valuesEpisodeHistory[agent].Clear();
 
+                dataBuffer.AddData(dataToAdd.ToArray());
+                
                 //update stats
                 stats.AddData("accumulatedRewards",accumulatedRewards[agent],parameters.rewardLogInterval);
                 accumulatedRewards[agent] = 0;
@@ -162,47 +207,28 @@ public class TrainerPPO : Trainer
     {
         var result = new TakeActionOutput();
         result.allProbabilities = new Dictionary<Agent, float[]>();
-        //result.entropy = new Dictionary<Agent, float>();
         result.outputAction = new Dictionary<Agent, float[]>();
         result.value = new Dictionary<Agent, float>();
-        //result.memory = new Dictionary<Agent, float[]>();
-        //result.textAction = new Dictionary<Agent, string>();
 
-        var agentList = agentInfos.Keys;
+        var agentList = new List<Agent>(agentInfos.Keys);
+
+        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
 
-        List<float> statesAll = new List<float>();
-        foreach (var agent in agentList)
-        {
-            statesAll.AddRange(agentInfos[agent].stackedVectorObservation);
-        }
-        float[] actionProbs = null;
-        var actions = modelRef.EvaluateAction(statesAll.ToArray(), out actionProbs, null,BrainToTrain.brainParameters.vectorActionSpaceType);
-        var values = modelRef.EvaluateValue(statesAll.ToArray(),null);
+        float[,] actionProbs = null;
+        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, BrainToTrain.brainParameters.vectorActionSpaceType);
+        var values = modelRef.EvaluateValue(vectorObsAll, visualObsAll);
 
 
         int i = 0;
         foreach (var agent in agentList)
         {
-            result.allProbabilities[agent] = actionProbs.Get(i* BrainToTrain.brainParameters.vectorActionSize, (i+1)* BrainToTrain.brainParameters.vectorActionSize);
-            result.outputAction[agent] = actions.Get(i * BrainToTrain.brainParameters.vectorActionSize, (i + 1) * BrainToTrain.brainParameters.vectorActionSize);
+            result.allProbabilities[agent] = actionProbs.GetRow(i);
+            result.outputAction[agent] = actions.GetRow(i);
             result.value[agent] = values[i];
             i++;
         }
-
-        /*foreach (var agent in agentList)
-        {
-            //get the action from model
-            float[] states = agentInfos[agent].stackedVectorObservation.ToArray();
-            float[] actionProbs = null;
-            float[] tempAction = modelRef.EvaluateAction(states, out actionProbs, brain.brainParameters.vectorActionSpaceType);
-            result.allProbabilities[agent] = actionProbs;
-            result.outputAction[agent] = tempAction;
-
-            //get the expected value from model
-            float[] value = modelRef.EvaluateValue(states);
-            result.value[agent] = value[0];
-        }*/
         
 
         return result;
@@ -213,21 +239,38 @@ public class TrainerPPO : Trainer
     public override void UpdateModel()
     {
         var fetches = new List<ValueTuple<string, int, string>>();
-        fetches.Add(new ValueTuple<string, int, string>("State", 0, "State"));
+        if(BrainToTrain.brainParameters.vectorObservationSize > 0)
+            fetches.Add(new ValueTuple<string, int, string>("VectorObservation", 0, "VectorObservation"));
         fetches.Add(new ValueTuple<string, int, string>("Action", 0, "Action"));
         fetches.Add(new ValueTuple<string, int, string>("ActionProb", 0, "ActionProb"));
         fetches.Add(new ValueTuple<string, int, string>("TargetValue", 0, "TargetValue"));
         fetches.Add(new ValueTuple<string, int, string>("Advantage", 0, "Advantage"));
+        for(int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
+        {
+            fetches.Add(new ValueTuple<string, int, string>("VisualObservation" + i, 0, "VisualObservation" + i));
+        }
+
 
         float loss = 0, policyLoss = 0, valueLoss = 0;
         for (int i = 0; i < parameters.numEpochPerTrain; ++i)
         {
             var samples = dataBuffer.SampleBatchesReordered(parameters.batchSize, fetches.ToArray());
-            float[] states = (float[])samples["State"];
-            float[] actions = (float[])samples["Action"];
-            float[] actionProbs = (float[])samples["ActionProb"];
-            float[] targetValues = (float[])samples["TargetValue"];
-            float[] advantages = (float[])samples["Advantage"];
+
+            var vectorObsArray = samples.TryGetOr("VectorObservation", null);
+            float[,] vectorObservations = vectorObsArray== null? null: vectorObsArray as float[,];
+            float[,] actions = (float[,])samples["Action"];
+            float[,] actionProbs = (float[,])samples["ActionProb"];
+            float[,] targetValues = (float[,])samples["TargetValue"];
+            float[,] advantages = (float[,])samples["Advantage"];
+
+            
+            List<float[,,,]> visualObservations = null;
+            for (int j = 0; j < BrainToTrain.brainParameters.cameraResolutions.Length; ++j)
+            {
+                if (j == 0)
+                    visualObservations = new List<float[,,,]>();
+                visualObservations.Add((float[,,,])samples["VisualObservation" + i]);
+            }
 
             int batchCount = targetValues.Length / parameters.batchSize;
             int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
@@ -238,11 +281,13 @@ public class TrainerPPO : Trainer
             for (int j = 0; j < batchCount; ++j)
             {
                 
-                float[] losses = modelRef.TrainBatch(SubArray(states, j * parameters.batchSize * totalStateSize, parameters.batchSize * totalStateSize),
-                    SubArray(actions, j * parameters.batchSize * actionUnitSize, parameters.batchSize * actionUnitSize),
-                    SubArray(actionProbs, j * parameters.batchSize * actionUnitSize, parameters.batchSize * actionUnitSize),
-                    SubArray(targetValues, j * parameters.batchSize, parameters.batchSize),
-                    SubArray(advantages, j * parameters.batchSize, parameters.batchSize));
+                float[] losses = modelRef.TrainBatch(SubRows(vectorObservations, j * parameters.batchSize , parameters.batchSize ),
+                    SubRows(visualObservations, j * parameters.batchSize, parameters.batchSize),
+                    SubRows(actions, j * parameters.batchSize , parameters.batchSize ),
+                    SubRows(actionProbs, j * parameters.batchSize , parameters.batchSize ),
+                    SubRows(targetValues, j * parameters.batchSize, parameters.batchSize).Flatten(),
+                    SubRows(advantages, j * parameters.batchSize, parameters.batchSize).Flatten()
+                    );
                 tempLoss += losses[0];
                 tempPolicyLoss += losses[1];
                 tempValueLoss += losses[2];
@@ -259,30 +304,37 @@ public class TrainerPPO : Trainer
     }
 
 
-    private static T[] SubArray<T>(T[] data, int index, int length)
+    private static T[,] SubRows<T>(T[,] data, int startRow, int rowCount)
     {
-        T[] result = new T[length];
-        Array.Copy(data, index, result, 0, length);
+        if (data == null)
+            return null;
+        int rowLength = data.GetLength(1);
+        T[,] result = new T[rowCount, rowLength];
+        int typeSize = Marshal.SizeOf(typeof(T));
+        Buffer.BlockCopy(data, startRow * rowLength * typeSize, result, 0, rowCount * rowLength * typeSize);
+        //Array.Copy(data, index, result, 0, length);
         return result;
     }
 
-    public List<float[,,,]> CreateVisualIInputBatch(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList)
+    private static List<T[,,,]> SubRows<T>(List<T[,,,]> data, int startRow, int rowCount)
     {
-        var observationMatrixList = new List<float[,,,]>();
-        var texturesHolder = new List<Texture2D>();
-
-        for (int observationIndex = 0; observationIndex < BrainToTrain.brainParameters.cameraResolutions.Count(); observationIndex++)
+        if (data == null || data.Count == 0)
+            return null;
+        List<T[,,,]> result = new List<T[,,,]>();
+        for(int i = 0; i < data.Count; ++i)
         {
-            texturesHolder.Clear();
-            foreach (Agent agent in agentList)
-            {
-                texturesHolder.Add(currentInfo[agent].visualObservations[observationIndex]);
-            }
-            observationMatrixList.Add(
-                CoreBrainInternal.BatchVisualObservations(texturesHolder, BrainToTrain.brainParameters.cameraResolutions[observationIndex].blackAndWhite));
+            int rowLength1 = data[i].GetLength(1);
+            int rowLength2 = data[i].GetLength(2);
+            int rowLength3 = data[i].GetLength(3);
+            int rowLengthTotal = rowLength1 * rowLength2 * rowLength3;
+
+            result.Add( new T[rowCount, rowLength1, rowLength2, rowLength3]);
+            int typeSize = Marshal.SizeOf(typeof(T));
+
+            Buffer.BlockCopy(data[i], startRow * rowLengthTotal * typeSize, result[i], 0, rowCount * rowLengthTotal * typeSize);
         }
 
-        return observationMatrixList;
+        return result;
     }
 
 }

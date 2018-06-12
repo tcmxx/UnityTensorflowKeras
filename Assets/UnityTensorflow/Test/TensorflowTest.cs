@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-using Accord;
+using Accord.Math;
 
 using static Current;
 
@@ -22,6 +22,9 @@ public class TensorflowTest : MonoBehaviour {
         //TestSetAndGetValue();
 
         TestModelCompileAndFit();
+
+        float[,] test = new float[2, 3]{ {1,2,3 },{4,5,6 } };
+        print(string.Join(",",test.GetRow(0)));
     }
 	
 

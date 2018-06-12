@@ -47,7 +47,7 @@ public class Flatten : Layer
     public override List<int?[]> compute_output_shape(List<int?[]> input_shapes)
     {
         // https://github.com/fchollet/keras/blob/f65a56fb65062c8d14d215c9f4b1015b97cc5bf3/keras/layers/core.py#L473
-        if (input_shapes.Count > 0)
+        if (input_shapes.Count != 1)
             throw new Exception();
 
         var input_shape = input_shapes[0];
@@ -58,7 +58,7 @@ public class Flatten : Layer
                 $"Make sure to pass a complete {input_shape} or {batch_input_shape} argument to the first layer in your model.");
         }
 
-        int size = 0;
+        int size = 1;
         for(int i = 1; i < input_shape.Length; ++i)
         {
             size *= input_shape[i].Value;

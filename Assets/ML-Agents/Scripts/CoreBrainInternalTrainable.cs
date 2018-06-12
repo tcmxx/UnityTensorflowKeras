@@ -34,6 +34,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     
     public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
     {
+        trainer.Initialize();
     }
 
 

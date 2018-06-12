@@ -17,14 +17,14 @@ public class RLNetworkSimpleAC : RLNetworkAC
     protected List<Tensor> weights;
 
 
-    public override void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize,
+    public override void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize, SpaceType actionSpace,
         out Tensor outAction, out Tensor outValue)
     {
 
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
         Debug.Assert(inPrevAction == null, "Currently previous action input is not supported by RLNetworkSimpleAC");
         Debug.Assert(!(inVectorstate == null && inVisualState == null), "Network need at least one vector observation or visual observation");
-
+        Debug.Assert(actionSpace == SpaceType.continuous, "Only continuous action space is supported by RLNetworkSimpleAC");
         weights = new List<Tensor>();
 
         //visual encoders
@@ -41,8 +41,19 @@ public class RLNetworkSimpleAC : RLNetworkAC
                 visualEncodedActor.Add(ha);
                 visualEncodedCritic.Add(hc);
             }
-            encodedVisualActor = Current.K.concat(visualEncodedActor, 1);
-            encodedVisualCritic = Current.K.concat(visualEncodedCritic, 1);
+            if(inVisualState.Count > 1)
+            {
+                Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
+                encodedVisualActor = Current.K.concat(visualEncodedActor, 1);
+                encodedVisualCritic = Current.K.concat(visualEncodedCritic, 1);
+            }
+            else
+            {
+                encodedVisualActor = visualEncodedActor[0];
+                encodedVisualCritic = visualEncodedCritic[0];
+            }
+
+
         }
 
         //vector states encode
@@ -70,6 +81,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         }
         else if(inVisualState != null && inVectorstate != null)
         {
+            Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
             encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor,encodedVisualActor},1);
             encodedAllCritic = Current.K.concat(new List<Tensor>() { encodedVectorStateCritic, encodedVisualCritic }, 1);
         }
@@ -98,8 +110,9 @@ public class RLNetworkSimpleAC : RLNetworkAC
             temp = conv1.Call(visualInput)[0];
             temp = conv2.Call(temp)[0];
 
-            temp = Current.K.batch_flatten(temp);
-
+            var flatten = new Flatten();
+            //temp = Current.K.batch_flatten(temp);
+            temp = flatten.Call(temp)[0];
             weights.AddRange(conv1.weights);
             weights.AddRange(conv2.weights);
         }

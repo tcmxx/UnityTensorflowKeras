@@ -147,7 +147,8 @@ public class DataBuffer
         {
             Debug.Assert(dataset.ContainsKey(d.Item1));
             Debug.Assert(!result.ContainsKey(d.Item3));
-            result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), dataset[d.Item1].info.unitLength * numOfSamples);
+            //result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), dataset[d.Item1].info.unitLength * numOfSamples);
+            result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), (new int[] { numOfSamples }).Concat(dataset[d.Item1].info.dimension).ToArray());
         }
 
         for (int i = 0; i < numOfSamples; ++i)
@@ -194,7 +195,8 @@ public class DataBuffer
         {
             Debug.Assert(dataset.ContainsKey(d.Item1));
             Debug.Assert(!result.ContainsKey(d.Item3));
-            result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), dataset[d.Item1].info.unitLength * numToSample);
+            //result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), dataset[d.Item1].info.unitLength * numToSample);
+            result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), (new int[] { numToSample }).Concat(dataset[d.Item1].info.dimension).ToArray());
         }
 
 
@@ -260,4 +262,25 @@ public class DataBuffer
         return advantages;
     }
 
+
+
+    public static float[,,,] ListToArray(List<float[,,]> arrays)
+    {
+        List<int> lengths = new List<int>();
+        int totalLength = arrays[0].Length;
+        lengths.Add(arrays.Count);
+        for(int i = 0; i < arrays[0].Rank; ++i)
+        {
+            lengths.Add(arrays[0].GetLength(i));
+        }
+        var result = Array.CreateInstance(typeof(float), lengths.ToArray());
+
+        int typeSize = sizeof(float);
+        for (int i = 0; i < arrays.Count; ++i)
+        {
+            Debug.Assert(arrays[i].Length == totalLength, "Input arrays must have the same length");
+            Buffer.BlockCopy(arrays[i], 0, result, i * totalLength * typeSize, totalLength * typeSize);
+        }
+        return result as float[,,,];
+    }
 }

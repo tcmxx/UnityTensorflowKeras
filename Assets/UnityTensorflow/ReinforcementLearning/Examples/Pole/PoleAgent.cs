@@ -13,7 +13,7 @@ public class PoleAgent : Agent
     public float angleR;    //in radian
 
     public GameObject poleObjectRef;
-
+    public bool noVectorObservation = false;
     private void Update()
     {
         poleObjectRef.transform.rotation = Quaternion.Euler(0, 0, angleR * Mathf.Rad2Deg + 180);
@@ -27,8 +27,11 @@ public class PoleAgent : Agent
 
     public override void CollectObservations()
     {
-        AddVectorObs(velR);
-        AddVectorObs(angleR);
+        if (!noVectorObservation)
+        {
+            AddVectorObs(velR);
+            AddVectorObs(angleR);
+        }
     }
 
     public override void AgentAction(float[] vectorAction, string textAction)

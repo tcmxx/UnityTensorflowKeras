@@ -317,7 +317,9 @@ public class UnityTFBackend : BackendBase, IBackend
         {
             alloutputs[i] = In(tensors[i]);
         }
-        return Out(Graph.ConcatV2(alloutputs, _constant(axis)));
+        return Out(Graph.Concat(_constant(axis),alloutputs));
+
+        //return batch_flatten(Out(Graph.Stack(alloutputs, axis,operName:"stackblabal")));
     }
 
 
@@ -495,7 +497,6 @@ public class UnityTFBackend : BackendBase, IBackend
     {
         var y = new TFOutput[] { In(loss).Output };
         var x = param.Select(t => In(t).Output).ToList().ToArray();
-
         TFOutput[] grads = Graph.AddGradients(y, x);
         List<Tensor> r = new List<Tensor>();
         for (int i = 0; i < grads.Length; i++)
@@ -736,10 +737,20 @@ public class UnityTFBackend : BackendBase, IBackend
     public Tensor batch_flatten(Tensor x)
     {
         //throw new NotImplementedException();
+        //use static reshape right now
         var _x = In(x);
-        TFOutput shape = Graph.Shape(_x);
-        TFOutput dim = Graph.Prod(Graph.Slice(shape, Graph.Const(1), Graph.Rank(shape)), reduction_indices: Graph.ReduceDims(shape, null));
-        return Out(Graph.Reshape(In(x), Graph.Stack(new TFOutput[] { Graph.Const(-1), dim })));
+        //TFOutput shape = Graph.Shape(_x);
+        var intShape = _x.shape;
+        var length = intShape.Select(v => v.HasValue&&v.Value>0 ? v.Value : 1).Aggregate((s, v) => s * v);
+        /*TFOutput dim = Graph.Prod(
+            Graph.Slice(
+                shape,
+                _constant(new int[] { 1 }, shape: new long[] { 1 }),
+                _constant(new int[] { intShape.Length-1 }, shape: new long[] { 1 })),
+            reduction_indices: _constant(new int[] { 0 }, shape: new long[] { 1 }));*/
+        //TFOutput dim = Graph.Prod(Graph.Slice(shape, Graph.Const(1), Graph.Rank(shape)), reduction_indices: Graph.ReduceDims(shape, null));
+        var output =  Out(Graph.Reshape(In(x), Graph.Stack(new TFOutput[] { Graph.Const(-1), Graph.Const(length) })));
+        return output;
     }
 
 

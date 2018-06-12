@@ -44,7 +44,7 @@ public class RLModelPPO : MonoBehaviour
 
         //build the network
         Tensor OutputValue = null, OutputMean = null;
-        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, actionSize, out OutputMean, out OutputValue);
+        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, actionSize, brain.brainParameters.vectorActionSpaceType, out OutputMean, out OutputValue);
 
         //actor network output variance
         var log_sigma_sq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
@@ -115,6 +115,8 @@ public class RLModelPPO : MonoBehaviour
         UpdateFunction = K.function(allInputs, new List<Tensor> { OutputLoss, OutputValueLoss, OutputPolicyLoss }, updates, "UpdateFunction");
         ValueFunction = K.function(observationInputs, new List<Tensor> { OutputValue }, null, "ValueFunction");
         ActionFunction = K.function(observationInputs, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
+
+        
         //test
         //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
@@ -154,17 +156,20 @@ public class RLModelPPO : MonoBehaviour
     /// <summary>
     /// evaluate the value of current states
     /// </summary>
-    /// <param name="vectorObservation">current states. Can be batch input</param>
+    /// <param name="vectorObservation">current vector observation. The first dimension of the array is the batch dimension.</param>
+    /// <param name="visualObservation">current visual observation. The first dimension of the array is the batch dimension.</param>
     /// <returns>values of current states</returns>
-    public float[] EvaluateValue(float[] vectorObservation, List<float[,,,]> visualObservation)
+    public float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
         {
+            Debug.Assert(vectorObservation != null, "Must Have vector observation inputs!");
             inputLists.Add(vectorObservation);
         }
         if (HasVisualObservation)
         {
+            Debug.Assert(visualObservation != null, "Must Have visual observation inputs!");
             inputLists.AddRange(visualObservation);
         }
 
@@ -174,42 +179,47 @@ public class RLModelPPO : MonoBehaviour
     }
 
     /// <summary>
-    /// Query actions based on curren states
+    /// Query actions based on curren states. The first dimension of the array must be batch dimension
     /// </summary>
     /// <param name="vectorObservation">current vector states. Can be batch input</param>
     /// <param name="actionProbs">output actions' probabilities</param>
     /// <param name="actionSpace">action space type.</param>
     /// <param name="useProbability">when true, the output actions are sampled based on output mean and variance. Otherwise it uses mean directly.</param>
     /// <returns></returns>
-    public float[] EvaluateAction(float[] vectorObservation, out float[] actionProbs, List<float[,,,]> visualObservation, SpaceType actionSpace, bool useProbability = true)
+    public float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, SpaceType actionSpace, bool useProbability = true)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
         {
+            Debug.Assert(vectorObservation != null, "Must Have vector observation inputs!");
             inputLists.Add(vectorObservation);
         }
         if (HasVisualObservation)
         {
+            Debug.Assert(visualObservation != null, "Must Have visual observation inputs!");
             inputLists.AddRange(visualObservation);
         }
 
         var result = ActionFunction.Call(inputLists);
 
-        var means = ((float[,])result[0].eval()).Flatten();
+        var means = ((float[,])result[0].eval());
         var vars = (float[])result[1].eval();
 
-        float[] actions = new float[means.Length];
-        actionProbs = new float[means.Length];
-        for (int j = 0; j < means.Length; ++j)
+        float[,] actions = new float[means.GetLength(0), means.GetLength(1)];
+        actionProbs = new float[means.GetLength(0), means.GetLength(1)];
+        for (int j = 0; j < means.GetLength(0); ++j)
         {
-            var std = Mathf.Sqrt(vars[j%actionSize]);
-            var dis = new NormalDistribution(means[j], std);
+            for (int i = 0; i < means.GetLength(1); ++i)
+            {
+                var std = Mathf.Sqrt(vars[i]);
+                var dis = new NormalDistribution(means[j,i], std);
 
-            if (useProbability)
-                actions[j] = (float)dis.Generate();
-            else
-                actions[j] = means[j];
-            actionProbs[j] = (float)dis.ProbabilityDensityFunction(actions[j]);
+                if (useProbability)
+                    actions[j,i] = (float)dis.Generate();
+                else
+                    actions[j,i] = means[j,i];
+                actionProbs[j,i] = (float)dis.ProbabilityDensityFunction(actions[j,i]);
+            }
         }
 
         return actions;
@@ -221,9 +231,19 @@ public class RLModelPPO : MonoBehaviour
         optimizer.SetLearningRate(rl);
     }
 
-    public float[] TrainBatch(float[] states, float[] actions, float[] actionProbs, float[] targetValues, float[] advantages)
+    public float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
     {
-        var loss = UpdateFunction.Call(new List<Array> { states, actions, actionProbs, targetValues, advantages });
+        List<Array> inputs = new List<Array>();
+        if (vectorObservations != null)
+            inputs.Add(vectorObservations);
+        if (visualObservations != null)
+            inputs.AddRange(visualObservations);
+        inputs.Add(actions);
+        inputs.Add(actionProbs);
+        inputs.Add(targetValues);
+        inputs.Add(advantages);
+
+        var loss = UpdateFunction.Call(inputs);
         return new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
     }
 
