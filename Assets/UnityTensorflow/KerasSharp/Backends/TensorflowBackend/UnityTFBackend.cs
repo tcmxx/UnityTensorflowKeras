@@ -167,6 +167,8 @@ public class UnityTFBackend : BackendBase, IBackend
         }
 
         Session.Run(new TFOutput[] { x.AssignPlaceHolder.Value }, new TFTensor[] { valueTensor }, new TFOutput[] { }, new TFOperation[] { x.AssignOperation } );
+
+        valueTensor.Dispose();
      }
 
     public void batch_set_value(List<ValueTuple<Tensor, Array>> weight_value_tuples)
@@ -206,6 +208,10 @@ public class UnityTFBackend : BackendBase, IBackend
 
         Session.Run(assignPlaceholders.ToArray(), valueTensors.ToArray(), new TFOutput[] { }, assignOps.ToArray());
         
+        foreach(var d in valueTensors)
+        {
+            d.Dispose();
+        }
     }
     
 
@@ -411,6 +417,8 @@ public class UnityTFBackend : BackendBase, IBackend
         //Debug.Log(string.Join(", ", Graph.GetShape(o.)));
         //Debug.Log(status.Ok);
 
+        t.Dispose();
+
         if (dtype == null || o.OutputType == dtype.Value)
             return o;
 
@@ -501,7 +509,9 @@ public class UnityTFBackend : BackendBase, IBackend
         List<Tensor> r = new List<Tensor>();
         for (int i = 0; i < grads.Length; i++)
             r.Add(Out(grads[i], name: "grad/" + x[i].Operation.Name));
-
+        
+        //var test = Graph["gradients / Conv2DBackpropInput_1"];
+        //test.GetAttributeMetadata
         return r;
     }
 
@@ -1209,10 +1219,14 @@ public class UnityTFBackend : BackendBase, IBackend
         string varName = t.Output.Operation.Name;
 
         TFOutput init;
-        if (_tensor.TensorTF == null)
+        if (_tensor.TensorValue == null)
             init = _tensor.Output;
         else
-            init = Graph.Cast(Graph.Const(_tensor.TensorTF), _dtype, operName: $"{name}/init");
+        {
+            TFTensor consInt = new TFTensor((Array)_tensor.TensorValue);
+            init = Graph.Cast(Graph.Const(consInt), _dtype, operName: $"{name}/init");
+            consInt.Dispose();
+        }
 
         //Debug.Log("tensorshape:" + string.Join(",",_tensor.Tensor.Shape));
         //TFOperation initOp;
@@ -1246,7 +1260,7 @@ public class UnityTFBackend : BackendBase, IBackend
         var _tensor = In(tensor);
         if (_tensor.ValueOnly)
         {
-            return _tensor.TensorTF.GetValue();
+            return _tensor.TensorValue;
         }
         else
         {

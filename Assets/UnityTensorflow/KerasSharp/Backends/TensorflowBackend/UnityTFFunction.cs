@@ -100,6 +100,8 @@ public class UnityTFFunction: Function
         foreach (var op in this.updates_op)
             runner.AddTarget(op);
 
+
+        List<TFTensor> tensors = new List<TFTensor>();
         foreach (KeyValuePair<Tensor, Array> pair in feed_dict)
         {
             UnityTFTensor t = backend.In(pair.Key);
@@ -118,7 +120,7 @@ public class UnityTFFunction: Function
             //TFTensor data = TFTensor.FromBuffer(new TFShape(actualShape), (dynamic)pair.Value, 0, totalLength *(pair.Value.Length / totalLength));
             TFTensor data = UnityTFUtils.TFTensorFromArray(pair.Value, new TFShape(actualShape));
 
-
+            tensors.Add(data);
             runner.AddInput(t.Output, data);
         }
 
@@ -126,6 +128,10 @@ public class UnityTFFunction: Function
 
         var updated = runner.Run();
 
+        foreach(var d in tensors)
+        {
+            d.Dispose();
+        }
         //Console.WriteLine();
 
         //foreach (var v in updated)
@@ -147,7 +153,8 @@ public class UnityTFFunction: Function
 
         return updated.Get(0, this.outputs.Count).Select(t => {
             var result = new UnityTFTensor(backend);
-            result.TensorTF = t;
+            result.TensorValue = t.GetValue();
+            result.TensorType = t.TensorType;
             return (Tensor)result;
         }).ToList();
 
@@ -202,6 +209,10 @@ public class UnityTFFunction: Function
 
                 object obj = v[0].GetValue();
 
+                foreach(var va in v)
+                {
+                    va.Dispose();
+                }
                 if (obj is float[,])
                     Console.WriteLine((obj as float[,]).ToCSharp());
                 else if (obj is float[])

@@ -116,9 +116,10 @@ public class RLModelPPO : MonoBehaviour
         ValueFunction = K.function(observationInputs, new List<Tensor> { OutputValue }, null, "ValueFunction");
         ActionFunction = K.function(observationInputs, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
 
-        
+
         //test
-        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        Debug.LogWarning("test save graph");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
 
     protected List<Tensor> CreateVisualInputs(Brain brain)
@@ -175,7 +176,8 @@ public class RLModelPPO : MonoBehaviour
 
         var result = ValueFunction.Call(inputLists);
         //return new float[] { ((float[,])result[0].eval())[0,0] };
-        return ((float[,])result[0].eval()).Flatten();
+        var value =  ((float[,])result[0].eval()).Flatten();
+        return value;
     }
 
     /// <summary>
@@ -204,7 +206,7 @@ public class RLModelPPO : MonoBehaviour
 
         var means = ((float[,])result[0].eval());
         var vars = (float[])result[1].eval();
-
+        
         float[,] actions = new float[means.GetLength(0), means.GetLength(1)];
         actionProbs = new float[means.GetLength(0), means.GetLength(1)];
         for (int j = 0; j < means.GetLength(0); ++j)
@@ -244,7 +246,12 @@ public class RLModelPPO : MonoBehaviour
         inputs.Add(advantages);
 
         var loss = UpdateFunction.Call(inputs);
-        return new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
+        var result =  new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
+
+        return result;
+        //Debug.LogWarning("test save graph");
+        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        //return new float[] { 0, 0, 0 }; //test for memeory allocation
     }
 
     

@@ -70,6 +70,16 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         //TODO: Save the model every certain amount of steps
 
         //copy the info
+        if(currentInfo != null)
+        {
+            foreach(var a in currentInfo)
+            {
+                foreach(var v in a.Value.visualObservations)
+                {
+                    Destroy(v);
+                }
+            }
+        }
         currentInfo = new Dictionary<Agent, AgentInfo>();
         foreach (Agent agent in agentList)
         {

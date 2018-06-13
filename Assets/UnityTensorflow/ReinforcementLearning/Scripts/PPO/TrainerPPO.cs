@@ -269,7 +269,7 @@ public class TrainerPPO : Trainer
             {
                 if (j == 0)
                     visualObservations = new List<float[,,,]>();
-                visualObservations.Add((float[,,,])samples["VisualObservation" + i]);
+                visualObservations.Add((float[,,,])samples["VisualObservation" + j]);
             }
 
             int batchCount = targetValues.Length / parameters.batchSize;

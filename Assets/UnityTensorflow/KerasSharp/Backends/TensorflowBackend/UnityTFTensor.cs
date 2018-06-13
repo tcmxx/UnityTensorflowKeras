@@ -9,7 +9,8 @@ using Accord;
 public class UnityTFTensor: Tensor
 {
 
-    public TFTensor TensorTF { get; set; }
+    public object TensorValue { get; set; }
+    public TFDataType TensorType { get; set; }
     public TFOutput Output { get {
             Debug.Assert(!ValueOnly, "This Tensor is value only and does not have a graph");
             Debug.Assert(output.HasValue, "This Tensor does not have  TFOutput");
@@ -23,7 +24,7 @@ public class UnityTFTensor: Tensor
     public bool ValueOnly {
         get
         {
-            return !output.HasValue && TensorTF != null;
+            return !output.HasValue && TensorValue != null;
         }
     }
 
@@ -53,8 +54,8 @@ public class UnityTFTensor: Tensor
     {
         get
         {
-            if (TensorTF != null)
-                return TensorTF.TensorType;
+            if (TensorValue != null)
+                return TensorType;
             return Output.OutputType;
         }
     }
@@ -96,5 +97,4 @@ public class UnityTFTensor: Tensor
         return t.Output;
     }
 
-   
 }
