@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
-  m_Name: PolePPOParams
+  m_Name: PoleVisualPPOParams
   m_EditorClassIdentifier: 
   maxTotalSteps: 100000000
   rewardDiscountFactor: 0.995
@@ -20,7 +20,6 @@ MonoBehaviour:
   batchSize: 128
   bufferSizeForTrain: 1024
   numEpochPerTrain: 5
-  learningRate: 0.001
+  learningRate: 0.0003
   lossLogInterval: 1
   rewardLogInterval: 10
-  saveModelInterval: 10000

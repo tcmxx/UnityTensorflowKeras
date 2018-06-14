@@ -80,7 +80,7 @@ public abstract class OptimizerBase
             Tensor p = param[i];
             Array w = weights[i];
 
-            if (pv.GetLength().IsEqual(w.GetLength()))
+            if (pv.GetLength().IsEqual(w.GetLength()) &&!(pv.Rank == 1 && pv.Length == w.Length))
                 throw new Exception($"Optimizer weight shape {pv.GetLength()} not compatible with provided weight shape {w.GetLength()}.");
 
             weight_value_tuples.Add(ValueTuple.Create(p, w));

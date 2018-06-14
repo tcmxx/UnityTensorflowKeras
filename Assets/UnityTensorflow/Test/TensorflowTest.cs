@@ -13,7 +13,7 @@ public class TensorflowTest : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-        //TestBasicBackendAndOptimizerAndExportGraph();
+        TestBasicBackendAndOptimizerAndExportGraph();
         //TestLayer();
 
         //TestConv2D();
@@ -21,10 +21,14 @@ public class TensorflowTest : MonoBehaviour {
         //
         //TestSetAndGetValue();
 
-        TestModelCompileAndFit();
+        //TestModelCompileAndFit();
 
-        float[,] test = new float[2, 3]{ {1,2,3 },{4,5,6 } };
-        print(string.Join(",",test.GetRow(0)));
+
+        float[,] test = new float[2, 2] { { 2, 3 }, { 4, 5 } };
+        Array ar = (Array)test;
+
+        Array flattened = ar.DeepFlatten();
+        float[] testF = flattened as float[];
     }
 	
 
@@ -69,11 +73,24 @@ public class TensorflowTest : MonoBehaviour {
         inputData.Add(new float[] { 1.2f, 3.3f, 4.3f, 5, 5, 5 });
         inputData.Add(new float[] { 2, 10 });
 
-        for (int i = 0; i < 20; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             var functionResult = function.Call(inputData);
             float resultLoss = (float)functionResult[0].eval();
             print(resultLoss);
+            var opWeights = optimizer.get_weights();
+            foreach(var w in opWeights)
+            {
+                string toPrint = "";
+                for(int j = 0; j < w.Length; ++j)
+                {
+                    if(w is float[])
+                        toPrint += " " + w.GetValue(j);
+                    else
+                        toPrint += " " + w.GetValue(j,0);
+                }
+                print("Weight:"+ toPrint);
+            }
         }
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/test.pb");
     }

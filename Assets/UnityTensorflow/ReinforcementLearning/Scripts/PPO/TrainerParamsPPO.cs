@@ -26,7 +26,7 @@ public class TrainerParamsPPO : ScriptableObject {
     [Header("Log related")]
     public int lossLogInterval = 1;
     public int rewardLogInterval = 10;
-
+    public int saveModelInterval = 10000;
     /// Displays the parameters of the CoreBrainInternal in the Inspector 
     public void OnInspector()
     {

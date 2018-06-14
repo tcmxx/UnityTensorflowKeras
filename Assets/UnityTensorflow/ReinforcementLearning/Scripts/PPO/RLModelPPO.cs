@@ -6,6 +6,8 @@ using System;
 using System.Linq;
 using Accord;
 using Accord.Math;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -30,6 +32,9 @@ public class RLModelPPO : MonoBehaviour
     public bool HasVisualObservation { get; private set; }
     public bool HasVectorObservation { get; private set; }
     public bool HasRecurrent { get; private set; } = false;
+    
+    //the variable for variance
+    protected Tensor logSigmaSq = null;
 
     public void Initialize(Brain brain)
     {
@@ -47,8 +52,8 @@ public class RLModelPPO : MonoBehaviour
         network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, actionSize, brain.brainParameters.vectorActionSpaceType, out OutputMean, out OutputValue);
 
         //actor network output variance
-        var log_sigma_sq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
-        var OutputVariance = K.exp(log_sigma_sq);
+        logSigmaSq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
+        var OutputVariance = K.exp(logSigmaSq);
 
         //training needed inputs
         var InputAction = UnityTFUtils.Input(new int?[] { actionSize }, name: "InputAction")[0];
@@ -88,11 +93,9 @@ public class RLModelPPO : MonoBehaviour
 
 
         //add inputs, outputs and parameters to the list
-        List<Tensor> updateParameters = new List<Tensor>();
+        List<Tensor> updateParameters = GetAllModelWeights();
         List<Tensor> allInputs = new List<Tensor>();
         List<Tensor> observationInputs = new List<Tensor>();
-        updateParameters.AddRange(network.GetWeights());
-        updateParameters.Add(log_sigma_sq);
 
         if (HasVectorObservation)
         {
@@ -254,5 +257,70 @@ public class RLModelPPO : MonoBehaviour
         //return new float[] { 0, 0, 0 }; //test for memeory allocation
     }
 
-    
+
+
+    /// <summary>
+    /// save the models all parameters to a byte array
+    /// </summary>
+    /// <returns></returns>
+    public byte[] SaveCheckpoint()
+    {
+        List<Array> data = GetAllModelWeights().Select(t => (Array)t.eval()).ToList();
+        data.AddRange(GetAllOptimizerWeights());
+
+        List<float[]> flattenedData = new List<float[]>();
+        foreach(var d in data)
+        {
+            flattenedData.Add(d.FlattenAndConvertArray<float>());
+        }
+
+        var binFormatter = new BinaryFormatter();
+        var mStream = new MemoryStream();
+        binFormatter.Serialize(mStream, flattenedData);
+        return mStream.ToArray();
+    }
+
+    public void RestoreCheckpoint(byte[]  data)
+    {
+        //deserialize the data
+        var mStream = new MemoryStream(data);
+        var binFormatter = new BinaryFormatter();
+        var floatData = (List<float[]>)binFormatter.Deserialize(mStream);
+
+        List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
+        var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
+        var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
+        SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
+        SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+    }
+
+    public List<Tensor> GetAllModelWeights()
+    {
+        List<Tensor> updateParameters = new List<Tensor>();
+        updateParameters.AddRange(network.GetWeights());
+        updateParameters.Add(logSigmaSq);
+        return updateParameters;
+    }
+    public List<Array> GetAllOptimizerWeights()
+    {
+        return optimizer.get_weights();
+    }
+
+    public void SetAllModelWeights(List<Array> values)
+    {
+        List<Tensor> updateParameters = new List<Tensor>();
+        updateParameters.AddRange(network.GetWeights());
+        updateParameters.Add(logSigmaSq);
+
+        Debug.Assert(values.Count == updateParameters.Count, "Counts of input values and parameters to update do not match.");
+
+        for(int i = 0; i < updateParameters.Count; ++i)
+        {
+            K.set_value(updateParameters[i], values[i]);
+        }
+    }
+    public void SetAllOptimizerWeights(List<Array> values)
+    {
+        optimizer.set_weights(values);
+    }
 }

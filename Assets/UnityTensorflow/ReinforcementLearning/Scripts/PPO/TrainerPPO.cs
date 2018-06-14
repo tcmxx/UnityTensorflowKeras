@@ -5,6 +5,7 @@ using UnityEngine;
 using Accord.Math;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.IO;
 
 public class TrainerPPO : Trainer
 {
@@ -29,7 +30,8 @@ public class TrainerPPO : Trainer
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
 
-
+    public bool continueFromCheckpoint = true;
+    public string checkpointPath = "Assets\testcheckpoint.bytes";
 
     public override void SetBrain(Brain brain)
     {
@@ -78,7 +80,10 @@ public class TrainerPPO : Trainer
         stats = new StatsLogger();
         modelRef.Initialize(BrainToTrain);
 
-        
+        if (continueFromCheckpoint)
+        {
+            Load(); 
+        }
     }
 
     public override void Update()
@@ -141,6 +146,10 @@ public class TrainerPPO : Trainer
     public override void IncrementStep()
     {
         Steps++;
+        if(Steps% parameters.saveModelInterval == 0)
+        {
+            Save();
+        }
     }
 
     public override bool IsReadyUpdate()
@@ -335,6 +344,25 @@ public class TrainerPPO : Trainer
         }
 
         return result;
+    }
+
+    public void Save()
+    {
+        var data = modelRef.SaveCheckpoint();
+        File.WriteAllBytes(checkpointPath, data);
+        Debug.Log("Saved Checkpoint to " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+    }
+    public void Load()
+    {
+        string fullPath = Path.Combine(Directory.GetCurrentDirectory(), checkpointPath);
+        if (!File.Exists(fullPath))
+        {
+            Debug.Log("Checkpoint Not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+            return;
+        }
+        var bytes = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+        modelRef.RestoreCheckpoint(bytes);
+        Debug.Log("Loaded from Checkpoint " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
     }
 
 }

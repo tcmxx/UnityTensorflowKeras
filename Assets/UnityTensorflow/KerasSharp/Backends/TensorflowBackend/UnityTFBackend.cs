@@ -125,7 +125,18 @@ public class UnityTFBackend : BackendBase, IBackend
 
     public Array get_value(Tensor x)
     {
-        return x.eval() as Array;
+        object result = x.eval();
+        if(result is Array)
+        {
+            return result as Array;
+        }
+        else
+        {
+            //if it is a scalar or others
+            var array =  Array.CreateInstance(result.GetType(), 1);
+            array.SetValue(result, 0);
+            return array;
+        }
     }
 
 
@@ -134,7 +145,7 @@ public class UnityTFBackend : BackendBase, IBackend
         List<Array> result = new List<Array>();
         foreach(var w in weights)
         {
-            result.Add(w.eval() as Array);
+            result.Add(get_value(w));
         }
         //throw new NotImplementedException();
         return result;

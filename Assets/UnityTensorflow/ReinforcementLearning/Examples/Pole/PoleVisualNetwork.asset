@@ -9,11 +9,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d99c8458226607a4bb1b2196d603c1b6, type: 3}
-  m_Name: PoleNetwork
+  m_Name: PoleVisualNetwork
   m_EditorClassIdentifier: 
-  actorNNHidden: 1
-  actorNNWidth: 32
-  criticNNHidden: 1
-  criticNNWidth: 32
-  hiddenWeightsInitialScale: 1
-  outputWeightsInitialScale: 0.1
+  actorNNHidden: 2
+  actorNNWidth: 128
+  criticNNHidden: 2
+  criticNNWidth: 128
+  hiddenWeightsInitialScale: 0.7
+  outputWeightsInitialScale: 0.01
