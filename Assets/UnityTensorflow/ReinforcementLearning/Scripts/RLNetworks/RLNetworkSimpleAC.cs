@@ -24,7 +24,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
         Debug.Assert(inPrevAction == null, "Currently previous action input is not supported by RLNetworkSimpleAC");
         Debug.Assert(!(inVectorstate == null && inVisualState == null), "Network need at least one vector observation or visual observation");
-        Debug.Assert(actionSpace == SpaceType.continuous, "Only continuous action space is supported by RLNetworkSimpleAC");
+        //Debug.Assert(actionSpace == SpaceType.continuous, "Only continuous action space is supported by RLNetworkSimpleAC");
         weights = new List<Tensor>();
 
         //visual encoders
@@ -90,6 +90,11 @@ public class RLNetworkSimpleAC : RLNetworkAC
         //outputs
         var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
         outAction = actorOutput.Call(encodedAllActor)[0];
+        if (actionSpace == SpaceType.discrete)
+        {
+            outAction = Current.K.softmax(outAction);
+        }
+
         weights.AddRange(actorOutput.weights);
 
         var criticOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));

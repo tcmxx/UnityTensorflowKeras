@@ -36,10 +36,13 @@ public class RLModelPPO : MonoBehaviour
     //the variable for variance
     protected Tensor logSigmaSq = null;
 
+    public SpaceType ActionSpace { get; private set; }
+
     public void Initialize(Brain brain)
     {
         actionSize = brain.brainParameters.vectorActionSize;
         stateSize = brain.brainParameters.vectorObservationSize*brain.brainParameters.numStackedVectorObservations;
+        ActionSpace = brain.brainParameters.vectorActionSpaceType;
 
         //create basic inputs
         var inputStateTensor = stateSize > 0?UnityTFUtils.Input(new int?[] { stateSize }, name: "InputStates")[0]:null;
@@ -48,16 +51,19 @@ public class RLModelPPO : MonoBehaviour
         HasVisualObservation = inputVisualTensors != null;
 
         //build the network
-        Tensor OutputValue = null, OutputMean = null;
-        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, actionSize, brain.brainParameters.vectorActionSpaceType, out OutputMean, out OutputValue);
+        Tensor OutputValue = null, OutputAction = null;
+        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, actionSize, ActionSpace, out OutputAction, out OutputValue);
 
         //actor network output variance
-        logSigmaSq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
-        var OutputVariance = K.exp(logSigmaSq);
-
+        Tensor OutputVariance = null;
+        if (ActionSpace == SpaceType.continuous)
+        {
+            logSigmaSq = K.variable((new Constant(0)).Call(new int[] { actionSize }, DataType.Float), name: "PPO.log_sigma_square");
+            OutputVariance = K.exp(logSigmaSq);
+        }
         //training needed inputs
-        var InputAction = UnityTFUtils.Input(new int?[] { actionSize }, name: "InputAction")[0];
-        var InputOldProb = UnityTFUtils.Input(new int?[] { actionSize }, name: "InputOldProb")[0];
+        var InputAction = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous?actionSize:1 }, name: "InputAction", dtype:ActionSpace == SpaceType.continuous?DataType.Float:DataType.Int32)[0];
+        var InputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? actionSize : 1 }, name: "InputOldProb")[0];
         var InputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
         var InputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
         var InputClipEpsilon = K.constant(0.1, name: "ClipEpsilon");
@@ -69,11 +75,24 @@ public class RLModelPPO : MonoBehaviour
         Tensor actionProb;
         using (K.name_scope("ActionProb"))
         {
-            var temp = K.mul(OutputVariance, 2 * Mathf.PI * 2.7182818285);
-            temp = K.mul(temp, 0.5);
-            OutputEntropy = K.sum(temp, 0, false, name: "OutputEntropy");
-            actionProb = K.normal_probability(InputAction, OutputMean, OutputVariance);
+            if (ActionSpace == SpaceType.continuous)
+            {
+                var temp = K.mul(OutputVariance, 2 * Mathf.PI * 2.7182818285);
+                temp = K.mul(temp, 0.5);
+                OutputEntropy = K.sum(temp, 0, false, name: "OutputEntropy");
+                actionProb = K.normal_probability(InputAction, OutputAction, OutputVariance);
+            }
+            else
+            {
+                var onehotInputAction = K.one_hot(InputAction, K.constant<int>(actionSize,dtype:DataType.Int32), K.constant(1.0f), K.constant(0.0f));
+                onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, actionSize });
+                OutputEntropy = K.mean((-1.0f) * K.sum(OutputAction * K.log(OutputAction + 0.00000001f), axis: 1),0);
+                actionProb = K.reshape(K.sum(OutputAction* onehotInputAction,1),new int[] { -1,1});
+            }
         }
+
+
+
         // value loss
         var OutputValueLoss = K.mean(new MeanSquareError().Call(OutputValue, InputTargetValue));
 
@@ -117,7 +136,14 @@ public class RLModelPPO : MonoBehaviour
         var updates = optimizer.get_updates(updateParameters, null, OutputLoss); ;
         UpdateFunction = K.function(allInputs, new List<Tensor> { OutputLoss, OutputValueLoss, OutputPolicyLoss }, updates, "UpdateFunction");
         ValueFunction = K.function(observationInputs, new List<Tensor> { OutputValue }, null, "ValueFunction");
-        ActionFunction = K.function(observationInputs, new List<Tensor> { OutputMean, OutputVariance }, null, "ActionFunction");
+        if (ActionSpace == SpaceType.continuous)
+        {
+            ActionFunction = K.function(observationInputs, new List<Tensor> { OutputAction, OutputVariance }, null, "ActionFunction");
+        }
+        else
+        {
+            ActionFunction = K.function(observationInputs, new List<Tensor> { OutputAction }, null, "ActionFunction");
+        }
 
 
         //test
@@ -188,10 +214,9 @@ public class RLModelPPO : MonoBehaviour
     /// </summary>
     /// <param name="vectorObservation">current vector states. Can be batch input</param>
     /// <param name="actionProbs">output actions' probabilities</param>
-    /// <param name="actionSpace">action space type.</param>
     /// <param name="useProbability">when true, the output actions are sampled based on output mean and variance. Otherwise it uses mean directly.</param>
     /// <returns></returns>
-    public float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, SpaceType actionSpace, bool useProbability = true)
+    public float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
@@ -207,23 +232,34 @@ public class RLModelPPO : MonoBehaviour
 
         var result = ActionFunction.Call(inputLists);
 
-        var means = ((float[,])result[0].eval());
-        var vars = (float[])result[1].eval();
+        var outputAction = ((float[,])result[0].eval());
+        var vars = ActionSpace == SpaceType.continuous?(float[])result[1].eval():null;
         
-        float[,] actions = new float[means.GetLength(0), means.GetLength(1)];
-        actionProbs = new float[means.GetLength(0), means.GetLength(1)];
-        for (int j = 0; j < means.GetLength(0); ++j)
-        {
-            for (int i = 0; i < means.GetLength(1); ++i)
-            {
-                var std = Mathf.Sqrt(vars[i]);
-                var dis = new NormalDistribution(means[j,i], std);
+        float[,] actions = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous?outputAction.GetLength(1):1];
+        actionProbs = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous ? outputAction.GetLength(1) : 1];
 
-                if (useProbability)
-                    actions[j,i] = (float)dis.Generate();
-                else
-                    actions[j,i] = means[j,i];
-                actionProbs[j,i] = (float)dis.ProbabilityDensityFunction(actions[j,i]);
+        if (ActionSpace == SpaceType.continuous)
+        {
+            for (int j = 0; j < outputAction.GetLength(0); ++j)
+            {
+                for (int i = 0; i < outputAction.GetLength(1); ++i)
+                {
+                    var std = Mathf.Sqrt(vars[i]);
+                    var dis = new NormalDistribution(outputAction[j, i], std);
+
+                    if (useProbability)
+                        actions[j, i] = (float)dis.Generate();
+                    else
+                        actions[j, i] = outputAction[j, i];
+                    actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
+                }
+            }
+        }else if(ActionSpace == SpaceType.discrete)
+        {
+            for (int j = 0; j < outputAction.GetLength(0); ++j)
+            {
+                actions[j, 0] = MathUtils.IndexByChance(outputAction.GetRow(j));
+                actionProbs[j, 0] = outputAction.GetRow(j)[Mathf.RoundToInt(actions[j, 0])];
             }
         }
 
@@ -243,7 +279,14 @@ public class RLModelPPO : MonoBehaviour
             inputs.Add(vectorObservations);
         if (visualObservations != null)
             inputs.AddRange(visualObservations);
-        inputs.Add(actions);
+        if(ActionSpace == SpaceType.continuous)
+            inputs.Add(actions);
+        else if(ActionSpace == SpaceType.discrete)
+        {
+            int[,] actionsInt = actions.Convert(t => Mathf.RoundToInt(t));
+            inputs.Add(actionsInt);
+        }
+
         inputs.Add(actionProbs);
         inputs.Add(targetValues);
         inputs.Add(advantages);
@@ -298,7 +341,8 @@ public class RLModelPPO : MonoBehaviour
     {
         List<Tensor> updateParameters = new List<Tensor>();
         updateParameters.AddRange(network.GetWeights());
-        updateParameters.Add(logSigmaSq);
+        if(logSigmaSq != null)
+            updateParameters.Add(logSigmaSq);
         return updateParameters;
     }
     public List<Array> GetAllOptimizerWeights()

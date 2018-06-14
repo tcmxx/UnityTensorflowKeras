@@ -129,12 +129,15 @@ public interface IBackend : IDisposable
 
     Tensor dot(Tensor a, Tensor b, string name = null);
 
+    Tensor one_hot(Tensor x, Tensor depth, Tensor on, Tensor off);
 
     Tensor elu(Tensor x, double alpha);
 
     Tensor sigmoid(Tensor x);
 
     Tensor softplus(Tensor x);
+
+    Tensor log(Tensor x);
 
     Tensor print_tensor(Tensor x, string message);
 
@@ -147,13 +150,6 @@ public interface IBackend : IDisposable
     Tensor exp(Tensor x);
 
     object eval(Tensor tensor);
-
-
-
-
-    
-
-
 
     Tensor random_uniform(int[] shape, double minval = 0.0, double maxval = 1.0, DataType? dtype = null, int? seed = null, string name = null);
 
@@ -178,10 +174,7 @@ public interface IBackend : IDisposable
     Tensor min(Tensor x, int axis, bool keepdims);
 
     Tensor binary_crossentropy(Tensor output, Tensor target, bool from_logits = false);
-
-
-
-
+    
     Tensor variable(Array array, DataType? dtype = null, string name = null);
 
     Tensor variable<T>(T value, DataType? dtype = null, string name = null) where T : struct;

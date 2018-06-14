@@ -338,7 +338,10 @@ public class UnityTFBackend : BackendBase, IBackend
 
         //return batch_flatten(Out(Graph.Stack(alloutputs, axis,operName:"stackblabal")));
     }
-
+    public Tensor one_hot(Tensor x, Tensor depth, Tensor on, Tensor off)
+    {
+        return Out(Graph.OneHot(In(x).Output, In(depth).Output, In(on).Output, In(off).Output));
+    }
 
     public Tensor constant<T>(T value, int[] shape = null, DataType? dtype = null, string name = null)
     {
@@ -494,6 +497,12 @@ public class UnityTFBackend : BackendBase, IBackend
     {
         return Out(Graph.Exp(In(x)));
     }
+
+    public Tensor log(Tensor x)
+    {
+        return Out(Graph.Log(In(x)));
+    }
+
 
     public Function function(List<Tensor> inputs, List<Tensor> outputs, List<List<Tensor>> updates, string name)
     {
@@ -1037,6 +1046,11 @@ public class UnityTFBackend : BackendBase, IBackend
     public Tensor softmax(Tensor x)
     {
         return Out(Graph.Softmax(In(x).Output));
+    }
+
+    public Tensor multinomial(Tensor x, Tensor numOfSample)
+    {
+        return Out(Graph.Multinomial(In(x).Output, In(numOfSample).Output ));
     }
 
     public Tensor softplus(Tensor x)

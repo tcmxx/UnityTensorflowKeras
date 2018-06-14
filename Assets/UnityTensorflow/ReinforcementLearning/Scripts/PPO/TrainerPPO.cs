@@ -226,7 +226,7 @@ public class TrainerPPO : Trainer
 
 
         float[,] actionProbs = null;
-        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, BrainToTrain.brainParameters.vectorActionSpaceType);
+        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll);
         var values = modelRef.EvaluateValue(vectorObsAll, visualObsAll);
 
 
