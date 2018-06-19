@@ -3,7 +3,12 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - banana
+  - badBanana
+  - agent
+  - wall
+  - frozenAgent
   layers:
   - Default
   - TransparentFX

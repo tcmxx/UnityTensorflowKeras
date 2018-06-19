@@ -16,7 +16,8 @@ public enum BrainType
     Heuristic,
     External,
     Internal,
-    InternalTrainable
+    InternalTrainable,
+    MAES
 }
 
 public enum SpaceType

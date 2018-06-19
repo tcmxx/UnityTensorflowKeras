@@ -31,7 +31,7 @@ public class TrainerPPO : Trainer
     protected Dictionary<Agent, int> episodeSteps;
 
     public bool continueFromCheckpoint = true;
-    public string checkpointPath = "Assets\testcheckpoint.bytes";
+    public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
     public override void SetBrain(Brain brain)
     {
@@ -78,7 +78,7 @@ public class TrainerPPO : Trainer
 
 
         stats = new StatsLogger();
-        modelRef.Initialize(BrainToTrain);
+        modelRef.Initialize(BrainToTrain,parameters);
 
         if (continueFromCheckpoint)
         {

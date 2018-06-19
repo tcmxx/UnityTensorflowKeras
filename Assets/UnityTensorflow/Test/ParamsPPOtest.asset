@@ -18,6 +18,9 @@ MonoBehaviour:
   entroyLossWeight: 0
   clipEpsilon: 0.2
   batchSize: 256
-  bufferSizeForTrain: 5000
+  bufferSizeForTrain: 9000
   numEpochPerTrain: 5
-  learningRate: 0.005
+  learningRate: 0.003
+  lossLogInterval: 1
+  rewardLogInterval: 10
+  saveModelInterval: 10000

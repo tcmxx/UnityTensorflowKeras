@@ -81,7 +81,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         }
         else if(inVisualState != null && inVectorstate != null)
         {
-            Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
+            //Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
             encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor,encodedVisualActor},1);
             encodedAllCritic = Current.K.concat(new List<Tensor>() { encodedVectorStateCritic, encodedVisualCritic }, 1);
         }
