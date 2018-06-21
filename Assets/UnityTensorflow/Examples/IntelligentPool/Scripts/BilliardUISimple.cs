@@ -25,14 +25,14 @@ public class BilliardUISimple : MonoBehaviour {
         populationSizeTextRef.text = "Population size: " + optimizerRef.populationSize.ToString();
         maxItrTextRef.text = "Max Iter: " + optimizerRef.maxIteration;
 
-        rewardShapingToggleRef.isOn = gameSystemRef.rewardShaping;
+        rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
     }
 
     private void Update()
     {
         populationSizeSliderRef.value = optimizerRef.populationSize;
         maxItrSliderRef.value = optimizerRef.maxIteration;
-        rewardShapingToggleRef.isOn = gameSystemRef.rewardShaping;
+        rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
 
         predictedScoreTextRef.text = "Predicted score: " + gameSystemRef.predictedShotScore;
     }
@@ -62,12 +62,13 @@ public class BilliardUISimple : MonoBehaviour {
 
     public void OnRewardShapingToggled(bool value)
     {
-        gameSystemRef.rewardShaping = value;
+        gameSystemRef.defaultArena.rewardShaping = value;
     }
 
     public void GenerateHeatMap()
     {
-        heatmapRef.StartSampling(SamplingFunc,5,1);
+        //heatmapRef.StartSampling(SamplingFunc,5,1);
+        heatmapRef.StartSampling(SamplingFuncBatch, 8, 2, 2);
     }
 
     
@@ -76,5 +77,18 @@ public class BilliardUISimple : MonoBehaviour {
         return Mathf.Clamp01(((gameSystemRef.evaluateShot(agentRef.SamplePointToForceVectorXY(x,y), Color.gray)) + 0.4f)/2.4f);
     }
 
-    
+    public List<float> SamplingFuncBatch(List<float> x, List<float> y)
+    {
+        List<Vector3> forces = new List<Vector3>();
+        for(int i = 0; i < x.Count; ++i)
+        {
+            forces.Add(agentRef.SamplePointToForceVectorXY(x[i], y[i]));
+        }
+        var values = gameSystemRef.evaluateShots(forces, Color.gray);
+        for(int i = 0; i < values.Count; ++i)
+        {
+            values[i] = Mathf.Clamp01((values[i] + 0.4f) / 2.4f);
+        }
+        return values;
+    }
 }

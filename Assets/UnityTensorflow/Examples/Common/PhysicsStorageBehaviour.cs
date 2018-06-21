@@ -14,6 +14,7 @@ public class PhysicsStorageBehaviour : MonoBehaviour {
         public Vector3 pos, vel, aVel;
         public Quaternion q;
         public bool active;
+        public bool isSleeping;
     }
     List<RigidbodyState> bodyStates = new List<RigidbodyState>();
 
@@ -51,6 +52,7 @@ public class PhysicsStorageBehaviour : MonoBehaviour {
             state.aVel = b.angularVelocity;
             state.q = b.rotation;
             state.active = b.gameObject.activeSelf;
+            state.isSleeping = b.IsSleeping();
             bodyStates.Add(state);
         }
     }
@@ -66,6 +68,10 @@ public class PhysicsStorageBehaviour : MonoBehaviour {
 
             state.b.transform.position = state.pos;
             state.b.transform.rotation = state.q;
+            if (state.isSleeping)
+            {
+                state.b.Sleep();
+            }
         }
     }
     //Use this if you want restoreState() have immediate effect on Unity's transforms. Otherwise, they only get updated after the next physics step.

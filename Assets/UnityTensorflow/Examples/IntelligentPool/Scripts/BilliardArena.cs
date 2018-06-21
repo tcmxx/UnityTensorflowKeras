@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(PhysicsStorageBehaviour))]
-public class BilliardArena : MonoBehaviour {
+public class BilliardArena : MonoBehaviour
+{
 
     [ReadOnly]
     public float score = 0;
@@ -14,34 +15,35 @@ public class BilliardArena : MonoBehaviour {
     protected PhysicsStorageBehaviour physicsStorageBehaviour;
 
     protected GameObject whiteBall;
-    
-    protected List<Rigidbody> ballsToPocket;
+
+    protected Dictionary<GameObject, bool> ballsToPocket;
     protected Vector3[] pocketPositions;
 
     public float PredictedShotScore { get; protected set; } = 0;
 
     //some temp vars about save/load,evaluation related.
     protected float savedScore;
+    protected Dictionary<GameObject, bool> saveBallsToPocket;
     protected Rigidbody[] simulationBodies;
     protected Vector3[] simulationPositions;
     protected Color drawColor;
 
     private void Awake()
     {
-        physicsStorageBehaviour = GetComponent<PhysicsStorageBehaviour>();
+        InitializeArena();
     }
-    // Use this for initialization
-    void Start()
+
+    public void InitializeArena()
     {
-        //cache game objects
+        physicsStorageBehaviour = GetComponent<PhysicsStorageBehaviour>();
         whiteBall = transform.Find("WhiteBall").gameObject;
-        //initialize reward shaping, need quick access to all balls that need to be pocketed, as well as all pocket positions
-        ballsToPocket = new List<Rigidbody>();
+
+        ballsToPocket = new Dictionary<GameObject, bool>();
         Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>();
         foreach (Rigidbody b in bodies)
         {
-            if (b.name != "WhiteBall")
-                ballsToPocket.Add(b);
+            if (b.gameObject != whiteBall)
+                ballsToPocket[b.gameObject] = true;
             b.angularDrag = physicsDrag;
             b.drag = physicsDrag;
         }
@@ -53,7 +55,14 @@ public class BilliardArena : MonoBehaviour {
             pockets[i].arena = this;
         }
 
+
+        BilliardBoundary[] bound = GetComponentsInChildren<BilliardBoundary>();
+        for (int i = 0; i < bound.Length; i++)
+        {
+            bound[i].arena = this;
+        }
     }
+
 
     // Update is called once per frame
     void Update()
@@ -81,9 +90,30 @@ public class BilliardArena : MonoBehaviour {
         else
         {
             score += 1;
+            if (!ballsToPocket.ContainsKey(ball))
+            {
+                var keys = new List<GameObject>(ballsToPocket.Keys);
+                Debug.LogError("Other ball into the pocket. Ball of arena " + ball.transform.parent.name + ", arena is " + name + " own ball is " + keys[0].transform.parent.name);
+
+            }
+            ballsToPocket[ball] = false;
         }
         ball.SetActive(false);
     }
+
+    public void OnoutOfBound(GameObject ball)
+    {
+
+        score -= 10;
+        if (!ballsToPocket.ContainsKey(ball) && ball != whiteBall)
+        {
+            Debug.LogError("Other ball into the pocket");
+        }
+        
+        ball.SetActive(false);
+    }
+
+
     public bool ShotComplete()
     {
         return physicsStorageBehaviour.IsAllSleeping();
@@ -105,21 +135,25 @@ public class BilliardArena : MonoBehaviour {
     {
         physicsStorageBehaviour.SaveState();
         savedScore = score;
+        saveBallsToPocket = new Dictionary<GameObject, bool>(ballsToPocket);
     }
     public void RestoreState()
     {
         physicsStorageBehaviour.RestoreState();
         score = savedScore;
+        ballsToPocket = saveBallsToPocket;
     }
 
 
 
     public void StartEvaluateShot(Vector3 force, Color drawColor)
     {
+
         SaveState();
 
         //initialize score to 0, want to count only this shot
         score = 0;
+
 
         //initialize shot
         Shoot(force);
@@ -129,7 +163,7 @@ public class BilliardArena : MonoBehaviour {
         //some helpers
         simulationBodies = GetComponentsInChildren<Rigidbody>();
         simulationPositions = new Vector3[simulationBodies.Length];
-        
+
     }
 
     public void BeforeEvaluationUpdate()
@@ -150,17 +184,24 @@ public class BilliardArena : MonoBehaviour {
         if (rewardShaping)
         {
             //Since the score as such provides very little gradient, we add a small score if the balls get close to the pockets
-            foreach (Rigidbody b in ballsToPocket)
+            foreach (var b in ballsToPocket)
             {
-                Vector3 ballPos = b.position;
-                float minSqDist = float.MaxValue;
-                for (int i = 0; i < pocketPositions.Length; i++)
+                if (b.Value)
                 {
-                    minSqDist = Mathf.Min(minSqDist, (pocketPositions[i] - ballPos).sqrMagnitude);
+                    Vector3 ballPos = b.Key.transform.position;
+                    float minSqDist = float.MaxValue;
+                    for (int i = 0; i < pocketPositions.Length; i++)
+                    {
+                        minSqDist = Mathf.Min(minSqDist, (pocketPositions[i] - ballPos).sqrMagnitude);
+                    }
+                    //each ball that is close to a pocket adds 0.1 to the score
+                    float distanceSd = 0.5f;
+                    score += Mathf.Min(0.1f * Mathf.Exp(-0.5f * minSqDist / (distanceSd * distanceSd)), 0.8f);
+                    if (score >= 2)
+                    {
+                        score = 2;
+                    }
                 }
-                //each ball that is close to a pocket adds 0.1 to the score
-                float distanceSd = 0.5f;
-                score += 0.1f * Mathf.Exp(-0.5f * minSqDist / (distanceSd * distanceSd));
             }
         }
 

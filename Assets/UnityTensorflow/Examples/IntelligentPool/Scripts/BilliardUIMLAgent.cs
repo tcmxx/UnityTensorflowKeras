@@ -24,14 +24,14 @@ public class BilliardUIMLAgent : MonoBehaviour {
         populationSizeTextRef.text = "Population size: " + agentRef.populationSize.ToString();
         maxItrTextRef.text = "Max Iter: " + agentRef.maxIteration;
 
-        rewardShapingToggleRef.isOn = gameSystemRef.rewardShaping;
+        rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
     }
 
     private void Update()
     {
         populationSizeSliderRef.value = agentRef.populationSize;
         maxItrSliderRef.value = agentRef.maxIteration;
-        rewardShapingToggleRef.isOn = gameSystemRef.rewardShaping;
+        rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
 
         predictedScoreTextRef.text = "Predicted score: " + gameSystemRef.predictedShotScore;
     }
@@ -61,7 +61,7 @@ public class BilliardUIMLAgent : MonoBehaviour {
 
     public void OnRewardShapingToggled(bool value)
     {
-        gameSystemRef.rewardShaping = value;
+        gameSystemRef.defaultArena.rewardShaping = value;
     }
 
     public void GenerateHeatMap()

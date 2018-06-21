@@ -540,7 +540,7 @@ MonoBehaviour:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 14
     m_FontStyle: 0
-    m_BestFit: 0
+    m_BestFit: 1
     m_MinSize: 10
     m_MaxSize: 40
     m_Alignment: 4
@@ -1329,7 +1329,6 @@ MonoBehaviour:
   predictedScoreTextRef: {fileID: 114350679937358594}
   populationSizeTextRef: {fileID: 114422631860502498}
   maxItrTextRef: {fileID: 114225833479703622}
-  optButtonTextRef: {fileID: 114711054938968060}
   populationSizeSliderRef: {fileID: 114517502117465522}
   maxItrSliderRef: {fileID: 114245442212277978}
   rewardShapingToggleRef: {fileID: 114487051412096316}

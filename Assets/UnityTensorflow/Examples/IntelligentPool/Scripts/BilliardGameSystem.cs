@@ -4,12 +4,6 @@ using UnityEngine;
 using AaltoGames;
 
 public class BilliardGameSystem : MonoBehaviour {
-    GameObject whiteBall;
-    public float score = 0;
-    List<Rigidbody> ballsToPocket;
-    Vector3[] pocketPositions;
-    public bool rewardShaping = true;
-    public float physicsDrag = 0.5f;
     [HideInInspector]
     public float predictedShotScore = 0;
 
@@ -18,30 +12,18 @@ public class BilliardGameSystem : MonoBehaviour {
     // Use this for initialization
     void Start()
     {
-        //cache game objects
-        whiteBall = GameObject.Find("WhiteBall");
-        //initialize reward shaping, need quick access to all balls that need to be pocketed, as well as all pocket positions
-        ballsToPocket = new List<Rigidbody>();
-        Rigidbody[] bodies = FindObjectsOfType<Rigidbody>();
-        foreach (Rigidbody b in bodies)
+        /*for (int i = 1; i < 4 ; ++i)
         {
-            if (b.name != "WhiteBall")
-                ballsToPocket.Add(b);
-            b.angularDrag = physicsDrag;
-            b.drag = physicsDrag;
-        }
-        GameObject[] pockets = GameObject.FindGameObjectsWithTag("Pocket");
-        pocketPositions = new Vector3[pockets.Length];
-        for (int i = 0; i < pockets.Length; i++)
-            pocketPositions[i] = pockets[i].transform.position;
+            var newA = Instantiate(defaultArena, defaultArena.transform.position + Vector3.right * 5 * i, defaultArena.transform.rotation);
+        }*/
 
-	}
-	
-	// Update is called once per frame
-	void Update () {
-        //GraphUtils.DrawPendingLines();
+       
     }
 
+    private void Update()
+    {
+        //evaluateShots(new List<Vector3>() { Vector3.forward, Vector3.forward, new Vector3(1,0,1) }, Color.green);
+    }
     public void shoot(Vector3 force)
     {
         //Rigidbody r = whiteBall.GetComponent<Rigidbody>();
@@ -55,28 +37,10 @@ public class BilliardGameSystem : MonoBehaviour {
 
         defaultArena.Shoot(force);
     }
-    public void onPocket(GameObject ball)
-    {
-        if (ball == whiteBall)
-        {
-            score -= 10;
-        }
-        else
-        {
-            score += 1;
-        }
-        ball.SetActive(false);
-    }
+
     public bool shotComplete()
     {
-        //check whether any physics object is moving
-        Rigidbody[] bodies = GameObject.FindObjectsOfType<Rigidbody>();
-        foreach (Rigidbody b in bodies)
-        {
-            if (b.velocity.magnitude > 0.001f)
-                return false;
-        }
-        return true;
+        return defaultArena.ShotComplete();
     }
     public void stopAll()
     {
@@ -86,85 +50,90 @@ public class BilliardGameSystem : MonoBehaviour {
             b.velocity = Vector3.zero;
         }
     }
-    PhysicsStorage storage = new PhysicsStorage();
-    float savedScore;
-    public void saveState()
-    {
-        storage.saveState();
-        savedScore = score;
-    }
-    public void restoreState()
-    {
-        storage.restoreState();
-        score = savedScore;
-    }
+
     public float evaluateShot(Vector3 force, Color drawColor, int maxSteps=1000)
+    {
+
+
+        var result = evaluateShots(new List<Vector3>() { force }, drawColor, maxSteps);
+        return result[0];
+    }
+
+    public List<float> evaluateShots(List<Vector3> forces, Color drawColor, int maxSteps = 1000)
     {
         //Disable autosimulation, the manual simulation will otherwise have no effect
         bool oldAutoSimulation = Physics.autoSimulation;
         Physics.autoSimulation = false;
 
-        //save state, we don't want this preview simulation to have any effect after it's done
-        saveState();
+        int numOfForce = forces.Count;
+        if (numOfForce <= 0)
+            return new List<float>();
 
-        //initialize score to 0, want to count only this shot
-        score = 0;
+        List<BilliardArena>  allArenas = new List<BilliardArena>();
+        allArenas.Add(defaultArena);
+        for (int i = 1; i < numOfForce; ++i)
+        {
+            var newA = Instantiate(defaultArena, defaultArena.transform.position + Vector3.right * 5 * i, defaultArena.transform.rotation);
+            newA.GetComponent<BilliardArena>().InitializeArena();
+            newA.name = " Arena" + forces[i] + "At:" + (defaultArena.transform.position + Vector3.right * 5 * i);
+            allArenas.Add(newA);
+        }
+
+        //Physics.Simulate(Time.fixedDeltaTime);
+
+        //save state, we don't want this preview simulation to have any effect after it's done
+        foreach (var a in allArenas)
+        {
+            a.SaveState();
+        }
 
         //initialize shot
-        shoot(force);
-
-        //some helpers
-        Rigidbody[] bodies = FindObjectsOfType<Rigidbody>();
-        Vector3[] pos = new Vector3[bodies.Length];
-
-        //forward simulation loop
-        bool complete;
-        for (int step=0; step<maxSteps; step++)
+        for (int i = 0; i < allArenas.Count;++i)
         {
-            //simulate and visualize all moving bodies
-            for (int i = 0; i < pos.Length; i++)
-                pos[i] = bodies[i].position;
-            Physics.Simulate(Time.fixedDeltaTime);
-            for (int i = 0; i < pos.Length; i++)
-                if (bodies[i].gameObject.activeSelf)
-                    //Debug.DrawLine(pos[i], bodies[i].position,Color.green);
-                    GraphUtils.AddLine(pos[i], bodies[i].position, drawColor);
+            allArenas[i].StartEvaluateShot(forces[i], drawColor);
+        }
 
-            //check whether movement stopped, exit early if yes
-            complete = true;
-            foreach (Rigidbody b in bodies)
+
+        for (int step = 0; step < maxSteps; step++)
+        {
+            for (int i = 0; i < allArenas.Count; ++i)
             {
-                if (b.velocity.magnitude > 0.01f)
-                {
-                    complete = false;
-                    break;
-                }
+                allArenas[i].BeforeEvaluationUpdate();
             }
-            if (complete)
+            Physics.Simulate(Time.fixedDeltaTime);
+            for (int i = 0; i < allArenas.Count; ++i)
+            {
+                allArenas[i].AfterEvaluationUpdate();
+            }
+            //check whether movement stopped, exit early if yes
+            bool done = true;
+            for (int i = 0; i < allArenas.Count; ++i)
+            {
+                if (!allArenas[i].ShotComplete())
+                    done = false;
+            }
+            if (done)
                 break;
         }
-        if (rewardShaping)
+
+        float maxScore = Mathf.NegativeInfinity;
+        List<float> resultScores = new List<float>();
+        foreach(var a in allArenas)
         {
-            //Since the score as such provides very little gradient, we add a small score if the balls get close to the pockets
-            foreach (Rigidbody b in ballsToPocket)
-            {
-                Vector3 ballPos = b.position;
-                float minSqDist = float.MaxValue;
-                for (int i = 0; i < pocketPositions.Length; i++)
-                {
-                    minSqDist = Mathf.Min(minSqDist, (pocketPositions[i] - ballPos).sqrMagnitude);
-                }
-                //each ball that is close to a pocket adds 0.1 to the score
-                float distanceSd = 0.5f;
-                score += 0.1f * Mathf.Exp(-0.5f * minSqDist / (distanceSd * distanceSd));
-            }
+            var s = a.EndEvaluationShoot();
+            resultScores.Add(s);
+            maxScore = Mathf.Max(maxScore, s);
+           
         }
 
-        //restore state and return the score for this shot
-        float resultScore = score;
-        restoreState();
+        foreach(var a in allArenas)
+        {
+            if (a != defaultArena)
+                DestroyImmediate(a.gameObject);
+        }
+
         Physics.autoSimulation = oldAutoSimulation;
-        predictedShotScore = resultScore;
-        return resultScore;  
+        predictedShotScore = maxScore;
+        return resultScores;
     }
 }

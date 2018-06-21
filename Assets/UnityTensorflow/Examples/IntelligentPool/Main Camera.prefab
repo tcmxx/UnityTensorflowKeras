@@ -269,7 +269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   heatMapMaterial: {fileID: 2100000, guid: 7a7ac1453fcbb9d4881914d9e2c13493, type: 2}
-  textureDimension: {x: 64, y: 64}
+  textureDimension: {x: 32, y: 32}
 --- !u!114 &114689177346702312
 MonoBehaviour:
   m_ObjectHideFlags: 1
