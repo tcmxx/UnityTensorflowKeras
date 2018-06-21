@@ -52,11 +52,13 @@ public class BilliardUIMLAgent : MonoBehaviour {
     public void OnOptimizationButtonClicked()
     {
         agentRef.RequestDecision();
+        Physics.autoSimulation = false;
     }
 
     public void OnEndOptimizationButtonClicked()
     {
         agentRef.ForceEndOptimization();
+        Physics.autoSimulation = true;
     }
 
     public void OnRewardShapingToggled(bool value)
@@ -66,14 +68,26 @@ public class BilliardUIMLAgent : MonoBehaviour {
 
     public void GenerateHeatMap()
     {
-        heatmapRef.StartSampling(SamplingFunc,5,1);
+        //heatmapRef.StartSampling(SamplingFunc,5,1);
+        Physics.autoSimulation = false;
+        heatmapRef.StartSampling(SamplingFuncBatch, 8, 2, 2, () => { Physics.autoSimulation = true; });
     }
 
-    
-    public float SamplingFunc(float x, float y)
+
+    public List<float> SamplingFuncBatch(List<float> x, List<float> y)
     {
-        return Mathf.Clamp01(((gameSystemRef.evaluateShot(agentRef.SamplePointToForceVectorXY(x,y), Color.gray)) + 0.4f)/2.4f);
+        List<Vector3> forces = new List<Vector3>();
+        for (int i = 0; i < x.Count; ++i)
+        {
+            forces.Add(agentRef.SamplePointToForceVectorXY(x[i], y[i]));
+        }
+        var values = gameSystemRef.evaluateShots(forces, Color.gray);
+        for (int i = 0; i < values.Count; ++i)
+        {
+            values[i] = Mathf.Clamp01((values[i] + 0.4f) / 2.4f);
+        }
+        return values;
     }
 
-    
+
 }

@@ -59,7 +59,7 @@ public class HeatMap : MonoBehaviour
     /// 
     /// </summary>
     /// <param name="sampleFunction">sample function to get the heat map value. value = function(x,y). x,y will be between 0 and 1</param>
-    public void StartSampling(Func<float, float, float> sampleFunction, int samplePerLoop = 1, int strideLevel = 3)
+    public void StartSampling(Func<float, float, float> sampleFunction, int samplePerLoop = 1, int strideLevel = 3, Action onSamplingDone = null)
     {
         StopAllCoroutines();
         //StartCoroutine(SamplingCoroutine(sampleFunction, samplePerLoop, strideLevel));
@@ -72,13 +72,13 @@ public class HeatMap : MonoBehaviour
                 result.Add(sampleFunction(x[i], y[i]));
             }
             return result;
-        },1,samplePerLoop,strideLevel));
+        },1,samplePerLoop,strideLevel, onSamplingDone));
     }
 
-    public void StartSampling(Func<List<float>, List<float>, List<float>> sampleBatchFunction, int batchsize, int samplePerLoop = 1, int strideLevel = 3)
+    public void StartSampling(Func<List<float>, List<float>, List<float>> sampleBatchFunction, int batchsize, int samplePerLoop = 1, int strideLevel = 3, Action onSamplingDone = null)
     {
         StopAllCoroutines();
-        StartCoroutine(SamplingBatchCoroutine(sampleBatchFunction, batchsize, samplePerLoop, strideLevel));
+        StartCoroutine(SamplingBatchCoroutine(sampleBatchFunction, batchsize, samplePerLoop, strideLevel, onSamplingDone));
 
     }
 
@@ -114,7 +114,7 @@ public class HeatMap : MonoBehaviour
         }
     }
 
-    protected IEnumerator SamplingBatchCoroutine(Func<List<float>, List<float>, List<float>> sampleBatchFunction, int batchsize, int samplePerLoop = 1, int strideLevel = 3)
+    protected IEnumerator SamplingBatchCoroutine(Func<List<float>, List<float>, List<float>> sampleBatchFunction, int batchsize, int samplePerLoop = 1, int strideLevel = 3, Action onSamplingDone = null)
     {
 
         int sampleCount = 0;
@@ -136,7 +136,8 @@ public class HeatMap : MonoBehaviour
                 {
                     for (int j = 0; j < initialStride; ++j)
                     {
-                        data.outputCoords.Add(new Vector2Int(y + i, x + j));
+                        if(y + i < textureDimension.y && x + j < textureDimension.x)
+                            data.outputCoords.Add(new Vector2Int(y + i, x + j));
                     }
                 }
                 batchSamples.Add(data);
@@ -166,8 +167,8 @@ public class HeatMap : MonoBehaviour
         {
             for (int off = 0; off < 3; ++off)
             {
-                int yoff = off == 0 ? 0 : offset;
-                int xoff = off == 1 ? 0 : offset;
+                int yoff = ((off == 0) ? 0 : offset);
+                int xoff = ((off == 1) ? 0 : offset);
 
                 for (int y = yoff; y < textureDimension.y; y += stride)
                 {
@@ -181,7 +182,8 @@ public class HeatMap : MonoBehaviour
                         {
                             for (int j = 0; j < offset; ++j)
                             {
-                                data.outputCoords.Add(new Vector2Int(y + i, x + j));
+                                if (y + i < textureDimension.y && x + j < textureDimension.x)
+                                    data.outputCoords.Add(new Vector2Int(y + i, x + j));
                             }
                         }
                         batchSamples.Add(data);
@@ -208,7 +210,8 @@ public class HeatMap : MonoBehaviour
             offset = offset / 2;
             stride = stride / 2;
         }
-
+        if (onSamplingDone != null)
+            onSamplingDone.Invoke();
         Debug.Log("Heatmap Sampling Done");
     }
 

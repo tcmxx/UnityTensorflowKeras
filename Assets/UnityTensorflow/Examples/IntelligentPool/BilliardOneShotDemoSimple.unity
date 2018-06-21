@@ -167,6 +167,26 @@ Prefab:
       propertyPath: agentSimplRef
       value: 
       objectReference: {fileID: 1363941756}
+    - target: {fileID: 114173365103390320, guid: 61c28c3b413277a48bd7a8243798695a,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: set_IsSampling
+      objectReference: {fileID: 0}
+    - target: {fileID: 114173365103390320, guid: 61c28c3b413277a48bd7a8243798695a,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[1].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: set_IsSampling
+      objectReference: {fileID: 0}
+    - target: {fileID: 114647183792634274, guid: 61c28c3b413277a48bd7a8243798695a,
+        type: 2}
+      propertyPath: textureDimension.x
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 114647183792634274, guid: 61c28c3b413277a48bd7a8243798695a,
+        type: 2}
+      propertyPath: textureDimension.y
+      value: 64
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 61c28c3b413277a48bd7a8243798695a, type: 2}
   m_IsPrefabParent: 0
@@ -462,6 +482,7 @@ MonoBehaviour:
   mode: 1
   maxIteration: 100
   targetValue: 2
+  evaluationBatchSize: 8
   iteration: 0
 --- !u!1001 &1363941755
 Prefab:
@@ -554,6 +575,22 @@ Prefab:
     - target: {fileID: 4542406693707484, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
       propertyPath: m_RootOrder
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 1291875998802794, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1929158077914544, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1133197049696698, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1642639715809588, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
+      propertyPath: m_Layer
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}

@@ -195,7 +195,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 114689177346702312}
-          m_MethodName: set_isSampling
+          m_MethodName: set_IsSampling
           m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -212,7 +212,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 114689177346702312}
-          m_MethodName: set_isSampling
+          m_MethodName: set_IsSampling
           m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -269,7 +269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   heatMapMaterial: {fileID: 2100000, guid: 7a7ac1453fcbb9d4881914d9e2c13493, type: 2}
-  textureDimension: {x: 32, y: 32}
+  textureDimension: {x: 50, y: 50}
 --- !u!114 &114689177346702312
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -52,19 +52,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a61bf13ca9f988b44abffcddf7c5323b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 0}
-  agentParameters:
-    agentCameras: []
-    maxStep: 0
-    resetOnDone: 1
-    onDemandDecision: 0
-    numberOfActionsBetweenDecisions: 1
-  maxIteration: 0
-  targetValue: 0
-  populationSize: 16
-  initialStepSize: 1
   forceMultiplier: 100
-  maxForce: 5
+  maxForce: 6
+  optimizer: {fileID: 0}
 --- !u!114 &114448073491991120
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -76,7 +66,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70c3764ea8250bb47a932fbdc9572273, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aimForceMultiplier: 5
+  aimForceMultiplier: 6
   previewTrajectories: 1
   gameOver: 0
   score: 0

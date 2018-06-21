@@ -19,7 +19,7 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
    
     public OptimizationModes optimizationMode;
     public int iterationPerFrame = 20;
-
+    public int evaluationBatchSize = 8;
     public bool debugVisualization = false;
 
     private Dictionary<AgentES, OptimizationData> currentOptimizingAgents;
@@ -107,12 +107,14 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
         var debugVis = serializedBrain.FindProperty("debugVisualization");
         var optMode = serializedBrain.FindProperty("optimizationMode");
         var itPerFrame = serializedBrain.FindProperty("iterationPerFrame");
+        var batchsize = serializedBrain.FindProperty("evaluationBatchSize");
         var opt = serializedBrain.FindProperty("optimizer");
 
         serializedBrain.Update();
         EditorGUILayout.PropertyField(debugVis, true);
         EditorGUILayout.PropertyField(optMode, true);
         EditorGUILayout.PropertyField(itPerFrame, true);
+        EditorGUILayout.PropertyField(batchsize, true);
         EditorGUILayout.PropertyField(opt, true);
         serializedBrain.ApplyModifiedProperties();
 #endif
@@ -145,21 +147,49 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
 
 
                 agent.SetVisualizationMode(debugVisualization ? AgentES.VisualizationMode.Sampling : AgentES.VisualizationMode.None);
-                foreach (OptimizationSample s in optData.samples)
+
+                for (int s = 0; s <= optData.samples.Length / evaluationBatchSize; ++s)
                 {
-                    float value = agent.Evaluate(s.x);
-                    s.objectiveFuncVal = value;
+                    List<double[]> paramList = new List<double[]>();
+                    for (int b = 0; b < evaluationBatchSize; ++b)
+                    {
+                        int ind = s * evaluationBatchSize + b;
+                        if (ind < optData.samples.Length)
+                        {
+                            paramList.Add(optData.samples[ind].x);
+                        }
+                    }
+
+                    var values = agent.Evaluate(paramList);
+
+                    for (int b = 0; b < evaluationBatchSize; ++b)
+                    {
+                        int ind = s * evaluationBatchSize + b;
+                        if (ind < optData.samples.Length)
+                        {
+                            optData.samples[ind].objectiveFuncVal = values[b];
+                        }
+                    }
+
                 }
+                /*foreach (OptimizationSample s in optData.samples)
+                {
+                    float value = agent.Evaluate(new List<double[]> { s.x })[0];
+                    s.objectiveFuncVal = value;
+                }*/
+
+
+
                 optData.optimizer.update(optData.samples);
                 double bestScore = optData.optimizer.getBestObjectiveFuncValue();
                 //Debug.Log("Best shot score " + optData.optimizer.getBestObjectiveFuncValue());
                 agent.SetVisualizationMode(debugVisualization ? AgentES.VisualizationMode.Best : AgentES.VisualizationMode.None);
-                agent.Evaluate(optData.optimizer.getBest());
+                agent.Evaluate(new List<double[]> { optData.optimizer.getBest() });
 
                 optData.interation++;
                 if ((optData.interation >= agent.maxIteration && agent.maxIteration > 0) ||
-                    (bestScore < agent.targetValue && optimizationMode == OptimizationModes.minimize) ||
-                    (bestScore > agent.targetValue && optimizationMode == OptimizationModes.maximize))
+                    (bestScore <= agent.targetValue && optimizationMode == OptimizationModes.minimize) ||
+                    (bestScore >= agent.targetValue && optimizationMode == OptimizationModes.maximize))
                 {
                     //optimizatoin is done
                     agent.OnReady(optData.optimizer.getBest());

@@ -53,11 +53,13 @@ public class BilliardUISimple : MonoBehaviour {
     public void OnOptimizationButtonClicked()
     {
         optimizerRef.StartOptimize(agentRef);
+        Physics.autoSimulation = false;
     }
 
     public void OnEndOptimizationButtonClicked()
     {
         optimizerRef.StopOptimize(true);
+        Physics.autoSimulation = true;
     }
 
     public void OnRewardShapingToggled(bool value)
@@ -68,15 +70,11 @@ public class BilliardUISimple : MonoBehaviour {
     public void GenerateHeatMap()
     {
         //heatmapRef.StartSampling(SamplingFunc,5,1);
-        heatmapRef.StartSampling(SamplingFuncBatch, 8, 2, 2);
+        Physics.autoSimulation = false;
+        heatmapRef.StartSampling(SamplingFuncBatch, 8, 2, 2, ()=> { Physics.autoSimulation = true; });
     }
 
     
-    public float SamplingFunc(float x, float y)
-    {
-        return Mathf.Clamp01(((gameSystemRef.evaluateShot(agentRef.SamplePointToForceVectorXY(x,y), Color.gray)) + 0.4f)/2.4f);
-    }
-
     public List<float> SamplingFuncBatch(List<float> x, List<float> y)
     {
         List<Vector3> forces = new List<Vector3>();

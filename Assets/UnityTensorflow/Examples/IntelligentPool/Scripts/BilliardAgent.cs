@@ -28,14 +28,22 @@ public class BilliardAgent : AgentES
 
 
 
-    public override float Evaluate(double[] action)
+    public override List<float> Evaluate(List<double[]> action)
     {
-        return gameSystem.evaluateShot(ParamsToForceVector(action), visColor);
+
+        List<Vector3> forces = new List<Vector3>();
+        for (int i = 0; i < action.Count; ++i)
+        {
+            forces.Add(ParamsToForceVector(action[i]));
+        }
+        var values = gameSystem.evaluateShots(forces, Color.gray);
+        return values;
     }
 
     public override void OnReady(double[] vectorAction)
     {
         gameSystem.shoot(ParamsToForceVector(vectorAction));
+        Physics.autoSimulation = true;
     }
 
 

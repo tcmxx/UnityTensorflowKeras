@@ -14,6 +14,8 @@ public class ESOptimizer : MonoBehaviour
     public int maxIteration = 100;
     public double targetValue = 2;
 
+    public int evaluationBatchSize = 1;
+
     protected IESOptimizable optimizable = null;
 
     [ReadOnly]
@@ -40,11 +42,35 @@ public class ESOptimizer : MonoBehaviour
             for (int it = 0; it < iterationPerUpdate; ++it)
             {
                 optimizer.generateSamples(samples);
-                foreach (OptimizationSample s in samples)
+                for(int s = 0; s <= samples.Length/evaluationBatchSize; ++s)
                 {
-                    float value = optimizable.Evaluate(s.x);
-                    s.objectiveFuncVal = value;
+                    List<double[]> paramList = new List<double[]>();
+                    for(int b = 0; b < evaluationBatchSize; ++b)
+                    {
+                        int ind = s * evaluationBatchSize + b;
+                        if (ind < samples.Length)
+                        {
+                            paramList.Add(samples[ind].x);
+                        }
+                    }
+
+                    var values = optimizable.Evaluate(paramList);
+
+                    for (int b = 0; b < evaluationBatchSize; ++b)
+                    {
+                        int ind = s * evaluationBatchSize + b;
+                        if (ind < samples.Length)
+                        {
+                            samples[ind].objectiveFuncVal = values[b];
+                        }
+                    }
+
                 }
+                /*foreach (OptimizationSample s in samples)
+                {
+                    float value = optimizable.Evaluate(new List<double[]>() { s.x })[0];
+                    s.objectiveFuncVal = value;
+                }*/
                 optimizer.update(samples);
                 BestScore = optimizer.getBestObjectiveFuncValue();
 
@@ -53,8 +79,8 @@ public class ESOptimizer : MonoBehaviour
                 iteration++;
 
                 if ((iteration >= maxIteration && maxIteration > 0) ||
-                    (BestScore < targetValue && mode == OptimizationModes.minimize) ||
-                    (BestScore > targetValue && mode == OptimizationModes.maximize))
+                    (BestScore <= targetValue && mode == OptimizationModes.minimize) ||
+                    (BestScore >= targetValue && mode == OptimizationModes.maximize))
                 {
                     //optimizatoin is done
                     optimizable.OnReady(BestParams);

@@ -17,7 +17,7 @@ public abstract class AgentES : Agent, IESOptimizable
     /// </summary>
     /// <param name="action"></param>
     /// <returns></returns>
-    public abstract float Evaluate(double[] action);
+    public abstract List<float> Evaluate(List<double[]> action);
 
 
     /// <summary>

@@ -25,14 +25,21 @@ public class BilliardSimple : MonoBehaviour, IESOptimizable
         }
     }
 
-    public float Evaluate(double[] action)
+    public List<float> Evaluate(List<double[]> action)
     {
-        return gameSystem.evaluateShot(ParamsToForceVector(action), Color.grey);
+        List<Vector3> forces = new List<Vector3>();
+        for (int i = 0; i < action.Count; ++i)
+        {
+            forces.Add(ParamsToForceVector(action[i]));
+        }
+        var values = gameSystem.evaluateShots(forces, Color.gray);
+        return values;
     }
 
     public void OnReady(double[] vectorAction)
     {
         gameSystem.shoot(ParamsToForceVector(vectorAction));
+        Physics.autoSimulation = true;
     }
     
     public Vector3 ParamsToForceVector(double[] x)

@@ -9,8 +9,13 @@ public class BilliardHeatMapToParam : MonoBehaviour {
     public BilliardAgent agentRef;
     public BilliardSimple agentSimplRef;
 
-    public bool isSampling { get; set; }
-
+    public bool IsSampling { get {
+            return isSampling;
+        } set {
+            Physics.autoSimulation = !value;
+            isSampling = value;
+        } }
+    protected bool isSampling;
     protected Vector3 sampledForce;
 	// Use this for initialization
 	void Start () {
@@ -41,6 +46,7 @@ public class BilliardHeatMapToParam : MonoBehaviour {
 
     public void Shoot()
     {
+        Physics.autoSimulation = true;
         gameSystemRef.shoot(sampledForce);
     }
     

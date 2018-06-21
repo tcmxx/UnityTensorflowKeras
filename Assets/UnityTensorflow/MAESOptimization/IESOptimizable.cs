@@ -5,11 +5,11 @@ using UnityEngine;
 public interface IESOptimizable {
 
     /// <summary>
-    /// return the value of an action.
+    /// evaluate a batch of params
     /// </summary>
     /// <param name="param"></param>
     /// <returns></returns>
-    float Evaluate(double[] param);
+    List<float> Evaluate(List<double[]> param);
 
 
     /// <summary>
