@@ -51,5 +51,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bcc267b801484648844874bdae6fa2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  materialZTestOff: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
-  materialZTestOn: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  materialZTestOff: {fileID: 2100000, guid: 6c93b8a093183e94a8ba21e5f2e7171d, type: 2}
+  materialZTestOn: {fileID: 2100000, guid: 6c93b8a093183e94a8ba21e5f2e7171d, type: 2}
+  renderTime: 1

@@ -7,7 +7,7 @@ public abstract class AgentES : Agent, IESOptimizable
 {
     
     public int maxIteration;
-    public float valueThresholdToStop;
+    public float targetValue;
     public int populationSize = 16;
     public float initialStepSize = 1;
 
@@ -17,14 +17,14 @@ public abstract class AgentES : Agent, IESOptimizable
     /// </summary>
     /// <param name="action"></param>
     /// <returns></returns>
-    public abstract float EvaluateAction(double[] action);
+    public abstract float Evaluate(double[] action);
 
 
     /// <summary>
     /// Implement this instead 
     /// </summary>
     /// <param name="vectorAction"></param>
-    public abstract void OnActionReady(double[] vectorAction);
+    public abstract void OnReady(double[] vectorAction);
 
 
     public enum VisualizationMode
@@ -50,4 +50,8 @@ public abstract class AgentES : Agent, IESOptimizable
         OnEndOptimizationRequested.Invoke(this);
     }
 
+    public int GetParamDimension()
+    {
+        return brain.brainParameters.vectorActionSize;
+    }
 }

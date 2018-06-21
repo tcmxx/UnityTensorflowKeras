@@ -15,7 +15,7 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
 {
     /// Reference to the brain that uses this CoreBrainInternal
     public Brain brain;
-    public ESOptimizer optimizer;
+    public ESOptimizerType optimizer;
    
     public OptimizationModes optimizationMode;
     public int iterationPerFrame = 20;
@@ -25,7 +25,7 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
     private Dictionary<AgentES, OptimizationData> currentOptimizingAgents;
 
 
-    public enum ESOptimizer
+    public enum ESOptimizerType
     {
         MAES,
         LMMAES
@@ -126,7 +126,7 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
     {
         foreach(var agent in agents)
         {
-            currentOptimizingAgents[agent] = new OptimizationData(agent.populationSize, optimizer== ESOptimizer.LMMAES?(IMAES)new LMMAES(): (IMAES)new MAES(), brain.brainParameters.vectorActionSize);
+            currentOptimizingAgents[agent] = new OptimizationData(agent.populationSize, optimizer== ESOptimizerType.LMMAES?(IMAES)new LMMAES(): (IMAES)new MAES(), agent.GetParamDimension());
             currentOptimizingAgents[agent].optimizer.init(brain.brainParameters.vectorActionSize, 
                 agent.populationSize, new double[brain.brainParameters.vectorActionSize],agent.initialStepSize, optimizationMode);
             agent.OnEndOptimizationRequested += OnEndOptimizationRequested;
@@ -147,22 +147,22 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
                 agent.SetVisualizationMode(debugVisualization ? AgentES.VisualizationMode.Sampling : AgentES.VisualizationMode.None);
                 foreach (OptimizationSample s in optData.samples)
                 {
-                    float value = agent.EvaluateAction(s.x);
+                    float value = agent.Evaluate(s.x);
                     s.objectiveFuncVal = value;
                 }
                 optData.optimizer.update(optData.samples);
                 double bestScore = optData.optimizer.getBestObjectiveFuncValue();
                 //Debug.Log("Best shot score " + optData.optimizer.getBestObjectiveFuncValue());
                 agent.SetVisualizationMode(debugVisualization ? AgentES.VisualizationMode.Best : AgentES.VisualizationMode.None);
-                agent.EvaluateAction(optData.optimizer.getBest());
+                agent.Evaluate(optData.optimizer.getBest());
 
                 optData.interation++;
                 if ((optData.interation >= agent.maxIteration && agent.maxIteration > 0) ||
-                    (bestScore < agent.valueThresholdToStop && optimizationMode == OptimizationModes.minimize) ||
-                    (bestScore > agent.valueThresholdToStop && optimizationMode == OptimizationModes.maximize))
+                    (bestScore < agent.targetValue && optimizationMode == OptimizationModes.minimize) ||
+                    (bestScore > agent.targetValue && optimizationMode == OptimizationModes.maximize))
                 {
                     //optimizatoin is done
-                    agent.OnActionReady(optData.optimizer.getBest());
+                    agent.OnReady(optData.optimizer.getBest());
                     currentOptimizingAgents.Remove(agent);
                 }
             }
@@ -174,7 +174,7 @@ public class CoreBrainMAES : ScriptableObject, CoreBrain
         if (currentOptimizingAgents.ContainsKey(agent))
         {
             var optData = currentOptimizingAgents[agent];
-            agent.OnActionReady(optData.optimizer.getBest());
+            agent.OnReady(optData.optimizer.getBest());
             currentOptimizingAgents.Remove(agent);
         }
     }

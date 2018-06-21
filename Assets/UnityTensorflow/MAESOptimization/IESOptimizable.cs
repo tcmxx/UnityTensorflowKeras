@@ -7,16 +7,16 @@ public interface IESOptimizable {
     /// <summary>
     /// return the value of an action.
     /// </summary>
-    /// <param name="action"></param>
+    /// <param name="param"></param>
     /// <returns></returns>
-    float EvaluateAction(double[] action);
+    float Evaluate(double[] param);
 
 
     /// <summary>
     /// Implement this instead 
     /// </summary>
-    /// <param name="vectorAction"></param>
-    void OnActionReady(double[] vectorAction);
+    /// <param name="param"></param>
+    void OnReady(double[] param);
 
-   
+    int GetParamDimension();
 }
