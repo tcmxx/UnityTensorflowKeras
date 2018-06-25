@@ -8,7 +8,7 @@ public class PhysicsStorageBehaviour : MonoBehaviour {
 
 
 
-    class RigidbodyState
+    public class RigidbodyState
     {
         public Rigidbody b;
         public Vector3 pos, vel, aVel;
@@ -39,10 +39,10 @@ public class PhysicsStorageBehaviour : MonoBehaviour {
         return true;
     }
 
-    public void SaveState()
+    public List<RigidbodyState> SaveState()
     {
         Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>(true);
-        bodyStates.Clear();
+        bodyStates = new List<RigidbodyState>();
         foreach (Rigidbody b in bodies)
         {
             RigidbodyState state = new RigidbodyState();
@@ -55,9 +55,14 @@ public class PhysicsStorageBehaviour : MonoBehaviour {
             state.isSleeping = b.IsSleeping();
             bodyStates.Add(state);
         }
+        return bodyStates;
     }
-    public void RestoreState()
+    public void RestoreState(List<RigidbodyState> states = null)
     {
+        if(states != null)
+        {
+            bodyStates = states;
+        }
         foreach (RigidbodyState state in bodyStates)
         {
             state.b.gameObject.SetActive(state.active);

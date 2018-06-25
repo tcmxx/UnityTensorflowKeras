@@ -1,4 +1,5 @@
 ﻿using ICM;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,6 +24,8 @@ public class ESOptimizer : MonoBehaviour
     protected int iteration;
     protected OptimizationSample[] samples;
     protected IMAES optimizer;
+    protected Action<double[]> onReady = null;
+
 
     public double BestScore { get; private set; }
     public double[] BestParams { get; private set; }
@@ -83,7 +86,8 @@ public class ESOptimizer : MonoBehaviour
                     (BestScore >= targetValue && mode == OptimizationModes.maximize))
                 {
                     //optimizatoin is done
-                    optimizable.OnReady(BestParams);
+                    if(onReady != null)
+                        onReady.Invoke(BestParams);
                     IsOptimizing = false;
                 }
             }
@@ -91,7 +95,7 @@ public class ESOptimizer : MonoBehaviour
     }
 
 
-    public void StartOptimize(IESOptimizable optimizeTarget)
+    public void StartOptimizeAsync(IESOptimizable optimizeTarget, Action<double[]> onReady = null)
     {
         optimizable = optimizeTarget;
 
@@ -107,14 +111,78 @@ public class ESOptimizer : MonoBehaviour
         optimizer.init(optimizable.GetParamDimension(), populationSize, new double[optimizable.GetParamDimension()], intialStepSize, mode);
 
         IsOptimizing = true;
+
+        this.onReady = onReady;
     }
 
-    public void StopOptimize(bool callOnReady = false)
+    public double[] Optimize(IESOptimizable optimizeTarget, Action<double[]> onReady = null )
+    {
+
+        var tempOptimizer = (optimizerType == ESOptimizerType.LMMAES ? (IMAES)new LMMAES() : (IMAES)new MAES());
+
+        var tempSamples = new OptimizationSample[populationSize];
+        for (int i = 0; i < populationSize; ++i)
+        {
+            tempSamples[i] = new OptimizationSample(optimizeTarget.GetParamDimension());
+        }
+ 
+        tempOptimizer.init(optimizeTarget.GetParamDimension(), populationSize, new double[optimizeTarget.GetParamDimension()], intialStepSize, mode);
+
+        double[] bestParams = null;
+        for (int it = 0; it < maxIteration; ++it)
+        {
+            tempOptimizer.generateSamples(tempSamples);
+            for (int s = 0; s <= tempSamples.Length / evaluationBatchSize; ++s)
+            {
+                List<double[]> paramList = new List<double[]>();
+                for (int b = 0; b < evaluationBatchSize; ++b)
+                {
+                    int ind = s * evaluationBatchSize + b;
+                    if (ind < tempSamples.Length)
+                    {
+                        paramList.Add(tempSamples[ind].x);
+                    }
+                }
+
+                var values = optimizeTarget.Evaluate(paramList);
+
+                for (int b = 0; b < evaluationBatchSize; ++b)
+                {
+                    int ind = s * evaluationBatchSize + b;
+                    if (ind < tempSamples.Length)
+                    {
+                        tempSamples[ind].objectiveFuncVal = values[b];
+                    }
+                }
+
+            }
+
+            tempOptimizer.update(tempSamples);
+            double bestScore = tempOptimizer.getBestObjectiveFuncValue();
+
+            bestParams = tempOptimizer.getBest();
+            
+            if ((bestScore <= targetValue && mode == OptimizationModes.minimize) ||
+                (bestScore >= targetValue && mode == OptimizationModes.maximize))
+            {
+                //optimizatoin is done
+                if (onReady != null)
+                    onReady.Invoke (bestParams);
+                break;
+            }
+        }
+
+        return bestParams;
+        
+    }
+
+    
+    public void StopOptimize(Action<double[]> onReady = null)
     {
         IsOptimizing = false;
-        if (callOnReady && optimizable != null)
+        if (onReady != null)
         {
-            optimizable.OnReady(BestParams);
+            onReady.Invoke(BestParams);
         }
     }
     

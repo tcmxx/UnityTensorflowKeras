@@ -90,7 +90,8 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         //TODO Update the agent's other info if there is
         foreach (Agent agent in agentList)
         {
-            agent.UpdateVectorAction(prevActionOutput.outputAction[agent]);
+            if(prevActionOutput.outputAction != null && prevActionOutput.outputAction.ContainsKey(agent))
+                agent.UpdateVectorAction(prevActionOutput.outputAction[agent]);
         }
 
     }

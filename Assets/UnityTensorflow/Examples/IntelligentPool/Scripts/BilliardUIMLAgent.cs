@@ -81,7 +81,7 @@ public class BilliardUIMLAgent : MonoBehaviour {
         {
             forces.Add(agentRef.SamplePointToForceVectorXY(x[i], y[i]));
         }
-        var values = gameSystemRef.evaluateShots(forces, Color.gray);
+        var values = gameSystemRef.EvaluateShotBatch(forces, Color.gray);
         for (int i = 0; i < values.Count; ++i)
         {
             values[i] = Mathf.Clamp01((values[i] + 0.4f) / 2.4f);

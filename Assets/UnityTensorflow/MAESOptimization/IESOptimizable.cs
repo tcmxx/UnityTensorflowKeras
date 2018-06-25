@@ -11,12 +11,5 @@ public interface IESOptimizable {
     /// <returns></returns>
     List<float> Evaluate(List<double[]> param);
 
-
-    /// <summary>
-    /// Implement this instead 
-    /// </summary>
-    /// <param name="param"></param>
-    void OnReady(double[] param);
-
     int GetParamDimension();
 }

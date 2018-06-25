@@ -37,7 +37,7 @@ public class BilliardHeatMapToParam : MonoBehaviour {
                     {
                         sampledForce = agentSimplRef.SamplePointToForceVectorXY(relatedPoint.x + 0.5f, relatedPoint.y + 0.5f);
                     }
-                    gameSystemRef.evaluateShot(sampledForce, Color.green);
+                    gameSystemRef.EvaluateShot(sampledForce, Color.green);
                 }
             }
         }
@@ -47,7 +47,7 @@ public class BilliardHeatMapToParam : MonoBehaviour {
     public void Shoot()
     {
         Physics.autoSimulation = true;
-        gameSystemRef.shoot(sampledForce);
+        gameSystemRef.Shoot(sampledForce);
     }
     
 

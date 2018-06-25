@@ -17,7 +17,7 @@ public enum BrainType
     External,
     Internal,
     InternalTrainable,
-    MAES
+    //MAES
 }
 
 public enum SpaceType

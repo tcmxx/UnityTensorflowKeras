@@ -39,7 +39,7 @@ with tf.Session() as sess:
         graph_def.ParseFromString(f.read())
         sess.graph.as_default()
         tf.import_graph_def(graph_def, name='')
-        create_recurrent_encoder()
+        #create_recurrent_encoder()
         #%%#######################################3
         #write the summary for tensorboard
         train_writer = tf.summary.FileWriter(os.getcwd() + '/logs', sess.graph)

@@ -1,6 +1,7 @@
 ﻿using AaltoGames;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(PhysicsStorageBehaviour))]
@@ -11,7 +12,9 @@ public class BilliardArena : MonoBehaviour
     public float score = 0;
     public bool rewardShaping = true;
     public float physicsDrag = 0.5f;
-
+    public Vector2 redBallInitialRangeMin;
+    public Vector2 redBallInitialRangeMax;
+    public float redBallRadius;
     protected PhysicsStorageBehaviour physicsStorageBehaviour;
 
     protected GameObject whiteBall;
@@ -27,6 +30,11 @@ public class BilliardArena : MonoBehaviour
     protected Rigidbody[] simulationBodies;
     protected Vector3[] simulationPositions;
     protected Color drawColor;
+
+    protected List<PhysicsStorageBehaviour.RigidbodyState> initialStates = null;
+
+    protected Queue<Vector3> shootsQueue = new Queue<Vector3>();
+
 
     private void Awake()
     {
@@ -61,13 +69,82 @@ public class BilliardArena : MonoBehaviour
         {
             bound[i].arena = this;
         }
+
+        initialStates = physicsStorageBehaviour.SaveState();
     }
+
+    public void Reset(bool randomize)
+    {
+        physicsStorageBehaviour.RestoreState(initialStates);
+
+        if(randomize)
+        {
+            int count = 0;
+            var size = redBallInitialRangeMax - redBallInitialRangeMin;
+            var sampler = new TCUtils.PoissonDiscSampler(size.x, size.y, redBallRadius);
+            var ballsList = ballsToPocket.Keys.ToList();
+
+            List<int> numList = new List<int>();
+            foreach (var s in sampler.Samples())
+            {
+                count++;
+                if (count >= 100)
+                    break;
+            }
+            for(int i = 0; i < sampler.ActiveSamples.Count; ++i)
+            {
+                numList.Add(i);
+            }
+
+            MathUtils.Shuffle(numList, new System.Random());
+            for(int i = 0; i < ballsList.Count; ++i)
+            {
+                var s = sampler.ActiveSamples[numList[i]];
+                var p = ballsList[i].transform.localPosition;
+                p.x = redBallInitialRangeMin.x + s.x;
+                p.z = redBallInitialRangeMin.y + s.y;
+                ballsList[i].transform.localPosition = p;
+                ballsList[i].SetActive(true);
+                ballsToPocket[ballsList[i]] = true;
+            }
+
+
+        }
+
+        savedScore = 0;
+        ballsToPocket = new Dictionary<GameObject, bool>();
+        Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>();
+        foreach (Rigidbody b in bodies)
+        {
+            if (b.gameObject != whiteBall)
+                ballsToPocket[b.gameObject] = true;
+            b.angularDrag = physicsDrag;
+            b.drag = physicsDrag;
+        }
+    }
+
+
 
 
     // Update is called once per frame
     void Update()
     {
         //GraphUtils.DrawPendingLines();
+    }
+
+    private void FixedUpdate()
+    {
+        ShotNextIfReady();
+    }
+
+
+    //check if everything is resolved and if there is next shot in queue. If yes, shot the next shot.
+    public void ShotNextIfReady()
+    {
+        if (IsAllSleeping() && shootsQueue.Count > 0)
+        {
+            Shoot(shootsQueue.Dequeue());
+        }
     }
 
     public void Shoot(Vector3 force)
@@ -81,6 +158,21 @@ public class BilliardArena : MonoBehaviour
         //float ballRadius = whiteBall.transform.localScale.x * 0.5f;
         //r.angularVelocity = 10.0f*axis * force.magnitude / (ballRadius * 2.0f * Mathf.PI);
     }
+
+    public void ShootSequence(List<Vector3> forces)
+    {
+        shootsQueue.Clear();
+        foreach (var f in forces)
+        {
+            shootsQueue.Enqueue(f);
+        }
+
+        var force = shootsQueue.Dequeue();
+        Rigidbody r = whiteBall.GetComponent<Rigidbody>();
+        r.velocity = force;
+    }
+
+
     public void OnPocket(GameObject ball)
     {
         if (ball == whiteBall)
@@ -101,7 +193,7 @@ public class BilliardArena : MonoBehaviour
         ball.SetActive(false);
     }
 
-    public void OnoutOfBound(GameObject ball)
+    public void OnOutOfBound(GameObject ball)
     {
 
         score -= 10;
@@ -113,19 +205,21 @@ public class BilliardArena : MonoBehaviour
         ball.SetActive(false);
     }
 
+    public bool GameComplete()
+    {
+        return IsAllSleeping() && (!whiteBall.activeSelf || ballsToPocket.Values.All(t => !t));
+    }
 
-    public bool ShotComplete()
+    public bool IsAllSleeping()
     {
         return physicsStorageBehaviour.IsAllSleeping();
-        //check whether any physics object is moving
-        /*Rigidbody[] bodies = GameObject.FindObjectsOfType<Rigidbody>();
-        foreach (Rigidbody b in bodies)
-        {
-            if (b.velocity.magnitude > 0.001f)
-                return false;
-        }
-        return true;*/
     }
+
+    public bool AllShotsComplete()
+    {
+        return IsAllSleeping() && shootsQueue.Count == 0;
+    }
+
     public void StopAll()
     {
         physicsStorageBehaviour.StopAll();
@@ -148,13 +242,9 @@ public class BilliardArena : MonoBehaviour
 
     public void StartEvaluateShot(Vector3 force, Color drawColor)
     {
-
         SaveState();
-
         //initialize score to 0, want to count only this shot
         score = 0;
-
-
         //initialize shot
         Shoot(force);
 
@@ -163,8 +253,23 @@ public class BilliardArena : MonoBehaviour
         //some helpers
         simulationBodies = GetComponentsInChildren<Rigidbody>();
         simulationPositions = new Vector3[simulationBodies.Length];
-
     }
+
+    public void StartEvaluateShotSequence(List<Vector3> forceSequence, Color drawColor)
+    {
+        SaveState();
+        //initialize score to 0, want to count only this shot
+        score = 0;
+        //initialize shot
+        ShootSequence(forceSequence);
+
+        this.drawColor = drawColor;
+
+        //some helpers
+        simulationBodies = GetComponentsInChildren<Rigidbody>();
+        simulationPositions = new Vector3[simulationBodies.Length];
+    }
+
 
     public void BeforeEvaluationUpdate()
     {
@@ -179,7 +284,7 @@ public class BilliardArena : MonoBehaviour
                 GraphUtils.AddLine(simulationPositions[i], simulationBodies[i].position, drawColor);
     }
 
-    public float EndEvaluationShoot()
+    public float EndEvaluation()
     {
         if (rewardShaping)
         {
@@ -197,10 +302,6 @@ public class BilliardArena : MonoBehaviour
                     //each ball that is close to a pocket adds 0.1 to the score
                     float distanceSd = 0.5f;
                     score += Mathf.Min(0.1f * Mathf.Exp(-0.5f * minSqDist / (distanceSd * distanceSd)), 0.8f);
-                    if (score >= 2)
-                    {
-                        score = 2;
-                    }
                 }
             }
         }

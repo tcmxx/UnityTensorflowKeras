@@ -71,12 +71,13 @@ MonoBehaviour:
   agentParameters:
     agentCameras: []
     maxStep: 0
-    resetOnDone: 1
+    resetOnDone: 0
     onDemandDecision: 1
     numberOfActionsBetweenDecisions: 1
-  maxIteration: 0
-  targetValue: 2
+  maxIteration: 15
+  targetValue: 10
   populationSize: 16
   initialStepSize: 1
+  shootSequence: 1
   forceMultiplier: 100
   maxForce: 5

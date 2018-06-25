@@ -148,8 +148,8 @@ public class RLModelPPO : MonoBehaviour
 
 
         //test
-        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+       // Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
 
     protected List<Tensor> CreateVisualInputs(Brain brain)
@@ -276,7 +276,7 @@ public class RLModelPPO : MonoBehaviour
     /// <summary>
     /// Query actions' probabilities based on curren states. The first dimension of the array must be batch dimension
     /// </summary>
-    public virtual float[,] EvaluateProbabilityn(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation)
+    public virtual float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)

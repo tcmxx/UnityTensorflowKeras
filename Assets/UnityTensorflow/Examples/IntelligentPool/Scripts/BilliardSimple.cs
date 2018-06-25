@@ -21,7 +21,7 @@ public class BilliardSimple : MonoBehaviour, IESOptimizable
     {
         if (optimizer.IsOptimizing)
         {
-            gameSystem.evaluateShot(ParamsToForceVector(optimizer.BestParams), Color.green);
+            gameSystem.EvaluateShot(ParamsToForceVector(optimizer.BestParams), Color.green);
         }
     }
 
@@ -32,13 +32,13 @@ public class BilliardSimple : MonoBehaviour, IESOptimizable
         {
             forces.Add(ParamsToForceVector(action[i]));
         }
-        var values = gameSystem.evaluateShots(forces, Color.gray);
+        var values = gameSystem.EvaluateShotBatch(forces, Color.gray);
         return values;
     }
 
     public void OnReady(double[] vectorAction)
     {
-        gameSystem.shoot(ParamsToForceVector(vectorAction));
+        gameSystem.Shoot(ParamsToForceVector(vectorAction));
         Physics.autoSimulation = true;
     }
     

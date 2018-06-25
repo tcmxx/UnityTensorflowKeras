@@ -7,9 +7,18 @@ public class BilliardAgent : AgentES
 {
     
     protected BilliardGameSystem gameSystem;
+    public int shootSequence = 1;
     public float forceMultiplier = 100;
     public float maxForce = 5;
     protected Color visColor;
+
+    public bool randomizeRedballs = true;
+
+    private void Start()
+    {
+        //test
+        //gameSystem.ShootSequence(new List<Vector3>() { Vector3.right, Vector3.back });
+    }
 
     public override void InitializeAgent()
     {
@@ -18,31 +27,57 @@ public class BilliardAgent : AgentES
 
     public override void AgentReset()
     {
+        
     }
 
     public override void AgentOnDone()
     {
-
     }
 
-
+    private void FixedUpdate()
+    {
+        if (gameSystem.GameComplete())
+        {
+            gameSystem.Reset(randomizeRedballs);
+        }
+    }
 
 
     public override List<float> Evaluate(List<double[]> action)
     {
 
-        List<Vector3> forces = new List<Vector3>();
+        List<List<Vector3>> forceSequences = new List<List<Vector3>>();
         for (int i = 0; i < action.Count; ++i)
         {
-            forces.Add(ParamsToForceVector(action[i]));
+            int seq = action[i].Length / 2;
+            forceSequences.Add(new List<Vector3>());
+            for (int j = 0; j < seq; ++j)
+            {
+                double[] act = new double[2];
+                Array.Copy(action[i], 2*j, act, 0, 2);
+
+                forceSequences[i].Add(ParamsToForceVector(act));
+            }
         }
-        var values = gameSystem.evaluateShots(forces, Color.gray);
+        var values = gameSystem.EvaluateShotSequenceBatch(forceSequences, Color.gray);
         return values;
     }
 
     public override void OnReady(double[] vectorAction)
     {
-        gameSystem.shoot(ParamsToForceVector(vectorAction));
+        int seq = vectorAction.Length / 2;
+        var result = new List<Vector3>();
+        for (int j = 0; j < seq; ++j)
+        {
+            double[] act = new double[2];
+            Array.Copy(vectorAction, 2 * j, act, 0, 2);
+
+            result.Add(ParamsToForceVector(act));
+        }
+
+
+        //gameSystem.Shoot(ParamsToForceVector(vectorAction));
+        gameSystem.ShootSequence(result);
         Physics.autoSimulation = true;
     }
 

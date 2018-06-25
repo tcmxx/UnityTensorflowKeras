@@ -52,13 +52,13 @@ public class BilliardUISimple : MonoBehaviour {
 
     public void OnOptimizationButtonClicked()
     {
-        optimizerRef.StartOptimize(agentRef);
+        optimizerRef.StartOptimizeAsync(agentRef,agentRef.OnReady);
         Physics.autoSimulation = false;
     }
 
     public void OnEndOptimizationButtonClicked()
     {
-        optimizerRef.StopOptimize(true);
+        optimizerRef.StopOptimize(agentRef.OnReady);
         Physics.autoSimulation = true;
     }
 
@@ -82,7 +82,7 @@ public class BilliardUISimple : MonoBehaviour {
         {
             forces.Add(agentRef.SamplePointToForceVectorXY(x[i], y[i]));
         }
-        var values = gameSystemRef.evaluateShots(forces, Color.gray);
+        var values = gameSystemRef.EvaluateShotBatch(forces, Color.gray);
         for(int i = 0; i < values.Count; ++i)
         {
             values[i] = Mathf.Clamp01((values[i] + 0.4f) / 2.4f);

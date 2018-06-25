@@ -72,13 +72,13 @@ public class Player : MonoBehaviour {
             {
                 //must also disable autosimulation, as otherwise we get nasty jitter due to the imperfect physics state saving and loading
                 Physics.autoSimulation = false;
-                float score=gameSystem.evaluateShot(aimForceMultiplier * aimVector, Color.green);
+                float score=gameSystem.EvaluateShot(aimForceMultiplier * aimVector, Color.green);
                 Debug.Log("Predicted shot score " + score);
             }
             //When mouse released, apply force to ball and go into simulation mode
             if (Input.GetMouseButtonUp(0))
             {
-                gameSystem.shoot(aimForceMultiplier*aimVector);
+                gameSystem.Shoot(aimForceMultiplier*aimVector);
                 uiState = UIState.simulating;
                 stick.SetActive(false);
             }
@@ -87,11 +87,9 @@ public class Player : MonoBehaviour {
         {
             Physics.autoSimulation = true;
             //if all physics objects have stopped moving (i.e., their speeds are below the 0.001f threshold), go back to idle mode
-            if (gameSystem.shotComplete())
+            if (gameSystem.AllShotsComplete())
             {
                 uiState = UIState.idle;
-                //just to be sure, fully stop all bodies
-                gameSystem.stopAll();
             }
         }
 	}

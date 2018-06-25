@@ -1,26 +1,20 @@
-﻿using System.Collections;
+﻿using ICM;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using ICM;
-using System;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 using System.Linq;
+using UnityEngine;
 
-/// CoreBrain which decides actions using internally embedded TensorFlow model.
-/*public class CoreBrainMAES : ScriptableObject, CoreBrain
+public class TrainerMAES : Trainer
 {
+
     /// Reference to the brain that uses this CoreBrainInternal
-    public Brain brain;
+    protected Brain brain;
     public ESOptimizerType optimizer;
-   
+
     public OptimizationModes optimizationMode;
     public int iterationPerFrame = 20;
     public int evaluationBatchSize = 8;
-    public bool debugVisualization = false;
+    public bool debugVisualization = true;
 
     private Dictionary<AgentES, OptimizationData> currentOptimizingAgents;
 
@@ -36,7 +30,7 @@ using System.Linq;
         public OptimizationData(int populationSize, IMAES optimizerToUse, int dim)
         {
             samples = new OptimizationSample[populationSize];
-            for(int i = 0; i < populationSize; ++i)
+            for (int i = 0; i < populationSize; ++i)
             {
                 samples[i] = new OptimizationSample(dim);
             }
@@ -50,88 +44,27 @@ using System.Linq;
     }
 
 
-    /// Create the reference to the brain
-    public void SetBrain(Brain b)
-    {
-        brain = b;
-    }
 
-    
-    public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
+    private void FixedUpdate()
+    {
+        ContinueOptimization();
+    }
+    /// Create the reference to the brain
+    public override void Initialize()
     {
         currentOptimizingAgents = new Dictionary<AgentES, OptimizationData>();
     }
 
 
 
-    /// Uses the stored information to run the tensorflow graph and generate 
-    /// the actions.
-    public void DecideAction(Dictionary<Agent, AgentInfo> agentInfo)
-    {
-        var agentList = agentInfo.Keys;
-        List<AgentES> agentsToOptimize = new List<AgentES>();
-        foreach(Agent a in agentList)
-        {
-            if(!(a is AgentES))
-            {
-                Debug.LogError("Agents using CoreBrainMAES must inherit from AgentES");
-            }
-            if (!currentOptimizingAgents.ContainsKey((AgentES)a))
-            {
-                agentsToOptimize.Add((AgentES)a);
-            }
-            else
-            {
-                //Debug.LogError("new decision requested while last decision is not made yet");
-            }
-        }
-
-        if(agentsToOptimize.Count > 0)
-            AddOptimization(agentsToOptimize);
-        ContinueOptimization();
-        
-    }
-
-
-
-    /// Displays the parameters of the CoreBrainInternal in the Inspector 
-    public void OnInspector()
-    {
-#if UNITY_EDITOR
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-
-        var serializedBrain = new SerializedObject(this);
-
-
-
-        var debugVis = serializedBrain.FindProperty("debugVisualization");
-        var optMode = serializedBrain.FindProperty("optimizationMode");
-        var itPerFrame = serializedBrain.FindProperty("iterationPerFrame");
-        var batchsize = serializedBrain.FindProperty("evaluationBatchSize");
-        var opt = serializedBrain.FindProperty("optimizer");
-
-        serializedBrain.Update();
-        EditorGUILayout.PropertyField(debugVis, true);
-        EditorGUILayout.PropertyField(optMode, true);
-        EditorGUILayout.PropertyField(itPerFrame, true);
-        EditorGUILayout.PropertyField(batchsize, true);
-        EditorGUILayout.PropertyField(opt, true);
-        EditorGUILayout.LabelField("CoreBrainMAES is deprecated. Please use CoreBrainTrainable and TrainerMAES instead.");
-        serializedBrain.ApplyModifiedProperties();
-#endif
-    }
-
-
-
-
 
     protected void AddOptimization(List<AgentES> agents)
     {
-        foreach(var agent in agents)
+        foreach (var agent in agents)
         {
-            currentOptimizingAgents[agent] = new OptimizationData(agent.populationSize, optimizer== ESOptimizerType.LMMAES?(IMAES)new LMMAES(): (IMAES)new MAES(), agent.GetParamDimension());
-            currentOptimizingAgents[agent].optimizer.init(brain.brainParameters.vectorActionSize, 
-                agent.populationSize, new double[brain.brainParameters.vectorActionSize],agent.initialStepSize, optimizationMode);
+            currentOptimizingAgents[agent] = new OptimizationData(agent.populationSize, optimizer == ESOptimizerType.LMMAES ? (IMAES)new LMMAES() : (IMAES)new MAES(), agent.GetParamDimension());
+            currentOptimizingAgents[agent].optimizer.init(brain.brainParameters.vectorActionSize,
+                agent.populationSize, new double[brain.brainParameters.vectorActionSize], agent.initialStepSize, optimizationMode);
             agent.OnEndOptimizationRequested += OnEndOptimizationRequested;
         }
     }
@@ -173,6 +106,11 @@ using System.Linq;
                     }
 
                 }
+                /*foreach (OptimizationSample s in optData.samples)
+                {
+                    float value = agent.Evaluate(new List<double[]> { s.x })[0];
+                    s.objectiveFuncVal = value;
+                }*/
 
 
 
@@ -202,8 +140,75 @@ using System.Linq;
             var optData = currentOptimizingAgents[agent];
             agent.OnReady(optData.optimizer.getBest());
             currentOptimizingAgents.Remove(agent);
+            agent.OnEndOptimizationRequested -= OnEndOptimizationRequested;
         }
     }
-    
+
+
+    public override int GetStep()
+    {
+        return 0;
+    }
+
+    public override int GetMaxStep()
+    {
+        return int.MaxValue;
+    }
+
+    public override TakeActionOutput TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    {
+        var agentList = agentInfos.Keys;
+        List<AgentES> agentsToOptimize = new List<AgentES>();
+        foreach (Agent a in agentList)
+        {
+            if (!(a is AgentES))
+            {
+                Debug.LogError("Agents using CoreBrainMAES must inherit from AgentES");
+            }
+            if (!currentOptimizingAgents.ContainsKey((AgentES)a))
+            {
+                agentsToOptimize.Add((AgentES)a);
+            }
+            else
+            {
+                //Debug.LogError("new decision requested while last decision is not made yet");
+            }
+        }
+
+        if (agentsToOptimize.Count > 0)
+            AddOptimization(agentsToOptimize);
+        
+
+        return new TakeActionOutput();
+    }
+
+    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
+    {
+        return;
+    }
+
+    public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
+    {
+        return;
+    }
+
+    public override bool IsReadyUpdate()
+    {
+        return false;
+    }
+
+    public override void UpdateModel()
+    {
+        return;
+    }
+
+    public override void IncrementStep()
+    {
+        return;
+    }
+
+    public override void SetBrain(Brain brain)
+    {
+        this.brain = brain; ;
+    }
 }
-*/
