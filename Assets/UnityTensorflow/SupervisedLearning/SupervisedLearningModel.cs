@@ -15,7 +15,7 @@ using static Current;
 /// <summary>
 /// actor critic network abstract class
 /// </summary>
-public class SupervisedLearningModel : ScriptableObject
+public class SupervisedLearningModel : MonoBehaviour
 {
     public int StateSize { get; private set; }
     public int ActionSize { get; private set; }
@@ -51,7 +51,7 @@ public class SupervisedLearningModel : ScriptableObject
         var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
         //creat the loss
         Tensor loss = null;
-        if (ActionSpace == SpaceType.continuous)
+        if (ActionSpace == SpaceType.discrete)
         {
             Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
             loss = K.mean(K.categorical_crossentropy(actionOnehot, outputAction, false));

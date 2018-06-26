@@ -6,18 +6,18 @@ using UnityEditor;
 using System.Linq;
 
 
-[CustomEditor(typeof(TrainerPPO))]
-public class TrainerEditor : Editor
+[CustomEditor(typeof(TrainerMimic))]
+public class TrainerMimicEditor : Editor
 {
 
     public override void OnInspectorGUI()
     {
-        TrainerPPO myBrain = (TrainerPPO)target;
+        TrainerMimic myTrainer = (TrainerMimic)target;
         base.OnInspectorGUI();
 
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         EditorGUILayout.LabelField("Training Parameters", GUI.skin.box);
-        myBrain.parameters?.OnInspector();
+        myTrainer.parameters?.OnInspector();
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
     }

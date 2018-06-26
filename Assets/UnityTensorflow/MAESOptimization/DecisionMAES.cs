@@ -2,9 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 [RequireComponent(typeof(ESOptimizer))]
-public class DecisionMAES : MonoBehaviour, IAgentDependentDecision
+public class DecisionMAES : AgentDependentDecision
 {
     protected ESOptimizer optimizer;
 
@@ -13,10 +14,11 @@ public class DecisionMAES : MonoBehaviour, IAgentDependentDecision
         optimizer = GetComponent<ESOptimizer>();
     }
 
-    public float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, float reward, bool done, Agent agent)
+    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction)
     {
-        Debug.Assert(agent is IESOptimizable, "DesicionMAES required the agent to implement AgentES.");
-        double[] best = optimizer.Optimize(agent as IESOptimizable, null);
+        Debug.Assert(agent is AgentES, "DesicionMAES required the agent to implement AgentES.");
+        var agentES = agent as AgentES;
+        double[] best = optimizer.Optimize(agentES, agentES.OnReady, heuristicAction.Select(t=>(double)t).ToArray());
 
         var result = Array.ConvertAll(best, t => (float)t);
         return result;

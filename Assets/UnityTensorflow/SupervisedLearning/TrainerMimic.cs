@@ -1,61 +1,210 @@
-﻿using System.Collections;
+﻿using Accord.Math;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
-public class TrainerMimic : Trainer {
+public class TrainerMimic : Trainer
+{
 
-    public AgentDependentDecision decisionToMimic;
+    public AgentDependentDecision decisionToMimicRef;
 
+    public SupervisedLearningModel modelRef;
+    public TrainerParamsMimic parameters;
 
+    public Brain BrainToTrain { get; private set; }
+    StatsLogger stats;
+
+    protected DataBuffer dataBuffer;
+
+    [ReadOnly]
+    [SerializeField]
+    private int steps = 0;
+    public int Steps { get { return steps; }protected set { steps = value; } }
+
+    public bool continueFromCheckpoint = true;
+    public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
     public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
     {
-        throw new System.NotImplementedException();
+        var agentList = currentInfo.Keys;
+        foreach (var agent in agentList)
+        {
+            var agentNewInfo = newInfo[agent];
+            
+            List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
+            dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionOutput.outputAction[agent]));
+            if (currentInfo[agent].stackedVectorObservation.Count > 0)
+                dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", currentInfo[agent].stackedVectorObservation.ToArray()));
+
+            for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
+            {
+                var res = BrainToTrain.brainParameters.cameraResolutions[i];
+                Array arrayToAdd =  TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
+                dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
+            }
+            dataBuffer.AddData(dataToAdd.ToArray());
+            
+        }
     }
 
     public override int GetMaxStep()
     {
-        throw new System.NotImplementedException();
+        return parameters.maxTotalSteps;
     }
 
     public override int GetStep()
     {
-        throw new System.NotImplementedException();
+        return Steps;
     }
 
     public override void IncrementStep()
     {
-        throw new System.NotImplementedException();
+        Steps++;
+        if (Steps % parameters.saveModelInterval == 0)
+        {
+            Save();
+        }
     }
 
     public override void Initialize()
     {
-        throw new System.NotImplementedException();
+        stats = new StatsLogger();
+        modelRef.Initialize(BrainToTrain);
+
+        var brainParameters = BrainToTrain.brainParameters;
+
+        //intialize data buffer
+        List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 })
+        };
+
+        if (brainParameters.vectorObservationSize > 0)
+            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] { brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations : 1 }));
+
+        for (int i = 0; i < brainParameters.cameraResolutions.Length; ++i)
+        {
+            int width = brainParameters.cameraResolutions[i].width;
+            int height = brainParameters.cameraResolutions[i].height;
+            int channels;
+            if (brainParameters.cameraResolutions[i].blackAndWhite)
+                channels = 1;
+            else
+                channels = 3;
+
+            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, height, channels }));
+        }
+        dataBuffer = new DataBuffer(parameters.maxBufferSize, allBufferData.ToArray());
+
+        if (continueFromCheckpoint)
+        {
+            Load();
+        }
     }
 
     public override bool IsReadyUpdate()
     {
-        throw new System.NotImplementedException();
+        return parameters.batchSize*parameters.trainIterationPerStep <= dataBuffer.CurrentCount ;
     }
 
     public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
     {
-        throw new System.NotImplementedException();
+        return;
     }
 
     public override void SetBrain(Brain brain)
     {
-        throw new System.NotImplementedException();
+        this.BrainToTrain = brain;
     }
 
     public override TakeActionOutput TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
-        throw new System.NotImplementedException();
+        var result = new TakeActionOutput();
+        result.outputAction = new Dictionary<Agent, float[]>();
+
+        var agentList = new List<Agent>(agentInfos.Keys);
+
+        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
+
+        float[,] actions = null;
+        bool useHeuristic = UnityEngine.Random.Range(0, 1.0f) < parameters.chanceOfUsingheuristicForOptimization ? true : false;
+        if (useHeuristic)
+            actions = modelRef.EvaluateAction(vectorObsAll, visualObsAll);
+        else
+            actions = new float[agentList.Count, BrainToTrain.brainParameters.vectorActionSize];
+
+        int i = 0;
+        foreach (var agent in agentList)
+        {
+            var info = agentInfos[agent];
+            var action = decisionToMimicRef.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
+            result.outputAction[agent] = action;
+
+            i++;
+        }
+
+        return result;
     }
 
     public override void UpdateModel()
     {
-        throw new System.NotImplementedException();
+        var fetches = new List<ValueTuple<string, int, string>>();
+        if (BrainToTrain.brainParameters.vectorObservationSize > 0)
+            fetches.Add(new ValueTuple<string, int, string>("VectorObservation", 0, "VectorObservation"));
+        fetches.Add(new ValueTuple<string, int, string>("Action", 0, "Action"));
+        for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
+        {
+            fetches.Add(new ValueTuple<string, int, string>("VisualObservation" + i, 0, "VisualObservation" + i));
+        }
+
+
+        float loss = 0;
+        for (int i = 0; i < parameters.trainIterationPerStep; ++i)
+        {
+            var samples = dataBuffer.RandomSample(parameters.batchSize, fetches.ToArray());
+
+            var vectorObsArray = samples.TryGetOr("VectorObservation", null);
+            float[,] vectorObservations = vectorObsArray == null ? null : vectorObsArray as float[,];
+            float[,] actions = (float[,])samples["Action"];
+            List<float[,,,]> visualObservations = null;
+            for (int j = 0; j < BrainToTrain.brainParameters.cameraResolutions.Length; ++j)
+            {
+                if (j == 0)
+                    visualObservations = new List<float[,,,]>();
+                visualObservations.Add((float[,,,])samples["VisualObservation" + j]);
+            }
+            
+            int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
+            int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
+
+            float temoLoss = modelRef.TrainBatch(vectorObservations, visualObservations,actions);
+            loss += temoLoss;
+        }
+
+        stats.AddData("loss", loss/ parameters.trainIterationPerStep,parameters.lossLogInterval);
     }
-    
+
+
+
+
+    public void Save()
+    {
+        var data = modelRef.SaveCheckpoint();
+        File.WriteAllBytes(checkpointPath, data);
+        Debug.Log("Saved Checkpoint to " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+    }
+    public void Load()
+    {
+        string fullPath = Path.Combine(Directory.GetCurrentDirectory(), checkpointPath);
+        if (!File.Exists(fullPath))
+        {
+            Debug.Log("Checkpoint Not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+            return;
+        }
+        var bytes = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+        modelRef.RestoreCheckpoint(bytes);
+        Debug.Log("Loaded from Checkpoint " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+    }
 }

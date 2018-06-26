@@ -39,6 +39,7 @@ public class TrainerPPO : Trainer
     }
     public override void Initialize()
     {
+        //initialize all data buffers
         statesEpisodeHistory = new Dictionary<Agent, List<float>>();
         rewardsEpisodeHistory = new Dictionary<Agent, List<float>>();
         actionsEpisodeHistory = new Dictionary<Agent, List<float>>();
@@ -76,7 +77,7 @@ public class TrainerPPO : Trainer
         }
         dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2, allBufferData.ToArray());
 
-
+        //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
         modelRef.Initialize(BrainToTrain,parameters);
 

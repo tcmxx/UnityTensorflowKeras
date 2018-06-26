@@ -31,6 +31,15 @@ public class BilliardGameSystem : MonoBehaviour {
         defaultArena.Reset(randomize);
         //Physics.autoSimulation = true;
     }
+    /// <summary>
+    /// return the positions of all balls. The first ball is always the white ball.
+    /// The Y coordinate of a ball will only be 1 and 0. 0 means this ball is not active right now.
+    /// </summary>
+    /// <returns></returns>
+    public List<Vector3> GetBallsStatus()
+    {
+        return defaultArena.GetBallsStatus();
+    }
 
     public bool GameComplete()
     {

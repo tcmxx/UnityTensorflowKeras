@@ -51,18 +51,18 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         }
 
 
-        if (trainer.GetStep() > 0 && trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
+        if (trainer.GetStep() > 0 && trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
         {
             trainer.AddExperience(currentInfo, agentInfo, prevActionOutput);
             trainer.ProcessExperience(currentInfo, agentInfo);
         }
 
-        if (trainer.IsReadyUpdate() && trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
+        if (trainer.IsReadyUpdate() && trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
         {
             trainer.UpdateModel();
         }
         
-        if (trainer.isTraining && trainer.GetStep() <= trainer.GetStep())
+        if (trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
         {
             trainer.IncrementStep();
         }

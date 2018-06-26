@@ -52,13 +52,13 @@ public class BilliardUISimple : MonoBehaviour {
 
     public void OnOptimizationButtonClicked()
     {
-        optimizerRef.StartOptimizeAsync(agentRef,agentRef.OnReady);
+        optimizerRef.StartOptimizingAsync(agentRef,agentRef.OnReady);
         Physics.autoSimulation = false;
     }
 
     public void OnEndOptimizationButtonClicked()
     {
-        optimizerRef.StopOptimize(agentRef.OnReady);
+        optimizerRef.StopOptimizing(agentRef.OnReady);
         Physics.autoSimulation = true;
     }
 

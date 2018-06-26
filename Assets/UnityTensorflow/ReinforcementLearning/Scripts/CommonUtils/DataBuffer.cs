@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
-public class DataBuffer
+[Serializable]
+public class DataBuffer:ISerializable
 {
-
+    [Serializable]
     public struct DataInfo
     {
         public DataInfo(string name, Type type, int[] dimension)
@@ -23,6 +25,7 @@ public class DataBuffer
         public int unitLength;
     }
 
+    [Serializable]
     protected struct DataContainer
     {
         public DataContainer(DataInfo info, int maxDataCount)
@@ -58,8 +61,22 @@ public class DataBuffer
     }
 
 
-
-
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+        info.AddValue("MaxCount", MaxCount);
+        info.AddValue("nextBufferPointer", nextBufferPointer);
+        info.AddValue("CurrentCount", CurrentCount);
+        info.AddValue("dataset", dataset);
+    }
+    // The special constructor is used to deserialize values.
+    public DataBuffer(SerializationInfo info, StreamingContext context)
+    {
+        // Reset the property value using the GetValue method.
+        MaxCount = (int)info.GetValue("MaxCount", typeof(int));
+        nextBufferPointer = (int)info.GetValue("nextBufferPointer", typeof(int));
+        CurrentCount = (int)info.GetValue("CurrentCount", typeof(int));
+        dataset = (Dictionary<string, DataContainer>)info.GetValue("dataset", typeof(Dictionary<string, DataContainer>));
+    }
     /// <summary>
     /// Add data to the buffer
     /// </summary>
@@ -137,7 +154,7 @@ public class DataBuffer
     /// <param name="numOfSamples"></param>
     /// <param name="fetchAndOffset">tuple of <key of data to sample, sample index offset, returned dictionary key></param>
     /// <returns></returns>
-    public Dictionary<string, Array> RandomSample(int numOfSamples, params Tuple<string, int, string>[] fetchAndOffset)
+    public Dictionary<string, Array> RandomSample(int numOfSamples, params ValueTuple<string, int, string>[] fetchAndOffset)
     {
         Debug.Assert(numOfSamples <= CurrentCount, "Not enough data to sample");
 
@@ -283,4 +300,6 @@ public class DataBuffer
         }
         return result as float[,,,];
     }
+
+
 }

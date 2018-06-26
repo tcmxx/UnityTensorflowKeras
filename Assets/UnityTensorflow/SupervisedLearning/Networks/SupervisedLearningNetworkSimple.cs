@@ -7,10 +7,8 @@ using UnityEngine;
 public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
 {
 
-    public int actorNNHidden = 1;
-    public int actorNNWidth = 128;
-    public int criticNNHidden = 1;
-    public int criticNNWidth = 128;
+    public int numHidden = 2;
+    public int width = 64;
     public float hiddenWeightsInitialScale = 1;
     public float outputWeightsInitialScale = 0.01f;
 
@@ -33,7 +31,7 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
             List<Tensor> visualEncodedActor = new List<Tensor>();
             foreach (var v in inVisualState)
             {
-                var ha = CreateVisualEncoder(v, actorNNWidth, actorNNHidden, "ActorVisualEncoder");
+                var ha = CreateVisualEncoder(v, width, numHidden, "ActorVisualEncoder");
                 visualEncodedActor.Add(ha);
             }
             if (inVisualState.Count > 1)
@@ -53,7 +51,7 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
         Tensor encodedVectorStateActor = null;
         if (inVectorstate != null)
         {
-            encodedVectorStateActor = CreateContinuousStateEncoder(inVectorstate, actorNNWidth, actorNNHidden, "ActorStateEncoder");
+            encodedVectorStateActor = CreateContinuousStateEncoder(inVectorstate, width, numHidden, "ActorStateEncoder");
         }
 
         //concat all inputs

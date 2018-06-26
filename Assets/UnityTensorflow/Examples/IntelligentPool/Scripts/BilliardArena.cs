@@ -15,6 +15,9 @@ public class BilliardArena : MonoBehaviour
     public Vector2 redBallInitialRangeMin;
     public Vector2 redBallInitialRangeMax;
     public float redBallRadius;
+
+    public float forceMultiplier = 5;
+
     protected PhysicsStorageBehaviour physicsStorageBehaviour;
 
     protected GameObject whiteBall;
@@ -110,7 +113,7 @@ public class BilliardArena : MonoBehaviour
 
 
         }
-
+        score = 0;
         savedScore = 0;
         ballsToPocket = new Dictionary<GameObject, bool>();
         Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>();
@@ -123,7 +126,25 @@ public class BilliardArena : MonoBehaviour
         }
     }
 
-
+    /// <summary>
+    /// return the positions of all balls. The first ball is always the white ball.
+    /// The Y coordinate of a ball will only be 1 and 0. 0 means this ball is not active right now.
+    /// </summary>
+    /// <returns></returns>
+    public List<Vector3> GetBallsStatus()
+    {
+        List<Vector3> result = new List<Vector3>();
+        var pos = whiteBall.transform.localPosition;
+        pos.y = whiteBall.activeSelf?1:0;
+        result.Add(pos);
+        foreach(var b in ballsToPocket.Keys)
+        {
+            pos = b.transform.localPosition;
+            pos.y = b.activeSelf ? 1 : 0;
+            result.Add(pos);
+        }
+        return result;
+    } 
 
 
     // Update is called once per frame
@@ -150,7 +171,16 @@ public class BilliardArena : MonoBehaviour
     public void Shoot(Vector3 force)
     {
         Rigidbody r = whiteBall.GetComponent<Rigidbody>();
+
+        force = forceMultiplier * force;
+         if(force.magnitude >= forceMultiplier)
+        {
+            score -= (force.magnitude) * 10;
+            force = Vector3.ClampMagnitude(force, forceMultiplier);
+        }
+
         r.velocity = force;
+
         //Uncomment the following to also set the angular velocity of the ball such that it agrees with velocity.
         //This should prevent the ball from first sliding and then decelerating rapidly. However, it doesn't seem to work in practice,
         //and better results are obtained simply by having everything with zero friction and basically no rotation (which however looks ok only without textures...)
@@ -168,8 +198,7 @@ public class BilliardArena : MonoBehaviour
         }
 
         var force = shootsQueue.Dequeue();
-        Rigidbody r = whiteBall.GetComponent<Rigidbody>();
-        r.velocity = force;
+        Shoot(force);
     }
 
 

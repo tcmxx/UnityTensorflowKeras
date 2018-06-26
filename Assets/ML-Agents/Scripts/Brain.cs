@@ -123,7 +123,7 @@ public class Brain : MonoBehaviour
      * coreBrains (one for each brainType) */
     public void UpdateCoreBrains()
     {
-
+        //CoreBrains = null;
         // If CoreBrains is null, this means the Brain object was just 
         // instanciated and we create instances of each CoreBrain
         if (CoreBrains == null)

@@ -95,7 +95,7 @@ public class ESOptimizer : MonoBehaviour
     }
 
 
-    public void StartOptimizeAsync(IESOptimizable optimizeTarget, Action<double[]> onReady = null)
+    public void StartOptimizingAsync(IESOptimizable optimizeTarget, Action<double[]> onReady = null, double[] initialMean = null)
     {
         optimizable = optimizeTarget;
 
@@ -108,6 +108,16 @@ public class ESOptimizer : MonoBehaviour
         }
         iteration = 0;
 
+        //initial mean
+        double[] actualInitMean = null;
+        if (initialMean != null && initialMean.Length != optimizeTarget.GetParamDimension())
+            Debug.LogError("Init mean has a wrong dimension " + initialMean.Length + " rather than " + optimizeTarget.GetParamDimension() + ".");
+        if (initialMean == null)
+            actualInitMean = new double[optimizeTarget.GetParamDimension()];
+        else
+            actualInitMean = initialMean;
+
+
         optimizer.init(optimizable.GetParamDimension(), populationSize, new double[optimizable.GetParamDimension()], intialStepSize, mode);
 
         IsOptimizing = true;
@@ -115,7 +125,7 @@ public class ESOptimizer : MonoBehaviour
         this.onReady = onReady;
     }
 
-    public double[] Optimize(IESOptimizable optimizeTarget, Action<double[]> onReady = null )
+    public double[] Optimize(IESOptimizable optimizeTarget, Action<double[]> onReady = null, double[] initialMean = null )
     {
 
         var tempOptimizer = (optimizerType == ESOptimizerType.LMMAES ? (IMAES)new LMMAES() : (IMAES)new MAES());
@@ -125,10 +135,23 @@ public class ESOptimizer : MonoBehaviour
         {
             tempSamples[i] = new OptimizationSample(optimizeTarget.GetParamDimension());
         }
- 
-        tempOptimizer.init(optimizeTarget.GetParamDimension(), populationSize, new double[optimizeTarget.GetParamDimension()], intialStepSize, mode);
 
+        //initial mean
+        double[] actualInitMean = null;
+        if (initialMean != null && initialMean.Length != optimizeTarget.GetParamDimension())
+            Debug.LogError("Init mean has a wrong dimension " + initialMean.Length + " rather than " + optimizeTarget.GetParamDimension() + ".");
+        if (initialMean == null)
+            actualInitMean = new double[optimizeTarget.GetParamDimension()];
+        else
+            actualInitMean = initialMean;
+
+        //initialize the optimizer
+        tempOptimizer.init(optimizeTarget.GetParamDimension(), populationSize, actualInitMean, intialStepSize, mode);
+
+        //iteration
         double[] bestParams = null;
+
+        bool hasInvokeReady = false;
         for (int it = 0; it < maxIteration; ++it)
         {
             tempOptimizer.generateSamples(tempSamples);
@@ -167,17 +190,24 @@ public class ESOptimizer : MonoBehaviour
             {
                 //optimizatoin is done
                 if (onReady != null)
-                    onReady.Invoke (bestParams);
+                {
+                    onReady.Invoke(bestParams);
+                    hasInvokeReady = true;
+                }
                 break;
             }
         }
 
+        if (onReady != null && !hasInvokeReady)
+        {
+            onReady.Invoke(bestParams);
+        }
         return bestParams;
         
     }
 
     
-    public void StopOptimize(Action<double[]> onReady = null)
+    public void StopOptimizing(Action<double[]> onReady = null)
     {
         IsOptimizing = false;
         if (onReady != null)
