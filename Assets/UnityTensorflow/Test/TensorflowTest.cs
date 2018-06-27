@@ -7,13 +7,15 @@ using System.Linq;
 using Accord.Math;
 
 using static Current;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 public class TensorflowTest : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
 
-        TestBasicBackendAndOptimizerAndExportGraph();
+        //TestBasicBackendAndOptimizerAndExportGraph();
         //TestLayer();
 
         //TestConv2D();
@@ -23,12 +25,7 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestModelCompileAndFit();
 
-
-        float[,] test = new float[2, 2] { { 2, 3 }, { 4, 5 } };
-        Array ar = (Array)test;
-
-        Array flattened = ar.DeepFlatten();
-        float[] testF = flattened as float[];
+        TestDataBuffer();
     }
 	
 
@@ -37,6 +34,44 @@ public class TensorflowTest : MonoBehaviour {
 	void Update () {
 		
 	}
+
+
+
+    public void TestDataBuffer()
+    {
+        DataBuffer testBuffer = new DataBuffer(100, new DataBuffer.DataInfo("Test1", typeof(float), new int[] { 1, 2 }),
+            new DataBuffer.DataInfo("Test2", typeof(float), new int[] { 4 }));
+
+        List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
+        dataToAdd.Add(ValueTuple.Create<string, Array>("Test1", new float[2, 1, 2] { { { 1, 2 } },{ { 3, 4 } } }));
+        dataToAdd.Add(ValueTuple.Create<string, Array>("Test2", new float[8] { 1,2,3,4,5,6,7,8 }));
+
+        testBuffer.AddData(dataToAdd.ToArray());
+
+        var result = testBuffer.FetchDataAt(1, ValueTuple.Create("Test1", 2, "Test1"), ValueTuple.Create("Test2", 2, "Test2"));
+
+
+
+        var formatter = new BinaryFormatter();
+        using (var stream = new FileStream("test.test", FileMode.Create, FileAccess.Write, FileShare.None))
+            formatter.Serialize(stream, testBuffer);
+
+        DataBuffer t2;
+        using (var stream = new FileStream("test.test", FileMode.Open, FileAccess.Read, FileShare.Read))
+            t2 = (DataBuffer)formatter.Deserialize(stream);
+
+        Debug.Assert(testBuffer.CurrentCount == t2.CurrentCount, "Wrong serialization");
+        Debug.Assert(testBuffer.MaxCount == t2.MaxCount, "Wrong serialization");
+
+        var t2Result = t2.FetchDataAt(1,  ValueTuple.Create("Test2", 2, "Test2"));
+        var t1Result = t2.FetchDataAt(1, ValueTuple.Create("Test2", 2, "Test2"));
+
+        bool resultEquals = t2Result["Test2"].Equals(t2Result["Test2"]);
+        Debug.Assert(resultEquals, "Data not matching.Wrong serialization.");
+
+
+
+    }
 
 
     public void TestBasicBackendAndOptimizerAndExportGraph()

@@ -3,7 +3,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using MLAgents;
 
 public class TrainerMimic : Trainer
 {
@@ -21,7 +23,7 @@ public class TrainerMimic : Trainer
     [ReadOnly]
     [SerializeField]
     private int steps = 0;
-    public int Steps { get { return steps; }protected set { steps = value; } }
+    public int Steps { get { return steps; } protected set { steps = value; } }
 
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";
@@ -32,7 +34,7 @@ public class TrainerMimic : Trainer
         foreach (var agent in agentList)
         {
             var agentNewInfo = newInfo[agent];
-            
+
             List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
             dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionOutput.outputAction[agent]));
             if (currentInfo[agent].stackedVectorObservation.Count > 0)
@@ -41,11 +43,11 @@ public class TrainerMimic : Trainer
             for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
             {
                 var res = BrainToTrain.brainParameters.cameraResolutions[i];
-                Array arrayToAdd =  TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
+                Array arrayToAdd = TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
                 dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
             }
             dataBuffer.AddData(dataToAdd.ToArray());
-            
+
         }
     }
 
@@ -64,7 +66,8 @@ public class TrainerMimic : Trainer
         Steps++;
         if (Steps % parameters.saveModelInterval == 0)
         {
-            Save();
+            SaveModel();
+            SaveTrainingData();
         }
     }
 
@@ -81,7 +84,7 @@ public class TrainerMimic : Trainer
         };
 
         if (brainParameters.vectorObservationSize > 0)
-            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] { brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations : 1 }));
+            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] {brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations  }));
 
         for (int i = 0; i < brainParameters.cameraResolutions.Length; ++i)
         {
@@ -99,13 +102,14 @@ public class TrainerMimic : Trainer
 
         if (continueFromCheckpoint)
         {
-            Load();
+            LoadModel();
+            LoadTrainingData();
         }
     }
 
     public override bool IsReadyUpdate()
     {
-        return parameters.batchSize*parameters.trainIterationPerStep <= dataBuffer.CurrentCount ;
+        return parameters.batchSize <= dataBuffer.CurrentCount;
     }
 
     public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
@@ -139,9 +143,9 @@ public class TrainerMimic : Trainer
         foreach (var agent in agentList)
         {
             var info = agentInfos[agent];
+
             var action = decisionToMimicRef.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
             result.outputAction[agent] = action;
-
             i++;
         }
 
@@ -175,36 +179,74 @@ public class TrainerMimic : Trainer
                     visualObservations = new List<float[,,,]>();
                 visualObservations.Add((float[,,,])samples["VisualObservation" + j]);
             }
-            
+
             int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
             int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
-            float temoLoss = modelRef.TrainBatch(vectorObservations, visualObservations,actions);
+            float temoLoss = modelRef.TrainBatch(vectorObservations, visualObservations, actions);
             loss += temoLoss;
         }
 
-        stats.AddData("loss", loss/ parameters.trainIterationPerStep,parameters.lossLogInterval);
+        stats.AddData("loss", loss / parameters.trainIterationPerStep, parameters.lossLogInterval);
     }
 
 
 
-
-    public void Save()
+    public void SaveModel()
     {
         var data = modelRef.SaveCheckpoint();
         File.WriteAllBytes(checkpointPath, data);
-        Debug.Log("Saved Checkpoint to " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+        Debug.Log("Saved model checkpoint to " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
     }
-    public void Load()
+    public void LoadModel()
     {
         string fullPath = Path.Combine(Directory.GetCurrentDirectory(), checkpointPath);
         if (!File.Exists(fullPath))
         {
-            Debug.Log("Checkpoint Not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+            Debug.Log("Model checkpoint not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
             return;
         }
         var bytes = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
         modelRef.RestoreCheckpoint(bytes);
-        Debug.Log("Loaded from Checkpoint " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+        Debug.Log("Model loaded  from checkpoint " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+    }
+
+    public void SaveTrainingData()
+    {
+        var binFormatter = new BinaryFormatter();
+        var mStream = new MemoryStream();
+
+        binFormatter.Serialize(mStream, dataBuffer);
+        var data = mStream.ToArray();
+
+        string dir = Path.GetDirectoryName(checkpointPath);
+        string file = Path.GetFileNameWithoutExtension(checkpointPath);
+        string savepath = Path.Combine(dir, file + "_trainingdata.bytes");
+
+        File.WriteAllBytes(savepath, data);
+        Debug.Log("Saved training data to " + Path.Combine(Directory.GetCurrentDirectory(), savepath));
+
+
+    }
+    public void LoadTrainingData()
+    {
+        string dir = Path.GetDirectoryName(checkpointPath);
+        string file = Path.GetFileNameWithoutExtension(checkpointPath);
+        string savepath = Path.Combine(dir, file + "_trainingdata.bytes");
+
+        string fullPath = Path.Combine(Directory.GetCurrentDirectory(), savepath);
+        if (!File.Exists(fullPath))
+        {
+            Debug.Log("Training data not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), savepath));
+            return;
+        }
+        var bytes = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), savepath));
+
+        //deserialize the data
+        var mStream = new MemoryStream(bytes);
+        var binFormatter = new BinaryFormatter();
+        dataBuffer = (DataBuffer)binFormatter.Deserialize(mStream);
+
+        Debug.Log("Loaded training data from " + Path.Combine(Directory.GetCurrentDirectory(), savepath));
     }
 }

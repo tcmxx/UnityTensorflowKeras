@@ -5,9 +5,11 @@ using UnityEngine;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 [Serializable]
-public class DataBuffer:ISerializable
+public class DataBuffer : ISerializable
 {
     [Serializable]
     public struct DataInfo
@@ -117,7 +119,7 @@ public class DataBuffer:ISerializable
             //Debug.Log(k.Item1);
             //Debug.Log("add length " + k.Item2.Length + " copy length " + (appendSize * dd.info.unitLength).ToString());
             //Array.Copy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength, appendSize * dd.info.unitLength);
-            Buffer.BlockCopy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength* typeSize, appendSize * dd.info.unitLength* typeSize);
+            Buffer.BlockCopy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength * typeSize, appendSize * dd.info.unitLength * typeSize);
         }
         nextBufferPointer += appendSize;
         CurrentCount += numToAdd;
@@ -130,7 +132,7 @@ public class DataBuffer:ISerializable
                 int typeSize = Marshal.SizeOf(dd.info.type);
                 //Array.Copy(k.Item2, appendSize * dd.info.unitLength, dd.dataList, 0, fromStartSize * dd.info.unitLength);
 
-                Buffer.BlockCopy(k.Item2, appendSize * dd.info.unitLength* typeSize, dd.dataList,0, fromStartSize * dd.info.unitLength * typeSize);
+                Buffer.BlockCopy(k.Item2, appendSize * dd.info.unitLength * typeSize, dd.dataList, 0, fromStartSize * dd.info.unitLength * typeSize);
             }
             nextBufferPointer = fromStartSize;
         }
@@ -185,6 +187,44 @@ public class DataBuffer:ISerializable
 
         return result;
     }
+
+    /// <summary>
+    /// get data at specific position
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="fetchAndOffset"></param>
+    /// <returns></returns>
+    public Dictionary<string, Array> FetchDataAt(int index, params ValueTuple<string, int, string>[] fetchAndOffset)
+    {
+        Debug.Assert(index < CurrentCount, "index out of bound");
+
+        Dictionary<string, Array> result = new Dictionary<string, Array>();
+
+        foreach (var d in fetchAndOffset)
+        {
+            Debug.Assert(dataset.ContainsKey(d.Item1));
+            Debug.Assert(!result.ContainsKey(d.Item3));
+            //result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), dataset[d.Item1].info.unitLength * numOfSamples);
+            result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), (new int[] { 1 }).Concat(dataset[d.Item1].info.dimension).ToArray());
+        }
+
+        foreach (var d in fetchAndOffset)
+        {
+            DataContainer c = dataset[d.Item1];
+            int typeSize = Marshal.SizeOf(c.info.type);
+
+            int unitLength = c.info.unitLength;
+            int actSampleInd = (index + d.Item2) % CurrentCount;
+            //Array.Copy(c.dataList, actSampleInd * unitLength, result[d.Item3], i * unitLength, unitLength);
+            Buffer.BlockCopy(c.dataList, actSampleInd * unitLength * typeSize, result[d.Item3], 0, unitLength * typeSize);
+        }
+
+
+        return result;
+    }
+
+
+
 
     /// <summary>
     /// sample as many batches as possible with data reordered
@@ -286,7 +326,7 @@ public class DataBuffer:ISerializable
         List<int> lengths = new List<int>();
         int totalLength = arrays[0].Length;
         lengths.Add(arrays.Count);
-        for(int i = 0; i < arrays[0].Rank; ++i)
+        for (int i = 0; i < arrays[0].Rank; ++i)
         {
             lengths.Add(arrays[0].GetLength(i));
         }

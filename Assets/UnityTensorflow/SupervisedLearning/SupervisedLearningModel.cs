@@ -10,7 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEditor;
 #endif
 using static Current;
-
+using MLAgents;
 
 /// <summary>
 /// actor critic network abstract class
@@ -157,7 +157,7 @@ public class SupervisedLearningModel : MonoBehaviour
         }
 
         var loss = UpdateFunction.Call(inputs);
-        var result = (float)loss[0].eval() ;
+        var result = (float)loss[0].eval();
 
         return result;
     }
@@ -207,8 +207,10 @@ public class SupervisedLearningModel : MonoBehaviour
 
         var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
+
         binFormatter.Serialize(mStream, flattenedData);
         return mStream.ToArray();
+
     }
 
     public virtual void RestoreCheckpoint(byte[] data)

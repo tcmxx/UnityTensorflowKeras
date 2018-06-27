@@ -4,7 +4,7 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-
+using MLAgents;
 /// <summary>
 /// actor critic network abstract class
 /// </summary>

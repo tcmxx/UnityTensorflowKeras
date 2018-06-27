@@ -6,6 +6,7 @@ using Accord.Math;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.IO;
+using MLAgents;
 
 public class TrainerPPO : Trainer
 {
@@ -61,7 +62,7 @@ public class TrainerPPO : Trainer
         };
 
         if (brainParameters.vectorObservationSize > 0)
-            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] { brainParameters.vectorObservationSpaceType == SpaceType.continuous ? brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations : 1 }));
+            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] {  brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations }));
 
         for(int i = 0; i < brainParameters.cameraResolutions.Length; ++i)
         {
@@ -83,7 +84,7 @@ public class TrainerPPO : Trainer
 
         if (continueFromCheckpoint)
         {
-            Load(); 
+            LoadModel(); 
         }
     }
 
@@ -149,7 +150,7 @@ public class TrainerPPO : Trainer
         Steps++;
         if(Steps% parameters.saveModelInterval == 0)
         {
-            Save();
+            SaveModel();
         }
     }
 
@@ -347,13 +348,13 @@ public class TrainerPPO : Trainer
         return result;
     }
 
-    public void Save()
+    public void SaveModel()
     {
         var data = modelRef.SaveCheckpoint();
         File.WriteAllBytes(checkpointPath, data);
         Debug.Log("Saved Checkpoint to " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
     }
-    public void Load()
+    public void LoadModel()
     {
         string fullPath = Path.Combine(Directory.GetCurrentDirectory(), checkpointPath);
         if (!File.Exists(fullPath))

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAgents;
 
 public abstract class AgentES : Agent, IESOptimizable
 {

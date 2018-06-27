@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Name: BilliardTrainerParamsMimic
   m_EditorClassIdentifier: Assembly-CSharp::TrainerParamsMimic
   maxTotalSteps: 100000000
-  batchSize: 16
-  trainIterationPerStep: 10
+  batchSize: 64
+  trainIterationPerStep: 32
   learningRate: 0.001
   maxBufferSize: 10000
-  chanceOfUsingheuristicForOptimization: 0.8
+  chanceOfUsingheuristicForOptimization: 0.9
   lossLogInterval: 1
   rewardLogInterval: 10
-  saveModelInterval: 100
+  saveModelInterval: 30

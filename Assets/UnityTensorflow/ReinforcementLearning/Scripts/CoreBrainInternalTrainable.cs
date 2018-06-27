@@ -7,6 +7,7 @@ using UnityEditor;
 #endif
 
 using System.Linq;
+using MLAgents;
 
 /// CoreBrain which decides actions using internally embedded TensorFlow model.
 public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain

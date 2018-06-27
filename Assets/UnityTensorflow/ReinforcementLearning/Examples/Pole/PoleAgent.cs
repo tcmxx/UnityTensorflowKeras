@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using MLAgents;
 public class PoleAgent : Agent
 {
     public float deltaTime = 0.02f;

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Accord.Math;
-
+using MLAgents;
 
 public struct TakeActionOutput
 {
@@ -11,9 +11,8 @@ public struct TakeActionOutput
 
 
     public Dictionary<Agent, float[]> outputAction;
-    public Dictionary<Agent, float[]> allProbabilities;
-    public Dictionary<Agent, float> value;
-    //public Dictionary<Agent, float> entropy;
+    public Dictionary<Agent, float[]> allProbabilities; //used for RL
+    public Dictionary<Agent, float> value;//use for RL
 
     //public Dictionary<Agent, float[]> memory;
 
