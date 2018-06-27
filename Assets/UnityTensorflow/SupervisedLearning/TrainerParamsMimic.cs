@@ -20,7 +20,7 @@ public class TrainerParamsMimic : ScriptableObject
     public int maxBufferSize = 10000;
 
     [Range(0,1)]
-    public float chanceOfUsingheuristicForOptimization;
+    public float chanceOfUsingheuristicForOptimization = 1;
     [Header("Log related")]
     public int lossLogInterval = 1;
     public int rewardLogInterval = 10;

@@ -30,7 +30,9 @@ public class StatsLogger
         averageCounter[name].AddValue(datapoint);
         if (LogToGrapher && averageCounter[name].JustUpdated)
         {
+#if GRAPHER
             Grapher.Log(averageCounter[name].Average, name);
+#endif
         }
     }
 

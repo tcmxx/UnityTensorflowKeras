@@ -6,5 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/test.unity
-    guid: 3419d0fcaa96d0741b838f66761ab6e1
+    path: Assets/UnityTensorflow/ReinforcementLearning/Examples/Pole/Pole.unity
+    guid: a1b6334bc9e5ed2488d2aa76ff23634a
+  m_configObjects: {}

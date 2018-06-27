@@ -104,15 +104,22 @@ public static class ConversionExtensions {
                         resultTemp[b * hwp + h * wp + w * pixels] = currentPixel.r / 255.0f;
                         resultTemp[b * hwp + h * wp + w * pixels + 1] = currentPixel.g / 255.0f;
                         resultTemp[b * hwp + h * wp + w * pixels + 2] = currentPixel.b / 255.0f;
+
+                        /*result[b,h,w,0] = currentPixel.r / 255.0f;
+                        result[b, h, w, 1] = currentPixel.g / 255.0f;
+                        result[b, h, w, 2] = currentPixel.b / 255.0f;*/
                     }
                     else
                     {
                         /*result[b, height - h - 1, w, 0] =
                             (currentPixel.r + currentPixel.g + currentPixel.b)
                             / 3;*/
-                        resultTemp[b * hwp + h * wp + w * pixels] =
-                            (currentPixel.r + currentPixel.g + currentPixel.b)
-                            / 3;
+                         resultTemp[b * hwp + h * wp + w * pixels] =
+                             (currentPixel.r + currentPixel.g + currentPixel.b)
+                             / 3;
+                        /*result[b, h, w, 0] =
+                             (currentPixel.r + currentPixel.g + currentPixel.b)
+                             / 3;*/
                     }
                 }
             }
