@@ -351,13 +351,17 @@ public class TrainerPPO : Trainer
     public void SaveModel()
     {
         var data = modelRef.SaveCheckpoint();
-        var fullpath = Path.GetFullPath(checkpointPath);
-        File.WriteAllBytes(fullpath, data);
-        Debug.Log("Saved Checkpoint to " + fullpath);
+        var fullPath = Path.GetFullPath(checkpointPath);
+        fullPath.Replace("/", Path.DirectorySeparatorChar);
+        fullPath.Replace(@"\", Path.DirectorySeparatorChar);
+        File.WriteAllBytes(fullPath, data);
+        Debug.Log("Saved Checkpoint to " + fullPath);
     }
     public void LoadModel()
     {
         string fullPath = Path.GetFullPath(checkpointPath);
+        fullPath.Replace("/", Path.DirectorySeparatorChar);
+        fullPath.Replace(@"\", Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))
         {
             Debug.Log("Checkpoint Not exist at: " + fullPath);
