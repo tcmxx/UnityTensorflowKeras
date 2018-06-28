@@ -196,16 +196,16 @@ public class TrainerMimic : Trainer
     {
         var data = modelRef.SaveCheckpoint();
         var fullPath = Path.GetFullPath(checkpointPath);
-        fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         File.WriteAllBytes(fullPath, data);
         Debug.Log("Saved model checkpoint to " + fullPath);
     }
     public void LoadModel()
     {
         string fullPath = Path.GetFullPath(checkpointPath);
-        fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))
         {
             Debug.Log("Model checkpoint not exist at: " + fullPath);
@@ -227,8 +227,8 @@ public class TrainerMimic : Trainer
         string dir = Path.GetDirectoryName(checkpointPath);
         string file = Path.GetFileNameWithoutExtension(checkpointPath);
         string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_trainingdata.bytes"));
-        fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
 
         File.WriteAllBytes(fullPath, data);
         Debug.Log("Saved training data to " + fullPath);
@@ -243,8 +243,8 @@ public class TrainerMimic : Trainer
 
         string fullPath = Path.GetFullPath(savepath);
 
-        fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
 
         if (!File.Exists(fullPath))
         {
