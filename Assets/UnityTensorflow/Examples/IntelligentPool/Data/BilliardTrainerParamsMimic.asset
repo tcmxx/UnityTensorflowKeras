@@ -15,8 +15,8 @@ MonoBehaviour:
   batchSize: 32
   trainIterationPerStep: 10
   learningRate: 0.001
-  maxBufferSize: 10000
+  maxBufferSize: 50000
   chanceOfUsingheuristicForOptimization: 0.9
   lossLogInterval: 1
   rewardLogInterval: 10
-  saveModelInterval: 50
+  saveModelInterval: 5

@@ -25,7 +25,10 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestModelCompileAndFit();
 
-        TestDataBuffer();
+        //TestDataBuffer();
+
+        print(Path.GetFullPath("Set/setset/set.ser"));
+
     }
 	
 

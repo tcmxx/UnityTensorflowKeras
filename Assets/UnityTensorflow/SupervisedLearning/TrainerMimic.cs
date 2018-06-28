@@ -195,20 +195,21 @@ public class TrainerMimic : Trainer
     public void SaveModel()
     {
         var data = modelRef.SaveCheckpoint();
-        File.WriteAllBytes(checkpointPath, data);
-        Debug.Log("Saved model checkpoint to " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+
+        File.WriteAllBytes(Path.GetFullPath(checkpointPath), data);
+        Debug.Log("Saved model checkpoint to " + Path.GetFullPath(checkpointPath));
     }
     public void LoadModel()
     {
-        string fullPath = Path.Combine(Directory.GetCurrentDirectory(), checkpointPath);
+        string fullPath = Path.GetFullPath(checkpointPath);
         if (!File.Exists(fullPath))
         {
-            Debug.Log("Model checkpoint not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+            Debug.Log("Model checkpoint not exist at: " + fullPath);
             return;
         }
-        var bytes = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+        var bytes = File.ReadAllBytes(fullPath);
         modelRef.RestoreCheckpoint(bytes);
-        Debug.Log("Model loaded  from checkpoint " + Path.Combine(Directory.GetCurrentDirectory(), checkpointPath));
+        Debug.Log("Model loaded  from checkpoint " + fullPath);
     }
 
     public void SaveTrainingData()
@@ -221,10 +222,10 @@ public class TrainerMimic : Trainer
 
         string dir = Path.GetDirectoryName(checkpointPath);
         string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string savepath = Path.Combine(dir, file + "_trainingdata.bytes");
+        string fullpath = Path.GetFullPath(Path.Combine(dir, file + "_trainingdata.bytes"));
 
-        File.WriteAllBytes(savepath, data);
-        Debug.Log("Saved training data to " + Path.Combine(Directory.GetCurrentDirectory(), savepath));
+        File.WriteAllBytes(fullpath, data);
+        Debug.Log("Saved training data to " + fullpath);
 
 
     }
@@ -234,19 +235,20 @@ public class TrainerMimic : Trainer
         string file = Path.GetFileNameWithoutExtension(checkpointPath);
         string savepath = Path.Combine(dir, file + "_trainingdata.bytes");
 
-        string fullPath = Path.Combine(Directory.GetCurrentDirectory(), savepath);
+        string fullPath = Path.GetFullPath(savepath);
         if (!File.Exists(fullPath))
         {
-            Debug.Log("Training data not exist at: " + Path.Combine(Directory.GetCurrentDirectory(), savepath));
+            Debug.Log("Training data not exist at: " + fullPath);
             return;
         }
-        var bytes = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), savepath));
+        var bytes = File.ReadAllBytes(fullPath);
 
         //deserialize the data
         var mStream = new MemoryStream(bytes);
         var binFormatter = new BinaryFormatter();
         dataBuffer = (DataBuffer)binFormatter.Deserialize(mStream);
 
-        Debug.Log("Loaded training data from " + Path.Combine(Directory.GetCurrentDirectory(), savepath));
+        Debug.Log("Loaded training data from " + fullPath);
     }
+
 }

@@ -10,7 +10,7 @@ public class ESOptimizer : MonoBehaviour
     public int iterationPerUpdate = 10;
     public int populationSize = 16;
     public ESOptimizerType optimizerType;
-    public int intialStepSize = 1;
+    public float initialStepSize = 1;
     public OptimizationModes mode;
     public int maxIteration = 100;
     public double targetValue = 2;
@@ -118,7 +118,7 @@ public class ESOptimizer : MonoBehaviour
             actualInitMean = initialMean;
 
 
-        optimizer.init(optimizable.GetParamDimension(), populationSize, new double[optimizable.GetParamDimension()], intialStepSize, mode);
+        optimizer.init(optimizable.GetParamDimension(), populationSize, new double[optimizable.GetParamDimension()], initialStepSize, mode);
 
         IsOptimizing = true;
 
@@ -146,7 +146,7 @@ public class ESOptimizer : MonoBehaviour
             actualInitMean = initialMean;
 
         //initialize the optimizer
-        tempOptimizer.init(optimizeTarget.GetParamDimension(), populationSize, actualInitMean, intialStepSize, mode);
+        tempOptimizer.init(optimizeTarget.GetParamDimension(), populationSize, actualInitMean, initialStepSize, mode);
 
         //iteration
         double[] bestParams = null;
