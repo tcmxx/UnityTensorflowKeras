@@ -30,7 +30,7 @@ public class StatsLogger
         averageCounter[name].AddValue(datapoint);
         if (LogToGrapher && averageCounter[name].JustUpdated)
         {
-#if GRAPHER
+#if UNITY_EDITOR
             Grapher.Log(averageCounter[name].Average, name);
 #endif
         }

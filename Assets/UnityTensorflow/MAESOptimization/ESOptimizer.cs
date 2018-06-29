@@ -31,6 +31,8 @@ public class ESOptimizer : MonoBehaviour
     public double[] BestParams { get; private set; }
     public bool IsOptimizing { get; private set; } = false;
 
+
+
     public enum ESOptimizerType
     {
         MAES,
@@ -181,12 +183,12 @@ public class ESOptimizer : MonoBehaviour
             }
 
             tempOptimizer.update(tempSamples);
-            double bestScore = tempOptimizer.getBestObjectiveFuncValue();
+            BestScore = tempOptimizer.getBestObjectiveFuncValue();
 
             bestParams = tempOptimizer.getBest();
             
-            if ((bestScore <= targetValue && mode == OptimizationModes.minimize) ||
-                (bestScore >= targetValue && mode == OptimizationModes.maximize))
+            if ((BestScore <= targetValue && mode == OptimizationModes.minimize) ||
+                (BestScore >= targetValue && mode == OptimizationModes.maximize))
             {
                 //optimizatoin is done
                 if (onReady != null)

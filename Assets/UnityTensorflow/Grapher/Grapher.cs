@@ -1,5 +1,4 @@
-﻿#define GRAPHER
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 
@@ -9,9 +8,6 @@ using System.Collections.Generic;
 using System;
 
 using NWH;
-
-
-
 
 [ExecuteInEditMode]
 public partial class Grapher : EditorWindow

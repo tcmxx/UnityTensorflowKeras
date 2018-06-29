@@ -9,8 +9,13 @@ public class BilliardArena : MonoBehaviour
 {
 
     [ReadOnly]
-    public float score = 0;
+    [SerializeField]
+    private float scoreRaw = 0;
     public bool rewardShaping = true;
+
+    //raw score plus reward shaped additional score if enabled
+    public float ActualScore { get { return scoreRaw + CalculateAdditionalReward(); } }
+
     public float physicsDrag = 0.5f;
     public Vector2 redBallInitialRangeMin;
     public Vector2 redBallInitialRangeMax;
@@ -24,9 +29,7 @@ public class BilliardArena : MonoBehaviour
 
     protected Dictionary<GameObject, bool> ballsToPocket;
     protected Vector3[] pocketPositions;
-
-    public float PredictedShotScore { get; protected set; } = 0;
-
+    
     //some temp vars about save/load,evaluation related.
     protected float savedScore;
     protected Dictionary<GameObject, bool> saveBallsToPocket;
@@ -113,7 +116,7 @@ public class BilliardArena : MonoBehaviour
 
 
         }
-        score = 0;
+        scoreRaw = 0;
         savedScore = 0;
         ballsToPocket = new Dictionary<GameObject, bool>();
         Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>();
@@ -164,33 +167,39 @@ public class BilliardArena : MonoBehaviour
     {
         if (IsAllSleeping() && shootsQueue.Count > 0)
         {
-            Shoot(shootsQueue.Dequeue());
+            ShootRaw(shootsQueue.Dequeue());
         }
     }
 
     public void Shoot(Vector3 force)
     {
+        scoreRaw = 0;
+        ShootRaw(force);
+    }
+
+    protected void ShootRaw(Vector3 force)
+    {
         Rigidbody r = whiteBall.GetComponent<Rigidbody>();
 
         force = forceMultiplier * force;
-         if(force.magnitude >= forceMultiplier)
+        //minus score if the force is too big
+        if (force.magnitude >= forceMultiplier)
         {
-            score -= (force.magnitude) * 10;
+            scoreRaw -= (force.magnitude) * 10;
             force = Vector3.ClampMagnitude(force, forceMultiplier);
+        }
+        else
+        {
+            scoreRaw -= Mathf.Max(0,force.magnitude/ forceMultiplier) * 0.1f;
+
         }
 
         r.velocity = force;
-
-        //Uncomment the following to also set the angular velocity of the ball such that it agrees with velocity.
-        //This should prevent the ball from first sliding and then decelerating rapidly. However, it doesn't seem to work in practice,
-        //and better results are obtained simply by having everything with zero friction and basically no rotation (which however looks ok only without textures...)
-        //Vector3 axis = Vector3.Cross(Vector3.up, force.normalized).normalized; //this is the axis of rotation
-        //float ballRadius = whiteBall.transform.localScale.x * 0.5f;
-        //r.angularVelocity = 10.0f*axis * force.magnitude / (ballRadius * 2.0f * Mathf.PI);
     }
 
     public void ShootSequence(List<Vector3> forces)
     {
+        scoreRaw = 0;
         shootsQueue.Clear();
         foreach (var f in forces)
         {
@@ -198,7 +207,7 @@ public class BilliardArena : MonoBehaviour
         }
 
         var force = shootsQueue.Dequeue();
-        Shoot(force);
+        ShootRaw(force);
     }
 
 
@@ -206,11 +215,11 @@ public class BilliardArena : MonoBehaviour
     {
         if (ball == whiteBall)
         {
-            score -= 10;
+            scoreRaw -= 10;
         }
         else
         {
-            score += 1;
+            scoreRaw += 1;
             if (!ballsToPocket.ContainsKey(ball))
             {
                 var keys = new List<GameObject>(ballsToPocket.Keys);
@@ -225,7 +234,7 @@ public class BilliardArena : MonoBehaviour
     public void OnOutOfBound(GameObject ball)
     {
 
-        score -= 10;
+        scoreRaw -= 10;
         if (!ballsToPocket.ContainsKey(ball) && ball != whiteBall)
         {
             Debug.LogError("Other ball into the pocket");
@@ -257,13 +266,13 @@ public class BilliardArena : MonoBehaviour
     public void SaveState()
     {
         physicsStorageBehaviour.SaveState();
-        savedScore = score;
+        savedScore = scoreRaw;
         saveBallsToPocket = new Dictionary<GameObject, bool>(ballsToPocket);
     }
     public void RestoreState()
     {
         physicsStorageBehaviour.RestoreState();
-        score = savedScore;
+        scoreRaw = savedScore;
         ballsToPocket = saveBallsToPocket;
     }
 
@@ -272,8 +281,6 @@ public class BilliardArena : MonoBehaviour
     public void StartEvaluateShot(Vector3 force, Color drawColor)
     {
         SaveState();
-        //initialize score to 0, want to count only this shot
-        score = 0;
         //initialize shot
         Shoot(force);
 
@@ -287,8 +294,6 @@ public class BilliardArena : MonoBehaviour
     public void StartEvaluateShotSequence(List<Vector3> forceSequence, Color drawColor)
     {
         SaveState();
-        //initialize score to 0, want to count only this shot
-        score = 0;
         //initialize shot
         ShootSequence(forceSequence);
 
@@ -315,31 +320,38 @@ public class BilliardArena : MonoBehaviour
 
     public float EndEvaluation()
     {
+        float resultScore = scoreRaw;
         if (rewardShaping)
         {
             //Since the score as such provides very little gradient, we add a small score if the balls get close to the pockets
-            foreach (var b in ballsToPocket)
-            {
-                if (b.Value)
-                {
-                    Vector3 ballPos = b.Key.transform.position;
-                    float minSqDist = float.MaxValue;
-                    for (int i = 0; i < pocketPositions.Length; i++)
-                    {
-                        minSqDist = Mathf.Min(minSqDist, (pocketPositions[i] - ballPos).sqrMagnitude);
-                    }
-                    //each ball that is close to a pocket adds 0.1 to the score
-                    float distanceSd = 0.5f;
-                    score += Mathf.Min(0.1f * Mathf.Exp(-0.5f * minSqDist / (distanceSd * distanceSd)), 0.8f);
-                }
-            }
+            resultScore += CalculateAdditionalReward();
         }
-
-
-        float resultScore = score;
-        PredictedShotScore = resultScore;
+        
         RestoreState();
 
         return resultScore;
+    }
+
+    protected float CalculateAdditionalReward()
+    {
+        //Since the score as such provides very little gradient, we add a small score if the balls get close to the pockets
+        float addRewards = 0;
+        foreach (var b in ballsToPocket)
+        {
+            //if the ball still on table
+            if (b.Value)
+            {
+                Vector3 ballPos = b.Key.transform.position;
+                float minSqDist = float.MaxValue;
+                for (int i = 0; i < pocketPositions.Length; i++)
+                {
+                    minSqDist = Mathf.Min(minSqDist, (pocketPositions[i] - ballPos).sqrMagnitude);
+                }
+                //each ball that is close to a pocket adds something
+                addRewards += Mathf.Min(0.5f * Mathf.Exp(-15f * minSqDist), 0.5f);
+            }
+        }
+
+        return addRewards;
     }
 }

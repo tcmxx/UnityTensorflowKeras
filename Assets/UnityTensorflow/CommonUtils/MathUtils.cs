@@ -131,5 +131,4 @@ public static class MathUtils
             list[n] = value;
         }
     }
-
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using MLAgents;
+using System.Linq;
 
 public class TrainerMimic : Trainer
 {
@@ -140,13 +141,25 @@ public class TrainerMimic : Trainer
             actions = new float[agentList.Count, BrainToTrain.brainParameters.vectorActionSize];
 
         int i = 0;
+
+        float actionDiff = 0;   //difference between decision and from networknetwork
+
         foreach (var agent in agentList)
         {
             var info = agentInfos[agent];
 
             var action = decisionToMimicRef.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
             result.outputAction[agent] = action;
+            if (useHeuristic)
+            {
+                actionDiff += Enumerable.Zip(action, actions.GetRow(i), (a, b) => Mathf.Sqrt((a - b)* (a - b))).Aggregate((a,v)=>a+v);
+            }
             i++;
+        }
+
+        if (useHeuristic)
+        {
+            stats.AddData("action difference", actionDiff/ i);
         }
 
         return result;
