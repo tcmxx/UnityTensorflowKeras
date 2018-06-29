@@ -45,6 +45,15 @@ public abstract class Trainer : MonoBehaviour
         }
     }
 
+
+    protected virtual void FixedUpdate()
+    {
+        if (IsReadyUpdate() && isTraining && GetStep() <= GetMaxStep())
+        {
+            UpdateModel();
+        }
+    }
+
     public abstract void SetBrain(Brain brain);
     public abstract void Initialize();
 

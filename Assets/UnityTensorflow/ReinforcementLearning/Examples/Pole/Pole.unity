@@ -705,7 +705,6 @@ MonoBehaviour:
     vectorActionDescriptions:
     - 
     vectorActionSpaceType: 1
-    vectorObservationSpaceType: 1
   brainType: 4
   CoreBrains:
   - {fileID: 1509215178}
@@ -940,7 +939,7 @@ MonoBehaviour:
   isTraining: 1
   modelRef: {fileID: 1831144743}
   parameters: {fileID: 11400000, guid: 01565c24258fe5446822c6f56acbab68, type: 2}
-  continueFromCheckpoint: 1
+  continueFromCheckpoint: 0
   checkpointPath: Assets\UnityTensorflow\ReinforcementLearning\Examples\Pole\testcheckpoint.bytes
 --- !u!1 &1397918840
 GameObject:
@@ -1043,7 +1042,8 @@ MonoBehaviour:
   m_Name: (Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   broadcast: 1
-  continuousPlayerActions: []
+  keyContinuousPlayerActions: []
+  axisContinuousPlayerActions: []
   discretePlayerActions: []
   defaultAction: 0
   brain: {fileID: 1290122114}

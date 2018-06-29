@@ -14,7 +14,7 @@ public class TrainerParamsMimic : ScriptableObject
     public int maxTotalSteps = 100000000;
     
     public int batchSize = 32;
-    public int trainIterationPerStep = 1;
+    public int numIterationPerTrain = 1;
     public float learningRate = 0.001f;
 
     public int maxBufferSize = 10000;

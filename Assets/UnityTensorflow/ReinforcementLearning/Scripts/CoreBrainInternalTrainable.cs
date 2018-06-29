@@ -65,10 +65,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
             trainer.ProcessExperience(prevInfo, newInfo);
         }
 
-        if (trainer.IsReadyUpdate() && trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
-        {
-            trainer.UpdateModel();
-        }
+
 
         if (trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
         {

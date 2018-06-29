@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Name: BilliardTrainerParamsMimic
   m_EditorClassIdentifier: 
   maxTotalSteps: 100000000
-  batchSize: 32
-  trainIterationPerStep: 10
+  batchSize: 64
+  numIterationPerTrain: 1
   learningRate: 0.001
   maxBufferSize: 50000
   chanceOfUsingheuristicForOptimization: 0.9
-  lossLogInterval: 1
+  lossLogInterval: 500
   rewardLogInterval: 10
   saveModelInterval: 20

@@ -182,7 +182,7 @@ public class TrainerMimic : Trainer
 
 
         float loss = 0;
-        for (int i = 0; i < parameters.trainIterationPerStep; ++i)
+        for (int i = 0; i < parameters.numIterationPerTrain; ++i)
         {
             var samples = dataBuffer.RandomSample(parameters.batchSize, fetches.ToArray());
 
@@ -204,7 +204,7 @@ public class TrainerMimic : Trainer
             loss += temoLoss;
         }
 
-        stats.AddData("loss", loss / parameters.trainIterationPerStep, parameters.lossLogInterval);
+        stats.AddData("loss", loss / parameters.numIterationPerTrain, parameters.lossLogInterval);
     }
 
 
