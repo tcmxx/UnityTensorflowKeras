@@ -167,6 +167,8 @@ public class BilliardArena : MonoBehaviour
     {
         if (IsAllSleeping() && shootsQueue.Count > 0)
         {
+            if (!whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall)
+                scoreRaw -= 10;
             ShootRaw(shootsQueue.Dequeue());
         }
     }
@@ -185,7 +187,7 @@ public class BilliardArena : MonoBehaviour
         //minus score if the force is too big
         if (force.magnitude >= forceMultiplier)
         {
-            scoreRaw -= (force.magnitude) * 10;
+            scoreRaw -= (force.magnitude) * 2;
             force = Vector3.ClampMagnitude(force, forceMultiplier);
         }
         else
@@ -193,6 +195,8 @@ public class BilliardArena : MonoBehaviour
             scoreRaw -= Mathf.Max(0,force.magnitude/ forceMultiplier) * 0.1f;
 
         }
+
+        whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall = false;
 
         r.velocity = force;
     }
@@ -352,6 +356,8 @@ public class BilliardArena : MonoBehaviour
             }
         }
 
+        if (!whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall)
+            addRewards -= 10;
         return addRewards;
     }
 }

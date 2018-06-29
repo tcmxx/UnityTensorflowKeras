@@ -29,7 +29,7 @@ public class TrainerMimic : Trainer
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -37,7 +37,7 @@ public class TrainerMimic : Trainer
             var agentNewInfo = newInfo[agent];
 
             List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
-            dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionOutput.outputAction[agent]));
+            dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionOutput[agent].outputAction));
             if (currentInfo[agent].stackedVectorObservation.Count > 0)
                 dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", currentInfo[agent].stackedVectorObservation.ToArray()));
 
@@ -123,10 +123,9 @@ public class TrainerMimic : Trainer
         this.BrainToTrain = brain;
     }
 
-    public override TakeActionOutput TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
-        var result = new TakeActionOutput();
-        result.outputAction = new Dictionary<Agent, float[]>();
+        var result = new Dictionary<Agent, TakeActionOutput>();
 
         var agentList = new List<Agent>(agentInfos.Keys);
 
@@ -149,7 +148,12 @@ public class TrainerMimic : Trainer
             var info = agentInfos[agent];
 
             var action = decisionToMimicRef.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
-            result.outputAction[agent] = action;
+
+            var tempAction = new TakeActionOutput();
+            tempAction.outputAction = action;
+            result[agent] = tempAction;
+
+
             if (useHeuristic)
             {
                 actionDiff += Enumerable.Zip(action, actions.GetRow(i), (a, b) => Mathf.Sqrt((a - b)* (a - b))).Aggregate((a,v)=>a+v);

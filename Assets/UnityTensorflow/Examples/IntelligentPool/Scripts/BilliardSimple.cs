@@ -7,8 +7,6 @@ public class BilliardSimple : MonoBehaviour, IESOptimizable
 {
     
     protected BilliardGameSystem gameSystem;
-    public float forceMultiplier = 100;
-    public float maxForce = 5;
     public ESOptimizer optimizer;
     
     private void Start()
@@ -41,22 +39,22 @@ public class BilliardSimple : MonoBehaviour, IESOptimizable
         gameSystem.Shoot(ParamsToForceVector(vectorAction));
         Physics.autoSimulation = true;
     }
-    
+
     public Vector3 ParamsToForceVector(double[] x)
     {
-        Vector3 force = forceMultiplier * (new Vector3((float)x[0], 0, (float)x[1]));
-        if (force.magnitude > maxForce)
-            force = maxForce * force.normalized;
+        Vector3 force = (new Vector3((float)x[0], 0, (float)x[1]));
+        //if (force.magnitude > maxForce)
+        //force = maxForce * force.normalized;
         return force;
     }
     public Vector3 SamplePointToForceVectorRA(float x, float y)
     {
         x = Mathf.Clamp01(x); y = Mathf.Clamp01(y);
-        float angle = x * Mathf.PI*2;
-        float force = y * maxForce;
+        float angle = x * Mathf.PI * 2;
+        float force = y;
         double[] param = new double[2];
-        param[0] = Mathf.Sin(angle) * force / forceMultiplier;
-        param[1] = Mathf.Cos(angle) * force / forceMultiplier;
+        param[0] = Mathf.Sin(angle) * force;
+        param[1] = Mathf.Cos(angle) * force;
         return ParamsToForceVector(param);
     }
 
@@ -67,8 +65,8 @@ public class BilliardSimple : MonoBehaviour, IESOptimizable
         float fy = y - 0.5f;
 
         double[] param = new double[2];
-        param[0] = fx*2 * maxForce / forceMultiplier;
-        param[1] = fy * 2 * maxForce / forceMultiplier;
+        param[0] = fx * 2;
+        param[1] = fy * 2;
         return ParamsToForceVector(param);
     }
 

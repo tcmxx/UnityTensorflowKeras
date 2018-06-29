@@ -19,4 +19,4 @@ MonoBehaviour:
   chanceOfUsingheuristicForOptimization: 0.9
   lossLogInterval: 1
   rewardLogInterval: 10
-  saveModelInterval: 5
+  saveModelInterval: 20

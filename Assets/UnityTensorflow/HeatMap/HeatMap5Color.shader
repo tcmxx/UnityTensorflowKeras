@@ -76,7 +76,7 @@
 			 	float3 result = (color[idx2] - color[idx1])*fractBetween + color[idx1];
 			
 				col.xyz = result;
-
+				col.a = 1;
 				// apply fog
 				UNITY_APPLY_FOG(i.fogCoord, col);
 

@@ -95,7 +95,7 @@ public class TrainerPPO : Trainer
     }
 
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -117,9 +117,9 @@ public class TrainerPPO : Trainer
             if(currentInfo[agent].stackedVectorObservation.Count > 0)
                 statesEpisodeHistory[agent].AddRange(currentInfo[agent].stackedVectorObservation.ToArray());
             rewardsEpisodeHistory[agent].Add(newInfo[agent].reward);
-            actionsEpisodeHistory[agent].AddRange(actionOutput.outputAction[agent]);
-            actionprobsEpisodeHistory[agent].AddRange(actionOutput.allProbabilities[agent]);
-            valuesEpisodeHistory[agent].Add(actionOutput.value[agent]);
+            actionsEpisodeHistory[agent].AddRange(actionOutput[agent].outputAction);
+            actionprobsEpisodeHistory[agent].AddRange(actionOutput[agent].allProbabilities);
+            valuesEpisodeHistory[agent].Add(actionOutput[agent].value);
 
             //add the visual observations
             for(int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
@@ -214,13 +214,9 @@ public class TrainerPPO : Trainer
         }
     }
 
-    public override TakeActionOutput TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
-        var result = new TakeActionOutput();
-        result.allProbabilities = new Dictionary<Agent, float[]>();
-        result.outputAction = new Dictionary<Agent, float[]>();
-        result.value = new Dictionary<Agent, float>();
-
+        var result = new Dictionary<Agent, TakeActionOutput>();
         var agentList = new List<Agent>(agentInfos.Keys);
 
         float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
@@ -235,9 +231,12 @@ public class TrainerPPO : Trainer
         int i = 0;
         foreach (var agent in agentList)
         {
-            result.allProbabilities[agent] = actionProbs.GetRow(i);
-            result.outputAction[agent] = actions.GetRow(i);
-            result.value[agent] = values[i];
+            var temp = new TakeActionOutput();
+            temp.allProbabilities = actionProbs.GetRow(i);
+            temp.outputAction = actions.GetRow(i);
+            temp.value = values[i];
+
+            result[agent] = temp;
             i++;
         }
         

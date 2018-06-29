@@ -478,7 +478,7 @@ MonoBehaviour:
   iterationPerUpdate: 1
   populationSize: 16
   optimizerType: 0
-  intialStepSize: 1
+  initialStepSize: 1
   mode: 1
   maxIteration: 100
   targetValue: 2
@@ -591,6 +591,14 @@ Prefab:
     - target: {fileID: 1642639715809588, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
       propertyPath: m_Layer
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4211362129176552, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0.226
+      objectReference: {fileID: 0}
+    - target: {fileID: 4211362129176552, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0.368
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 55c096b86fa848c499e2b6532b4f68ca, type: 2}

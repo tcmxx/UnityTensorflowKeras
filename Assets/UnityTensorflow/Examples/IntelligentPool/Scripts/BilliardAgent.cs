@@ -54,6 +54,7 @@ public class BilliardAgent : AgentES
 
         if(autoRequestDecision && gameSystem.AllShotsComplete())
         {
+            AddReward(gameSystem.defaultArena.ActualScore);
             RequestDecision();
         }
     }

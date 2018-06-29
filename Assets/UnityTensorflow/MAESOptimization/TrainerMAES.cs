@@ -156,7 +156,7 @@ public class TrainerMAES : Trainer
         return int.MaxValue;
     }
 
-    public override TakeActionOutput TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
         var agentList = agentInfos.Keys;
         List<AgentES> agentsToOptimize = new List<AgentES>();
@@ -180,10 +180,10 @@ public class TrainerMAES : Trainer
             AddOptimization(agentsToOptimize);
         
 
-        return new TakeActionOutput();
+        return new Dictionary<Agent, TakeActionOutput>();
     }
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, TakeActionOutput actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         return;
     }
