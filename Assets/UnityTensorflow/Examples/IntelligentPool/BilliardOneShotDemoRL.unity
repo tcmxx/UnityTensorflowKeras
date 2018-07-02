@@ -2075,7 +2075,7 @@ MonoBehaviour:
   parameters: {fileID: 11400000, guid: 063d746d40cfc3f4fa8e859ecf679eda, type: 2}
   steps: 0
   continueFromCheckpoint: 1
-  checkpointPath: Assets\testcheckpoint.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\PPOOneshotCheckpoint.bytes
 --- !u!114 &1567260242
 MonoBehaviour:
   m_ObjectHideFlags: 0
