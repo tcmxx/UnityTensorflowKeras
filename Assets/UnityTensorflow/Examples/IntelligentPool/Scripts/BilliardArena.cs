@@ -187,7 +187,7 @@ public class BilliardArena : MonoBehaviour
         //minus score if the force is too big
         if (force.magnitude >= forceMultiplier)
         {
-            scoreRaw -= (force.magnitude) * 2;
+            scoreRaw -= (force.magnitude - forceMultiplier) * 2 + Mathf.Max(0, force.magnitude / forceMultiplier) * 0.1f;
             force = Vector3.ClampMagnitude(force, forceMultiplier);
         }
         else

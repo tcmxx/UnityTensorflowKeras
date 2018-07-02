@@ -6,7 +6,7 @@ using UnityEngine;
 public class BilliardAgent : AgentES
 {
     
-    protected BilliardGameSystem gameSystem;
+    public BilliardGameSystem gameSystem;
     public int shootSequence = 1;
 
     protected Color visColor;
@@ -21,8 +21,9 @@ public class BilliardAgent : AgentES
 
     public override void InitializeAgent()
     {
-        gameSystem = FindObjectOfType(typeof(BilliardGameSystem)) as BilliardGameSystem;
-        gameSystem.Reset(randomizeRedballs);
+        if(gameSystem == null)
+            gameSystem = FindObjectOfType(typeof(BilliardGameSystem)) as BilliardGameSystem;
+        //gameSystem.Reset(randomizeRedballs);
     }
 
     public override void AgentReset()
@@ -50,6 +51,7 @@ public class BilliardAgent : AgentES
         if (gameSystem.GameComplete())
         {
             gameSystem.Reset(randomizeRedballs);
+            Done();
         }
 
         if(autoRequestDecision && gameSystem.AllShotsComplete())

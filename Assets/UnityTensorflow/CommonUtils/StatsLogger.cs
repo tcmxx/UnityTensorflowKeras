@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 public class StatsLogger
@@ -10,10 +12,19 @@ public class StatsLogger
 
     public bool LogToGrapher { get; set; } = true;
 
+    protected MethodInfo logMethodInfo = null;
+
+
     public StatsLogger()
     {
         data = new Dictionary<string, List<float>>();
         averageCounter = new Dictionary<string, AutoAverage>();
+
+        Type type = Type.GetType("Grapher");
+        if (type != null)
+        {
+            logMethodInfo = type.GetMethod("Log", new Type[] { typeof(float), typeof(string) });
+        }
     }
 
 
@@ -31,10 +42,18 @@ public class StatsLogger
         if (LogToGrapher && averageCounter[name].JustUpdated)
         {
 #if UNITY_EDITOR
-            Grapher.Log(averageCounter[name].Average, name);
+            //Grapher.Log(averageCounter[name].Average, name);
+            if (logMethodInfo != null)
+            {
+                object[] parametersArray = new object[] { averageCounter[name].Average, name };
+                logMethodInfo.Invoke(null, parametersArray);
+
+            }
 #endif
         }
+
     }
+
 
     public List<float> GetStat(string name)
     {

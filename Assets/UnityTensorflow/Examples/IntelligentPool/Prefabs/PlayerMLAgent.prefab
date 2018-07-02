@@ -74,10 +74,11 @@ MonoBehaviour:
     resetOnDone: 0
     onDemandDecision: 1
     numberOfActionsBetweenDecisions: 1
+  callOnReadyInAgentAction: 0
   maxIteration: 15
   targetValue: 10
   populationSize: 16
   initialStepSize: 1
   shootSequence: 1
-  forceMultiplier: 100
-  maxForce: 5
+  randomizeRedballs: 1
+  autoRequestDecision: 0

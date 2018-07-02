@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MLAgents;
+using System;
+using System.Linq;
 
 public abstract class AgentES : Agent, IESOptimizable
 {
-    
+    //for asynchronized decision, set this to false.
+    public bool callOnReadyInAgentAction = true;
     public int maxIteration;
     public float targetValue;
     public int populationSize = 16;
@@ -41,8 +44,10 @@ public abstract class AgentES : Agent, IESOptimizable
     /// </summary>
     /// <param name="vectorAction"></param>
     /// <param name="textAction"></param>
-    public new void AgentAction(float[] vectorAction, string textAction)
+    public override void AgentAction(float[] vectorAction, string textAction)
     {
+        if (callOnReadyInAgentAction)
+            OnReady(Array.ConvertAll(vectorAction, t => (double)t));
     }
     
 

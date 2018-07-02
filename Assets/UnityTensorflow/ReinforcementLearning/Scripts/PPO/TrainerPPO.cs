@@ -18,7 +18,10 @@ public class TrainerPPO : Trainer
     protected DataBuffer dataBuffer;
     public int DataCountStored { get { return dataBuffer.CurrentCount; } }
 
-    public int Steps { get; protected set; } = 0;
+    [ReadOnly]
+    [SerializeField]
+    protected int steps = 0;
+    public int Steps { get { return steps; } protected set { steps = value; } }
 
     protected Dictionary<Agent, List<float>> statesEpisodeHistory = null;
     protected Dictionary<Agent, List<float>> rewardsEpisodeHistory = null;
@@ -299,8 +302,8 @@ public class TrainerPPO : Trainer
                     SubRows(advantages, j * parameters.batchSize, parameters.batchSize).Flatten()
                     );
                 tempLoss += losses[0];
-                tempPolicyLoss += losses[1];
-                tempValueLoss += losses[2];
+                tempValueLoss  += losses[1];
+                tempPolicyLoss += losses[2];
             }
 
             loss += tempLoss / batchCount; policyLoss += tempPolicyLoss / batchCount; valueLoss += tempValueLoss / batchCount;
@@ -351,16 +354,16 @@ public class TrainerPPO : Trainer
     {
         var data = modelRef.SaveCheckpoint();
         var fullPath = Path.GetFullPath(checkpointPath);
-        fullPath = fullPath.Replace("/", Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace(@"\", Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         File.WriteAllBytes(fullPath, data);
         Debug.Log("Saved Checkpoint to " + fullPath);
     }
     public void LoadModel()
     {
         string fullPath = Path.GetFullPath(checkpointPath);
-        fullPath = fullPath.Replace("/", Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace(@"\", Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))
         {
             Debug.Log("Checkpoint Not exist at: " + fullPath);

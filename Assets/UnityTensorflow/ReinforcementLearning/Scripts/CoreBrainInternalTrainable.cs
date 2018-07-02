@@ -46,7 +46,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     {
         int currentBatchSize = newAgentInfos.Count();
         List<Agent> newAgentList = newAgentInfos.Keys.ToList();
-        List<Agent> recordableAgentList = newAgentList.Where((a) => currentInfo != null && currentInfo.ContainsKey(a)).ToList();
+        List<Agent> recordableAgentList = newAgentList.Where((a) => currentInfo != null && currentInfo.ContainsKey(a) && prevActionOutput.ContainsKey(a)).ToList();
 
         if (currentBatchSize == 0)
         {
