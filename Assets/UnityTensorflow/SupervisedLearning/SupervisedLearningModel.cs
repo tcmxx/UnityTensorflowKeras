@@ -9,8 +9,14 @@ using System.Runtime.Serialization.Formatters.Binary;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using static Current;
+using static KerasSharp.Backends.Current;
 using MLAgents;
+using KerasSharp.Optimizers;
+using KerasSharp.Models;
+using KerasSharp.Engine.Topology;
+using KerasSharp.Losses;
+using KerasSharp;
+using KerasSharp.Backends;
 
 /// <summary>
 /// actor critic network abstract class

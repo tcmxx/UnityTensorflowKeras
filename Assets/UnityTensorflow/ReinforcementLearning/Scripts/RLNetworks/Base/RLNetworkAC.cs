@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using KerasSharp.Engine.Topology;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

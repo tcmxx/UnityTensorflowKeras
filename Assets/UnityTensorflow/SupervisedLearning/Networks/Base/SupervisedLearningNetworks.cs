@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEditor;
 #endif
 using MLAgents;
+using KerasSharp.Engine.Topology;
+
 
 /// <summary>
 /// actor critic network abstract class

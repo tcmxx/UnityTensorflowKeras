@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+
+#if UNITY_EDITOR
 using UnityEditor;
 
 
@@ -499,3 +501,30 @@ public partial class Grapher : EditorWindow
         }
     }
 }
+#else
+public partial class Grapher{
+    /// <summary>
+    /// Main Log function.
+    /// </summary>
+    public static void Log(object obj, string name, Color color, float time)
+    {
+    }
+
+    public static void Log(object obj, string name, float time)
+    {
+    }
+
+    public static void Log(object obj, string name, Color color)
+    {
+    }
+
+    public static void Log(object value, string name)
+    {
+    }
+
+    public static void Log(object value, int id)
+    {
+    }
+}
+
+#endif

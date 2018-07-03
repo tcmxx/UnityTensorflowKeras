@@ -1,0 +1,3 @@
+[submodule "Assets/UnityTensorflow/keras-sharp"]
+	path = Assets/UnityTensorflow/keras-sharp
+	url = https://github.com/tcmxx/keras-sharp.git

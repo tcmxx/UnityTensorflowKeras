@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+
+
+#if UNITY_EDITOR
 using UnityEditor;
 
 using NWH;
@@ -103,3 +106,5 @@ public partial class Grapher : EditorWindow
         }
     }
 }
+
+#endif

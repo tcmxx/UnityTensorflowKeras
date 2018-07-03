@@ -2,6 +2,9 @@
 // Credits for this class belong to Unity3D Wiki developers: 
 // http://wiki.unity3d.com/index.php/OpenInFileBrowser
 
+
+#if UNITY_EDITOR
+
 namespace NWH
 {
     public static class OpenInFileBrowser
@@ -107,3 +110,5 @@ namespace NWH
         }
     }
 }
+
+#endif

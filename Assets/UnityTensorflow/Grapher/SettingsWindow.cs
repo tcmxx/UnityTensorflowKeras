@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿
+#if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine;
 
 namespace NWH
@@ -79,3 +81,4 @@ namespace NWH
         }
     }
 }
+#endif

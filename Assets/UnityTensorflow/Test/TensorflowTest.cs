@@ -6,9 +6,18 @@ using UnityEngine.UI;
 using System.Linq;
 using Accord.Math;
 
-using static Current;
+using static KerasSharp.Backends.Current;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using KerasSharp.Initializers;
+using KerasSharp.Losses;
+using KerasSharp.Engine.Topology;
+using KerasSharp.Optimizers;
+using KerasSharp;
+using KerasSharp.Constraints;
+using KerasSharp.Activations;
+using KerasSharp.Models;
+using KerasSharp.Backends;
 
 public class TensorflowTest : MonoBehaviour {
 

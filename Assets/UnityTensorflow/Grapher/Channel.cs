@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+
 using UnityEditor;
 using UnityEngine;
 
@@ -196,3 +198,5 @@ namespace NWH
         }
     }
 }
+
+#endif

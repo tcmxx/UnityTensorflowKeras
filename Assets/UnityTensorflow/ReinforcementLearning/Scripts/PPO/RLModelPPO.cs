@@ -13,9 +13,16 @@ using UnityEditor;
 #endif
 
 
-using static Current;
-using MLAgents;
+using static KerasSharp.Backends.Current;
+using KerasSharp.Backends;
 
+using MLAgents;
+using KerasSharp.Models;
+using KerasSharp.Optimizers;
+using KerasSharp.Engine.Topology;
+using KerasSharp.Initializers;
+using KerasSharp;
+using KerasSharp.Losses;
 
 public class RLModelPPO : MonoBehaviour
 {

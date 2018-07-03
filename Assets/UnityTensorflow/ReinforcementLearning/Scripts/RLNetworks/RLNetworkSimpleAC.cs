@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MLAgents;
+using KerasSharp.Engine.Topology;
+using KerasSharp.Backends;
+using KerasSharp;
+using KerasSharp.Initializers;
+using KerasSharp.Activations;
 
 [CreateAssetMenu()]
 public class RLNetworkSimpleAC : RLNetworkAC
