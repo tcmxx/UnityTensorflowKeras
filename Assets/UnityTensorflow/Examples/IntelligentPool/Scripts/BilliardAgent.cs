@@ -99,6 +99,9 @@ public class BilliardAgent : AgentES
         //gameSystem.Shoot(ParamsToForceVector(vectorAction));
         gameSystem.ShootSequence(result);
         Physics.autoSimulation = true;
+
+        //test
+        //AddReward(-Mathf.Abs((float)vectorAction[0]) + Mathf.Abs((float)vectorAction[1]));
     }
 
 

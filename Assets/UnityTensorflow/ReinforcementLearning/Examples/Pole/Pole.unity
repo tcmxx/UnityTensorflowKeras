@@ -932,7 +932,7 @@ MonoBehaviour:
   modelRef: {fileID: 1831144743}
   parameters: {fileID: 11400000, guid: 01565c24258fe5446822c6f56acbab68, type: 2}
   steps: 0
-  continueFromCheckpoint: 0
+  continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\ReinforcementLearning\Examples\Pole\testcheckpoint.bytes
 --- !u!1 &1397918840
 GameObject:

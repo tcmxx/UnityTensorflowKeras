@@ -48,9 +48,11 @@ public class RLNetworkSimpleAC : RLNetworkAC
             }
             if(inVisualState.Count > 1)
             {
-                Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
-                encodedVisualActor = Current.K.concat(visualEncodedActor, 1);
-                encodedVisualCritic = Current.K.concat(visualEncodedCritic, 1);
+                //Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
+                encodedVisualActor = Current.K.stack(visualEncodedActor, 1);
+                encodedVisualActor = Current.K.batch_flatten(encodedVisualActor);
+                encodedVisualCritic = Current.K.stack(visualEncodedCritic, 1);
+                encodedVisualCritic = Current.K.batch_flatten(encodedVisualCritic);
             }
             else
             {
@@ -86,7 +88,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         }
         else if(inVisualState != null && inVectorstate != null)
         {
-            //Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
+            Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one type of observation.");
             encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor,encodedVisualActor},1);
             encodedAllCritic = Current.K.concat(new List<Tensor>() { encodedVectorStateCritic, encodedVisualCritic }, 1);
         }

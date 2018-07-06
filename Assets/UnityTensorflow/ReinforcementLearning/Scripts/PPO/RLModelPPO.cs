@@ -43,6 +43,10 @@ public class RLModelPPO : MonoBehaviour
     public bool HasVectorObservation { get; private set; }
     public bool HasRecurrent { get; private set; } = false;
     
+    public float EntropyLossWeight { get; set; }
+    public float ValueLossWeight { get; set; }
+    public float ClipEpsilon { get; set; }
+
     //the variable for variance
     protected Tensor logSigmaSq = null;
 
@@ -76,9 +80,17 @@ public class RLModelPPO : MonoBehaviour
         var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
         var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
         var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
-        var inputClipEpsilon = K.constant(trainingParams.clipEpsilon, name: "ClipEpsilon");
+
+        ClipEpsilon = trainingParams.clipEpsilon;
+        ValueLossWeight = trainingParams.valueLossWeight;
+        EntropyLossWeight = trainingParams.entroyLossWeight;
+
+        /*var inputClipEpsilon = K.constant(trainingParams.clipEpsilon, name: "ClipEpsilon");
         var inputValuelossWeight = K.constant(trainingParams.valueLossWeight, name: "ValueLossWeight");
-        var inputEntropyLossWeight = K.constant(trainingParams.entroyLossWeight, name: "EntropyLossWeight");
+        var inputEntropyLossWeight = K.constant(trainingParams.entroyLossWeight, name: "EntropyLossWeight");*/
+        var inputClipEpsilon = UnityTFUtils.Input(batch_shape:new int?[] {  }, name: "ClipEpsilon", dtype: DataType.Float)[0];
+        var inputValuelossWeight = UnityTFUtils.Input(batch_shape: new int?[] {  }, name: "ValueLossWeight", dtype: DataType.Float)[0];
+        var inputEntropyLossWeight = UnityTFUtils.Input(batch_shape: new int?[] {  }, name: "EntropyLossWeight", dtype: DataType.Float)[0];
 
         // action probability from input action
         Tensor outputEntropy;
@@ -88,8 +100,8 @@ public class RLModelPPO : MonoBehaviour
             if (ActionSpace == SpaceType.continuous)
             {
                 var temp = K.mul(outputVariance, 2 * Mathf.PI * 2.7182818285);
-                temp = K.mul(temp, 0.5);
-                outputEntropy = K.sum(temp, 0, false, name: "OutputEntropy");
+                temp = K.mul(K.log(temp), 0.5);
+                outputEntropy = K.mean(temp, 0, false, name: "OutputEntropy");
                 actionProb = K.normal_probability(inputAction, outputAction, outputVariance);
             }
             else
@@ -140,6 +152,9 @@ public class RLModelPPO : MonoBehaviour
         allInputs.Add(inputOldProb);
         allInputs.Add(inputTargetValue);
         allInputs.Add(inputAdvantage);
+        allInputs.Add(inputClipEpsilon);
+        allInputs.Add(inputValuelossWeight);
+        allInputs.Add(inputEntropyLossWeight);
 
         //create optimizer and create necessary functions
         optimizer = new Adam(lr: 0.001);
@@ -157,8 +172,8 @@ public class RLModelPPO : MonoBehaviour
 
 
         //test
-       // Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
 
     protected List<Tensor> CreateVisualInputs(Brain brain)
@@ -355,6 +370,9 @@ public class RLModelPPO : MonoBehaviour
         inputs.Add(actionProbs);
         inputs.Add(targetValues);
         inputs.Add(advantages);
+        inputs.Add(new float[] { ClipEpsilon });
+        inputs.Add(new float[] { ValueLossWeight });
+        inputs.Add(new float[] { EntropyLossWeight });
 
         var loss = UpdateFunction.Call(inputs);
         var result =  new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
@@ -399,7 +417,11 @@ public class RLModelPPO : MonoBehaviour
         var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
         var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
         SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
-        SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+
+        if (arrayData.Count >= modelWeigthLength + optimizerWeightLength && optimizerWeightLength > 0)
+        {
+            SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+        }
     }
 
     public virtual List<Tensor> GetAllModelWeights()

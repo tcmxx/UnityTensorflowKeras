@@ -14,9 +14,12 @@ public class TrainerParamsPPO : ScriptableObject {
     public float rewardDiscountFactor = 0.99f;
     public float rewardGAEFactor = 0.95f;
     public float valueLossWeight = 1f;
+
+    [Tooltip("larger value means exploration is encouraged")]
     public float entroyLossWeight = 0.0f;
     public float clipEpsilon = 0.2f;
 
+    
     public int batchSize = 128;
     public int bufferSizeForTrain = 2048;
     public int numEpochPerTrain = 100;

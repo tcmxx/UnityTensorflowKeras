@@ -14,13 +14,13 @@ MonoBehaviour:
   maxTotalSteps: 100000000
   rewardDiscountFactor: 0.9
   rewardGAEFactor: 0.8
-  valueLossWeight: 1
+  valueLossWeight: 10
   entroyLossWeight: 0
   clipEpsilon: 0.2
-  batchSize: 64
-  bufferSizeForTrain: 512
+  batchSize: 32
+  bufferSizeForTrain: 128
   numEpochPerTrain: 100
-  learningRate: 0.001
+  learningRate: 0.00001
   lossLogInterval: 1
-  rewardLogInterval: 10
+  rewardLogInterval: 50
   saveModelInterval: 100

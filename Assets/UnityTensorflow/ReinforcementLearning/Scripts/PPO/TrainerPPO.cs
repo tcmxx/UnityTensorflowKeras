@@ -94,6 +94,10 @@ public class TrainerPPO : Trainer
     public override void Update()
     {
         modelRef.SetLearningRate(parameters.learningRate);
+        modelRef.ValueLossWeight = parameters.valueLossWeight;
+        modelRef.EntropyLossWeight = parameters.entroyLossWeight;
+        modelRef.ClipEpsilon = parameters.clipEpsilon;
+
         base.Update();
     }
 

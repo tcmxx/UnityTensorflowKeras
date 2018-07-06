@@ -94,7 +94,7 @@ public class BilliardArena : MonoBehaviour
             foreach (var s in sampler.Samples())
             {
                 count++;
-                if (count >= 100)
+                if (count >= 50)
                     break;
             }
             for(int i = 0; i < sampler.ActiveSamples.Count; ++i)
@@ -357,7 +357,7 @@ public class BilliardArena : MonoBehaviour
         }
 
         if (!whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall)
-            addRewards -= 10;
+            addRewards -= 1;
         return addRewards;
     }
 }
