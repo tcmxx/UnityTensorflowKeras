@@ -12,7 +12,7 @@ Still in development. Don't use this unless you know what you have time to check
 2. Import the TenfowflowSharp plugin. One provided by Unity: https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Using-TensorFlow-Sharp-in-Unity.md. This is not fully updated. A new version will be provided soon.
 3. Clone this repo with submodules, for example you can use: 
  ```
- git clone --recursive https://github.com/tcmxx/UnityTensorflowKeras.git
+ git clone --recurse-submodules https://github.com/tcmxx/UnityTensorflowKeras.git
  ```
 4. Copy everything in UnityTensorflowKeras's Assets folder and put it into Unity MLAgent's Assets folder. Replace the files that already exist.
 5. Done!
