@@ -14,9 +14,20 @@ Still in development. Don't use this unless you know what you have time to check
  ```
  git clone --recurse-submodules https://github.com/tcmxx/UnityTensorflowKeras.git
  ```
-4. Copy everything in UnityTensorflowKeras's Assets folder and put it into Unity MLAgent's Assets folder. Replace the files that already exist.
-5. Done!
+4. Copy the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder and put it into Unity MLAgent's /Assets folder. Then replace the Brain.cs in Unity MLAgent's Assets/ML-Agents/Scripts folder with the one from UnityTensorflowKeras.  You can also modify it by youself to keep it up with the correct version: Add one line to the BrainType enum:
+```    
+    public enum BrainType
+    {
+        Player,
+        Heuristic,
+        External,
+        Internal,
+        InternalTrainable
+    }
+```
+5. Delete the System.ValueTuple.dll in Unity MLAgent's /Assets/ML-Agents/Plugins folder
+6. Done!
 
 ## Platforms:
 Mac and Windows are fully supported. Android does not support training. IOS is not tested.
-Nothing is fully tested yet.
+NOTHING is fully tested yet.
