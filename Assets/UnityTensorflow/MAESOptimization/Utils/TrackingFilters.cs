@@ -23,7 +23,7 @@ namespace AaltoGames
     {
         float x;
         float dx;  //currently estimated trend
-        float oldInput,oldOldInput;
+        //float oldInput,oldOldInput;
         public float smoothness, trendSmoothness;
         public float damping;
         public DoubleExponential(float initialValue, float smoothness, float trendSmoothness, float trendDamping)
@@ -33,8 +33,8 @@ namespace AaltoGames
             this.trendSmoothness = trendSmoothness;
             dx = 0;
             damping = trendDamping;
-            oldInput = initialValue;
-            oldOldInput = initialValue;
+            //oldInput = initialValue;
+            //oldOldInput = initialValue;
         }
         public float putSample(float newInput, float timeStepSeconds = 1.0f)
         {
@@ -56,8 +56,8 @@ namespace AaltoGames
             dx = trendSmoothnessPow * dx + (1.0f - trendSmoothnessPow) * (x - oldx) / timeStepSeconds;
             //damping biases the trend (velocity) estimate towards 0
             dx = dx * (1.0f - dampingPow);
-            oldOldInput = oldInput;
-            oldInput = newInput;
+            //oldOldInput = oldInput;
+           // oldInput = newInput;
             return x;
         }
         public float output
@@ -312,8 +312,8 @@ namespace AaltoGames
         /// </summary>
         private float resonance;
 
-        private float frequency;
-        private float sampleRate;
+        //private float frequency;
+        //private float sampleRate;
 
         private float c, a1, a2, a3, b1, b2;
 
@@ -348,8 +348,8 @@ namespace AaltoGames
             //resonance = Mathf.Sqrt(2.0f)/(1.0f+resonance);
             resonance = 2.0f/(1.0f+resonance);
             this.resonance = resonance;
-            this.frequency = frequency;
-            this.sampleRate = sampleRate;
+            //this.frequency = frequency;
+            //this.sampleRate = sampleRate;
 
             c = 1.0f / (float)Mathf.Tan(Mathf.PI * frequency / sampleRate);
             a1 = 1.0f / (1.0f + this.resonance * c + c * c);

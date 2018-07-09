@@ -97,7 +97,7 @@ public class TrainerMimic : Trainer
             else
                 channels = 3;
 
-            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, height, channels }));
+            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, width, channels }));
         }
         dataBuffer = new DataBuffer(parameters.maxBufferSize, allBufferData.ToArray());
 
@@ -197,8 +197,8 @@ public class TrainerMimic : Trainer
                 visualObservations.Add((float[,,,])samples["VisualObservation" + j]);
             }
 
-            int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
-            int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
+            //int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
+            //int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
             float temoLoss = modelRef.TrainBatch(vectorObservations, visualObservations, actions);
             loss += temoLoss;

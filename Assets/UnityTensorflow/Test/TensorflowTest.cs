@@ -36,7 +36,7 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestDataBuffer();
 
-        print(Path.GetFullPath("Set/setset/set.ser"));
+        //print(Path.GetFullPath("Set/setset/set.ser"));
 
     }
 	
@@ -60,7 +60,7 @@ public class TensorflowTest : MonoBehaviour {
 
         testBuffer.AddData(dataToAdd.ToArray());
 
-        var result = testBuffer.FetchDataAt(1, ValueTuple.Create("Test1", 2, "Test1"), ValueTuple.Create("Test2", 2, "Test2"));
+        //var result = testBuffer.FetchDataAt(1, ValueTuple.Create("Test1", 2, "Test1"), ValueTuple.Create("Test2", 2, "Test2"));
 
 
 
@@ -78,7 +78,7 @@ public class TensorflowTest : MonoBehaviour {
         var t2Result = t2.FetchDataAt(1,  ValueTuple.Create("Test2", 2, "Test2"));
         var t1Result = t2.FetchDataAt(1, ValueTuple.Create("Test2", 2, "Test2"));
 
-        bool resultEquals = t2Result["Test2"].Equals(t2Result["Test2"]);
+        bool resultEquals = t1Result["Test2"].Equals(t2Result["Test2"]);
         Debug.Assert(resultEquals, "Data not matching.Wrong serialization.");
 
 
@@ -256,7 +256,8 @@ public class TensorflowTest : MonoBehaviour {
         
         // Evaluate the model
         double[] scores = model.evaluate(x, y);
-        scores = model.evaluate(x, y); scores = model.evaluate(x, y); 
+        Debug.Log("Eval results: " + string.Join(",", scores));
+        //scores = model.evaluate(x, y); scores = model.evaluate(x, y); 
         //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
 
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");

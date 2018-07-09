@@ -64,7 +64,7 @@ public class DataProvider : MonoBehaviour
         //Grapher.Log(arrList, "ArrayList", Color.white);
 
         // ********** Enum **********
-        TestEnum tEnum = (int)t % 2 == 0 ? TestEnum.bird : TestEnum.alien;
+        //TestEnum tEnum = (int)t % 2 == 0 ? TestEnum.bird : TestEnum.alien;
         //Grapher.Log(tEnum, "Enum", Color.white);
     }
 

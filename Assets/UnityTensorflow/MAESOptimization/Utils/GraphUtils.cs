@@ -29,33 +29,35 @@ namespace AaltoGames{
 		{
 			if (lineMaterialZTestOff==null)
 			{
-            //    lineMaterialZTestOff = new Material("Shader \"Lines/Colored Blended\" {" + "SubShader { Pass { " + "    Blend SrcAlpha OneMinusSrcAlpha " + "    ZWrite Off Cull Off Fog { Mode Off } " + "    BindChannels {" + "      Bind \"vertex\", vertex Bind \"color\", color }" + "} } }");
+                //    lineMaterialZTestOff = new Material("Shader \"Lines/Colored Blended\" {" + "SubShader { Pass { " + "    Blend SrcAlpha OneMinusSrcAlpha " + "    ZWrite Off Cull Off Fog { Mode Off } " + "    BindChannels {" + "      Bind \"vertex\", vertex Bind \"color\", color }" + "} } }");
 
                 //lineMaterialZTestOff = new Material(Shader.Find("Custom/GizmoShader"));
 
-               lineMaterialZTestOff = new Material( "Shader \"Lines/Colored Blended\" {" +
-            "SubShader { Pass {" +
-            "   BindChannels { Bind \"Color\",color }" +
-            "   Blend SrcAlpha OneMinusSrcAlpha" +
-            "   ZTest Off ZWrite Off Cull Off Fog { Mode Off }" +
-            "} } }");
-                lineMaterialZTestOff.hideFlags = HideFlags.HideAndDontSave;
-                lineMaterialZTestOff.shader.hideFlags = HideFlags.HideAndDontSave;
+                /*lineMaterialZTestOff = new Material( "Shader \"Lines/Colored Blended\" {" +
+             "SubShader { Pass {" +
+             "   BindChannels { Bind \"Color\",color }" +
+             "   Blend SrcAlpha OneMinusSrcAlpha" +
+             "   ZTest Off ZWrite Off Cull Off Fog { Mode Off }" +
+             "} } }");
+                 lineMaterialZTestOff.hideFlags = HideFlags.HideAndDontSave;
+                 lineMaterialZTestOff.shader.hideFlags = HideFlags.HideAndDontSave;*/
+                Debug.LogError("Please call GraphUtils.setMaterials() first to set the materials");
             }
-			if (lineMaterialZTestOn==null)
+            if (lineMaterialZTestOn==null)
 			{
                 //lineMaterialZTestOn = new Material(Shader.Find("Custom/GizmoShader"));
 
-                lineMaterialZTestOn = new Material("Shader \"Lines/Colored Blended\" {" + "SubShader { Pass { " + "    Blend SrcAlpha OneMinusSrcAlpha " + "    ZWrite Off Cull Off Fog { Mode Off } " + "    BindChannels {" + "      Bind \"vertex\", vertex Bind \"color\", color }" + "} } }");
+                /*lineMaterialZTestOn = new Material("Shader \"Lines/Colored Blended\" {" + "SubShader { Pass { " + "    Blend SrcAlpha OneMinusSrcAlpha " + "    ZWrite Off Cull Off Fog { Mode Off } " + "    BindChannels {" + "      Bind \"vertex\", vertex Bind \"color\", color }" + "} } }");
                 lineMaterialZTestOn.hideFlags = HideFlags.HideAndDontSave;
-                lineMaterialZTestOn.shader.hideFlags = HideFlags.HideAndDontSave;
-            //    lineMaterialZTestOn = new Material("Shader \"Lines/Colored Blended\" {" +
-            //"SubShader { Pass {" +
-            //"   BindChannels { Bind \"Color\",color }" +
-            //"   Blend SrcAlpha OneMinusSrcAlpha" +
-            //"   ZWrite Off Cull Off Fog { Mode Off }" +
-            //"} } }");
-			}
+                lineMaterialZTestOn.shader.hideFlags = HideFlags.HideAndDontSave;*/
+                //    lineMaterialZTestOn = new Material("Shader \"Lines/Colored Blended\" {" +
+                //"SubShader { Pass {" +
+                //"   BindChannels { Bind \"Color\",color }" +
+                //"   Blend SrcAlpha OneMinusSrcAlpha" +
+                //"   ZWrite Off Cull Off Fog { Mode Off }" +
+                //"} } }");
+                Debug.LogError("Please call GraphUtils.setMaterials() first to set the materials");
+            }
 			if (zTest)
 			{
 				lineMaterialZTestOn.SetPass(pass);

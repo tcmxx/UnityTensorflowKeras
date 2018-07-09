@@ -46,7 +46,7 @@ public class TrainerMAES : Trainer
 
 
 
-    private void FixedUpdate()
+    protected override void FixedUpdate()
     {
         ContinueOptimization();
     }

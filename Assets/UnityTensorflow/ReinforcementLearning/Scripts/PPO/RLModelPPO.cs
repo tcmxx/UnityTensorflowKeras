@@ -172,8 +172,8 @@ public class RLModelPPO : MonoBehaviour
 
 
         //test
-        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
     }
 
     protected List<Tensor> CreateVisualInputs(Brain brain)

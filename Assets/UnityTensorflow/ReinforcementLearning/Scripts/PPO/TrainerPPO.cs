@@ -77,7 +77,7 @@ public class TrainerPPO : Trainer
             else
                 channels = 3;
 
-            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation"+i, typeof(float), new int[] { height , height, channels }));
+            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation"+i, typeof(float), new int[] { height, width,  channels }));
         }
         dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2, allBufferData.ToArray());
 
@@ -290,8 +290,8 @@ public class TrainerPPO : Trainer
             }
 
             int batchCount = targetValues.Length / parameters.batchSize;
-            int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
-            int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
+            //int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
+            //int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
             float tempLoss = 0, tempPolicyLoss = 0, tempValueLoss = 0;
 

@@ -120,7 +120,7 @@ public class ESOptimizer : MonoBehaviour
             actualInitMean = initialMean;
 
 
-        optimizer.init(optimizable.GetParamDimension(), populationSize, new double[optimizable.GetParamDimension()], initialStepSize, mode);
+        optimizer.init(optimizable.GetParamDimension(), populationSize, actualInitMean, initialStepSize, mode);
 
         IsOptimizing = true;
 
