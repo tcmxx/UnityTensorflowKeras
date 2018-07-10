@@ -595,6 +595,7 @@ PlayerSettings:
   webGLLinkerTarget: 0
   scriptingDefineSymbols:
     1: ENABLE_TENSORFLOW
+    7: ENABLE_TENSORFLOW
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}

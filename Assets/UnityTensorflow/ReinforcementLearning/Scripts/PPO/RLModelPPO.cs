@@ -50,31 +50,86 @@ public class RLModelPPO : MonoBehaviour
     //the variable for variance
     protected Tensor logSigmaSq = null;
 
-    
+    //some holders for tensors
+    protected Tensor outputVariance = null;
+    protected Tensor outputAction = null;
+    protected Tensor outputValue = null;
+    protected Tensor inputStateTensor = null;
+    protected List<Tensor> inputVisualTensors = null;
 
-    public virtual void Initialize(Brain brain, TrainerParamsPPO trainingParams)
+
+    public bool TrainingEnabled { get { return trainingEnabled; } protected set { trainingEnabled = value; } }
+    [SerializeField]
+    [ReadOnly]
+    public bool trainingEnabled = false;
+
+    public bool Initialized { get; protected set; } = false;
+
+    /// <summary>
+    /// Initialize the model without training parts
+    /// </summary>
+    /// <param name="brainParameters"></param>
+    public virtual void Initialize(BrainParameters brainParameters)
     {
-        ActionSize = brain.brainParameters.vectorActionSize;
-        StateSize = brain.brainParameters.vectorObservationSize*brain.brainParameters.numStackedVectorObservations;
-        ActionSpace = brain.brainParameters.vectorActionSpaceType;
+        Debug.Assert(Initialized == false, "Model already Initalized");
+
+        ActionSize = brainParameters.vectorActionSize;
+        StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
+        ActionSpace = brainParameters.vectorActionSpaceType;
 
         //create basic inputs
-        var inputStateTensor = StateSize > 0?UnityTFUtils.Input(new int?[] { StateSize }, name: "InputStates")[0]:null;
+        inputStateTensor = StateSize > 0 ? UnityTFUtils.Input(new int?[] { StateSize }, name: "InputStates")[0] : null;
         HasVectorObservation = inputStateTensor != null;
-        var inputVisualTensors = CreateVisualInputs(brain);
+        inputVisualTensors = CreateVisualInputs(brainParameters);
         HasVisualObservation = inputVisualTensors != null;
 
         //build the network
-        Tensor outputValue = null, outputAction = null;
         network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue);
 
         //actor network output variance
-        Tensor outputVariance = null;
         if (ActionSpace == SpaceType.continuous)
         {
             logSigmaSq = K.variable((new Constant(0)).Call(new int[] { ActionSize }, DataType.Float), name: "PPO.log_sigma_square");
             outputVariance = K.exp(logSigmaSq);
         }
+
+        //create functions for evaluation
+        List<Tensor> observationInputs = new List<Tensor>();
+
+        if (HasVectorObservation)
+        {
+            observationInputs.Add(inputStateTensor);
+        }
+        if (HasVisualObservation)
+        {
+            observationInputs.AddRange(inputVisualTensors);
+        }
+        ValueFunction = K.function(observationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
+        if (ActionSpace == SpaceType.continuous)
+        {
+            ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction, outputVariance }, null, "ActionFunction");
+        }
+        else
+        {
+            ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
+        }
+        K.try_initialize_variables();
+        Initialized = true;
+        TrainingEnabled = false;
+    }
+    /// <summary>
+    /// Initialize the model with training enabled
+    /// </summary>
+    /// <param name="brainParameters"></param>
+    /// <param name="trainingParams"></param>
+    public virtual void Initialize(BrainParameters brainParameters, TrainerParamsPPO trainingParams)
+    {
+
+        Debug.Assert(Initialized == false, "Model already Initalized");
+
+        //initalize the evaluation parts
+        Initialize(brainParameters);
+
         //training needed inputs
         var inputAction = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous?ActionSize:1 }, name: "InputAction", dtype:ActionSpace == SpaceType.continuous?DataType.Float:DataType.Int32)[0];
         var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
@@ -112,9 +167,7 @@ public class RLModelPPO : MonoBehaviour
                 actionProb = K.reshape(K.sum(outputAction* onehotInputAction,1),new int[] { -1,1});
             }
         }
-
-
-
+        
         // value loss
         var outputValueLoss = K.mean(new MeanSquareError().Call(outputValue, inputTargetValue));
 
@@ -136,17 +189,13 @@ public class RLModelPPO : MonoBehaviour
         //add inputs, outputs and parameters to the list
         List<Tensor> updateParameters = GetAllModelWeights();
         List<Tensor> allInputs = new List<Tensor>();
-        List<Tensor> observationInputs = new List<Tensor>();
-
         if (HasVectorObservation)
         {
             allInputs.Add(inputStateTensor);
-            observationInputs.Add(inputStateTensor);
         }
         if (HasVisualObservation)
         {
             allInputs.AddRange(inputVisualTensors);
-            observationInputs.AddRange(inputVisualTensors);
         }
         allInputs.Add(inputAction);
         allInputs.Add(inputOldProb);
@@ -160,31 +209,25 @@ public class RLModelPPO : MonoBehaviour
         optimizer = new Adam(lr: 0.001);
         var updates = optimizer.get_updates(updateParameters, null, outputLoss); ;
         UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
-        ValueFunction = K.function(observationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
-        if (ActionSpace == SpaceType.continuous)
-        {
-            ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction, outputVariance }, null, "ActionFunction");
-        }
-        else
-        {
-            ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
-        }
-
 
         //test
         //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
         //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+
+        Initialized = true;
+        TrainingEnabled = true;
+        K.try_initialize_variables();
     }
 
-    protected List<Tensor> CreateVisualInputs(Brain brain)
+    protected List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
     {
-        if(brain.brainParameters.cameraResolutions == null || brain.brainParameters.cameraResolutions.Length == 0)
+        if(brainParameters.cameraResolutions == null || brainParameters.cameraResolutions.Length == 0)
         {
             return null;
         }
         List<Tensor> allInputs = new List<Tensor>();
         int i = 0;
-        foreach(var r in brain.brainParameters.cameraResolutions)
+        foreach(var r in brainParameters.cameraResolutions)
         {
             int width = r.width;
             int height = r.height;
@@ -302,6 +345,8 @@ public class RLModelPPO : MonoBehaviour
     /// </summary>
     public virtual float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation)
     {
+        Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use EvaluateProbability()");
+
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
         {
@@ -349,11 +394,14 @@ public class RLModelPPO : MonoBehaviour
 
     public virtual void SetLearningRate(float rl)
     {
+        Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use SetLearningRate()");
         optimizer.SetLearningRate(rl);
     }
 
     public virtual float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
     {
+        Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
+
         List<Array> inputs = new List<Array>();
         if (vectorObservations != null)
             inputs.Add(vectorObservations);
@@ -434,16 +482,16 @@ public class RLModelPPO : MonoBehaviour
     }
     public virtual List<Array> GetAllOptimizerWeights()
     {
+        if (!TrainingEnabled)
+            return new List<Array>();
         return optimizer.get_weights();
     }
 
     public virtual void SetAllModelWeights(List<Array> values)
     {
-        List<Tensor> updateParameters = new List<Tensor>();
-        updateParameters.AddRange(network.GetWeights());
-        updateParameters.Add(logSigmaSq);
+        List<Tensor> updateParameters = GetAllModelWeights();
 
-        Debug.Assert(values.Count == updateParameters.Count, "Counts of input values and parameters to update do not match.");
+        Debug.Assert(values.Count == updateParameters.Count, "SetAllModelWeights(): Counts of input values and parameters to update do not match.");
 
         for(int i = 0; i < updateParameters.Count; ++i)
         {

@@ -37,64 +37,87 @@ public class SupervisedLearningModel : MonoBehaviour
     public bool HasVectorObservation { get; private set; }
     public bool HasRecurrent { get; private set; } = false;
 
-    public virtual void Initialize(Brain brain)
+    public bool TrainingEnabled { get { return trainingEnabled; } protected set { trainingEnabled = value; } }
+    [SerializeField]
+    [ReadOnly]
+    public bool trainingEnabled = false;
+
+    public bool Initialized { get; protected set; } = false;
+
+    public virtual void Initialize(BrainParameters brainParameters, bool enableTraining = true)
     {
-        ActionSize = brain.brainParameters.vectorActionSize;
-        StateSize = brain.brainParameters.vectorObservationSize * brain.brainParameters.numStackedVectorObservations;
-        ActionSpace = brain.brainParameters.vectorActionSpaceType;
+        Debug.Assert(Initialized == false, "Model already Initalized");
+
+        ActionSize = brainParameters.vectorActionSize;
+        StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
+        ActionSpace = brainParameters.vectorActionSpaceType;
 
         //create basic inputs
         var inputStateTensor = StateSize > 0 ? UnityTFUtils.Input(new int?[] { StateSize }, name: "InputStates")[0] : null;
         HasVectorObservation = inputStateTensor != null;
-        var inputVisualTensors = CreateVisualInputs(brain);
+        var inputVisualTensors = CreateVisualInputs(brainParameters);
         HasVisualObservation = inputVisualTensors != null;
 
 
         //build the network
         Tensor outputAction = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize, ActionSpace);
 
-        //training inputs
-        var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
-        //creat the loss
-        Tensor loss = null;
-        if (ActionSpace == SpaceType.discrete)
-        {
-            Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-            loss = K.mean(K.categorical_crossentropy(actionOnehot, outputAction, false));
-        }
-        else
-        {
-            loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
-        }
-
-
-        //add inputs, outputs and parameters to the list
-        List<Tensor> updateParameters = GetAllModelWeights();
-        List<Tensor> allInputs = new List<Tensor>();
         List<Tensor> observationInputs = new List<Tensor>();
-
         if (HasVectorObservation)
         {
-            allInputs.Add(inputStateTensor);
             observationInputs.Add(inputStateTensor);
         }
         if (HasVisualObservation)
         {
-            allInputs.AddRange(inputVisualTensors);
             observationInputs.AddRange(inputVisualTensors);
         }
-        allInputs.Add(inputActionLabel);
-        //create optimizer and create necessary functions
-        optimizer = new Adam(lr: 0.001);
-        var updates = optimizer.get_updates(updateParameters, null, loss); ;
-        UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
         ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
 
+        //build the parts for training
+        if (enableTraining)
+        {
+            //training inputs
+            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+            //creat the loss
+            Tensor loss = null;
+            if (ActionSpace == SpaceType.discrete)
+            {
+                Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
+                loss = K.mean(K.categorical_crossentropy(actionOnehot, outputAction, false));
+            }
+            else
+            {
+                loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
+            }
+            //add inputs, outputs and parameters to the list
+            List<Tensor> updateParameters = GetAllModelWeights();
+            List<Tensor> allInputs = new List<Tensor>();
 
 
+            if (HasVectorObservation)
+            {
+                allInputs.Add(inputStateTensor);
+                observationInputs.Add(inputStateTensor);
+            }
+            if (HasVisualObservation)
+            {
+                allInputs.AddRange(inputVisualTensors);
+                observationInputs.AddRange(inputVisualTensors);
+            }
+            allInputs.Add(inputActionLabel);
+            //create optimizer and create necessary functions
+            optimizer = new Adam(lr: 0.001);
+            var updates = optimizer.get_updates(updateParameters, null, loss); ;
+            UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
+        }
+        
         //test
-        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/SuperviseTest.pb");
+        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/SuperviseTest.pb");
+
+        K.try_initialize_variables();
+        Initialized = true;
+        TrainingEnabled = enableTraining;
 
     }
 
@@ -149,6 +172,9 @@ public class SupervisedLearningModel : MonoBehaviour
 
     public virtual float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions)
     {
+        Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
+
+
         List<Array> inputs = new List<Array>();
         if (vectorObservations != null)
             inputs.Add(vectorObservations);
@@ -169,15 +195,15 @@ public class SupervisedLearningModel : MonoBehaviour
     }
 
 
-    protected List<Tensor> CreateVisualInputs(Brain brain)
+    protected List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
     {
-        if (brain.brainParameters.cameraResolutions == null || brain.brainParameters.cameraResolutions.Length == 0)
+        if (brainParameters.cameraResolutions == null || brainParameters.cameraResolutions.Length == 0)
         {
             return null;
         }
         List<Tensor> allInputs = new List<Tensor>();
         int i = 0;
-        foreach (var r in brain.brainParameters.cameraResolutions)
+        foreach (var r in brainParameters.cameraResolutions)
         {
             int width = r.width;
             int height = r.height;
@@ -230,7 +256,10 @@ public class SupervisedLearningModel : MonoBehaviour
         var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
         var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
         SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
-        SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+        if (arrayData.Count >= modelWeigthLength + optimizerWeightLength && optimizerWeightLength > 0)
+        {
+            SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+        }
     }
 
     public virtual List<Tensor> GetAllModelWeights()
@@ -241,6 +270,8 @@ public class SupervisedLearningModel : MonoBehaviour
     }
     public virtual List<Array> GetAllOptimizerWeights()
     {
+        if (!TrainingEnabled)
+            return new List<Array>();
         return optimizer.get_weights();
     }
 

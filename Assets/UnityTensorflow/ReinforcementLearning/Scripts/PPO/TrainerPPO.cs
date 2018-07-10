@@ -33,7 +33,7 @@ public class TrainerPPO : Trainer
     StatsLogger stats;
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
-
+    
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
@@ -79,11 +79,17 @@ public class TrainerPPO : Trainer
 
             allBufferData.Add(new DataBuffer.DataInfo("VisualObservation"+i, typeof(float), new int[] { height, width,  channels }));
         }
+
+        Debug.Assert(parameters != null, "Please Specify PPO Trainer Parameters");
         dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2, allBufferData.ToArray());
 
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
-        modelRef.Initialize(BrainToTrain,parameters);
+        
+        if(isTraining)
+            modelRef.Initialize(BrainToTrain.brainParameters,parameters);
+        else
+            modelRef.Initialize(BrainToTrain.brainParameters);
 
         if (continueFromCheckpoint)
         {
@@ -93,7 +99,8 @@ public class TrainerPPO : Trainer
 
     public override void Update()
     {
-        modelRef.SetLearningRate(parameters.learningRate);
+        if(isTraining)
+            modelRef.SetLearningRate(parameters.learningRate);
         modelRef.ValueLossWeight = parameters.valueLossWeight;
         modelRef.EntropyLossWeight = parameters.entroyLossWeight;
         modelRef.ClipEpsilon = parameters.clipEpsilon;
@@ -231,7 +238,7 @@ public class TrainerPPO : Trainer
 
 
         float[,] actionProbs = null;
-        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll);
+        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, isTraining);
         var values = modelRef.EvaluateValue(vectorObsAll, visualObsAll);
 
 

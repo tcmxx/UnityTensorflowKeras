@@ -75,7 +75,8 @@ public class TrainerMimic : Trainer
     public override void Initialize()
     {
         stats = new StatsLogger();
-        modelRef.Initialize(BrainToTrain);
+
+        modelRef.Initialize(BrainToTrain.brainParameters,isTraining);
 
         var brainParameters = BrainToTrain.brainParameters;
 
