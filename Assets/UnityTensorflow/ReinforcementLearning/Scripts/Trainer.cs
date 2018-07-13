@@ -27,12 +27,14 @@ public struct TakeActionOutput
 public abstract class Trainer : MonoBehaviour
 {
 
-    public Academy academyRef;
+    protected Academy academyRef;
     public bool isTraining;
     protected bool prevIsTraining;
 
     private void Start()
     {
+        academyRef = FindObjectOfType<Academy>();
+        Debug.Assert(academyRef != null, "No Academy in this scene!");
         prevIsTraining = isTraining;
         academyRef.SetIsInference(!isTraining);
     }

@@ -238,7 +238,7 @@ public class TrainerPPO : Trainer
 
 
         float[,] actionProbs = null;
-        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, isTraining);
+        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
         var values = modelRef.EvaluateValue(vectorObsAll, visualObsAll);
 
 

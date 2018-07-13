@@ -22,7 +22,7 @@ public class TrainerParamsPPO : ScriptableObject {
     
     public int batchSize = 128;
     public int bufferSizeForTrain = 2048;
-    public int numEpochPerTrain = 100;
+    public int numEpochPerTrain = 40;
 
     public float learningRate = 0.001f;
 

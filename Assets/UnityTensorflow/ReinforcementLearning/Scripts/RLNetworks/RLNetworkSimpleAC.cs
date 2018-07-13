@@ -63,6 +63,8 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
         }
 
+        
+
         //vector states encode
         Tensor encodedVectorStateActor = null;
         Tensor encodedVectorStateCritic = null;
@@ -88,7 +90,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         }
         else if(inVisualState != null && inVectorstate != null)
         {
-            Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one type of observation.");
+            //Debug.LogWarning("Tensorflow does not have gradient for concat operation in C yet. Please only use one type of observation if you need training.");
             encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor,encodedVisualActor},1);
             encodedAllCritic = Current.K.concat(new List<Tensor>() { encodedVectorStateCritic, encodedVisualCritic }, 1);
         }
@@ -116,8 +118,8 @@ public class RLNetworkSimpleAC : RLNetworkAC
         Tensor temp;
         using (Current.K.name_scope(scope))
         {
-            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 }, activation: new ELU());
-            var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 }, activation: new ELU());
+            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 },kernel_initializer: new GlorotUniform(scale: hiddenWeightsInitialScale), activation: new ELU());
+            var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 },kernel_initializer: new GlorotUniform(scale: hiddenWeightsInitialScale), activation: new ELU());
 
             temp = conv1.Call(visualInput)[0];
             temp = conv2.Call(temp)[0];

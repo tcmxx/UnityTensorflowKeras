@@ -41,8 +41,9 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
             }
             if (inVisualState.Count > 1)
             {
-                Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
-                encodedVisualActor = Current.K.concat(visualEncodedActor, 1);
+                //Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
+                encodedVisualActor = Current.K.stack(visualEncodedActor, 1);
+                encodedVisualActor = Current.K.batch_flatten(encodedVisualActor);
             }
             else
             {

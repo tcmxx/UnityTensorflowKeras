@@ -23,4 +23,4 @@ MonoBehaviour:
   learningRate: 0.01
   lossLogInterval: 1
   rewardLogInterval: 50
-  saveModelInterval: 10000
+  saveModelInterval: 50000

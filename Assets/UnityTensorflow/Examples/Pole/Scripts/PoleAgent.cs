@@ -13,13 +13,8 @@ public class PoleAgent : Agent
     public float angleR;    //in radian
 
     public GameObject poleObjectRef;
+    public Transform velIndicatorRef;
     public bool noVectorObservation = false;
-    private void Update()
-    {
-        poleObjectRef.transform.rotation = Quaternion.Euler(0, 0, angleR * Mathf.Rad2Deg + 180);
-    }
-
-
     public override void InitializeAgent()
     {
 
@@ -64,6 +59,13 @@ public class PoleAgent : Agent
         float reward = -Mathf.Abs(angleR) + Mathf.PI / 2 - Mathf.Abs(velR);
         reward /= 10;
 
+        if (velIndicatorRef)
+        {
+            velIndicatorRef.transform.localScale = new Vector3(velR * 2, 1, 1);
+            Vector3 currentRot = velIndicatorRef.transform.localPosition;
+            velIndicatorRef.transform.localPosition = new Vector3(-velR, currentRot.y, currentRot.z);
+        }
+        poleObjectRef.transform.rotation = Quaternion.Euler(0, 0, angleR * Mathf.Rad2Deg + 180);
         SetReward(reward);
     }
 

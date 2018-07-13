@@ -23,6 +23,7 @@ public class TensorflowTest : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        
 
         //TestBasicBackendAndOptimizerAndExportGraph();
         //TestLayer();
@@ -38,6 +39,7 @@ public class TensorflowTest : MonoBehaviour {
 
         //print(Path.GetFullPath("Set/setset/set.ser"));
 
+        TestConcatGradient();
     }
 	
 
@@ -209,7 +211,7 @@ public class TensorflowTest : MonoBehaviour {
         inputValue1 = new float[] { 2.2f, 3.9f, 4.1f };
         var inputValue2 = new float[] { 4.2f, 3.2f, 14.5f, 44.5f, 74.3f };
         K.batch_set_value(new List<ValueTuple<Tensor, Array>>() {
-            ValueTuple.Create(weight1,inputValue1),ValueTuple.Create(weight2,inputValue2),
+            ValueTuple.Create(weight1,(Array)inputValue1),ValueTuple.Create(weight2,(Array)inputValue2),
         });
 
         var resultBatch = K.batch_get_value(new List<Tensor>() { weight1 , weight2 });
@@ -261,5 +263,59 @@ public class TensorflowTest : MonoBehaviour {
         //Debug.Log($"{model.metrics_names[1]}: {scores[1] * 100}");
 
         ((UnityTFBackend)K).ExportGraphDef("SavedGraph/sequentialtest.pb");
+    }
+
+    //test the concat gradient of the backend.
+    //This is tested because the Tensorflow c++ concat gradient is not officially impelmented. I wrote my own version and built it. Might be wrong. 
+    public bool TestConcatGradient()
+    {
+        //create model first
+        var input1 = K.placeholder(new int?[] { -1, 1 });
+        var input2 = K.placeholder(new int?[] { -1, 1 });
+        var input3 = K.placeholder(new int?[] { -1, 1 });
+        var weight1 = K.variable((new Constant(1)).Call(new int[] { 1, 1 }, DataType.Float));
+        var weight2 = K.variable((new Constant(1)).Call(new int[] { 1, 2 }, DataType.Float));
+        var weight3 = K.variable((new Constant(1)).Call(new int[] { 1, 3 }, DataType.Float));
+
+        var output1 = K.dot(input1, weight1);
+        var output2 = K.dot(input2, weight2);
+        var output3 = K.dot(input3, weight3);
+
+        var concated = K.concat(new List<Tensor>() { output1, output2, output3 }, 1);
+
+        var input4 = K.placeholder(new int?[] { -1, 6 });
+
+        var output = K.mul(concated, input4);
+
+        var gradients = K.gradients(output, new List<Tensor>() { weight1, weight2, weight3 });
+        var g1 = K.identity(gradients[0], "finalGradient1");
+        var g2 = K.identity(gradients[1], "finalGradient2");
+        var g3 = K.identity(gradients[2], "finalGradient3");
+
+        var inputs = new List<Tensor>();
+        inputs.Add(input1); inputs.Add(input2); inputs.Add(input3); inputs.Add(input4);
+        var outputs = new List<Tensor>();
+        outputs.Add(g1); outputs.Add(g2); outputs.Add(g3);
+
+        var function = K.function(inputs, outputs, null, "GetGradients");
+
+        var inputData = new List<Array>();
+        inputData.Add(new float[] { 1f});
+        inputData.Add(new float[] { 2f});
+        inputData.Add(new float[] { 3f});
+        inputData.Add(new float[] { 1f,2f,3f,4f,5f,6f });
+
+        var functionResult = function.Call(inputData);
+        float[,] resultg1 = (float[,])functionResult[0].eval();
+        float[,] resultg2 = (float[,])functionResult[1].eval();
+        float[,] resultg3 = (float[,])functionResult[2].eval();
+
+        bool pass = resultg1[0, 0] == 1 
+            && resultg2[0, 0] == 4 && resultg2[0, 1] == 6
+            && resultg3[0, 0] == 12 && resultg3[0, 1] == 15 && resultg3[0, 2] == 18;
+
+        Debug.Assert(pass, "TestConcatGradient: Wrong gradient, test failed!");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/TestConcatGradient.pb");
+        return pass;
     }
 }

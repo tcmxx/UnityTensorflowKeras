@@ -64,7 +64,7 @@ public class RLModelPPO : MonoBehaviour
     public bool trainingEnabled = false;
 
     public bool Initialized { get; protected set; } = false;
-
+    public TextAsset checkpointTOLoad = null;
     /// <summary>
     /// Initialize the model without training parts
     /// </summary>
@@ -114,8 +114,13 @@ public class RLModelPPO : MonoBehaviour
             ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
         }
         K.try_initialize_variables();
+        if(checkpointTOLoad != null){
+            RestoreCheckpoint(checkpointTOLoad.bytes);
+        }
         Initialized = true;
         TrainingEnabled = false;
+
+
     }
     /// <summary>
     /// Initialize the model with training enabled
@@ -211,8 +216,8 @@ public class RLModelPPO : MonoBehaviour
         UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
 
         //test
-        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+            ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
 
         Initialized = true;
         TrainingEnabled = true;
