@@ -24,8 +24,8 @@ public class TrainerParamsPPO : ScriptableObject {
     public int bufferSizeForTrain = 2048;
     public int numEpochPerTrain = 10;
 
-    public int heuristicBufferSize = 20000;
-    public int extraBatchTFromHeuristicBuffer = 5;
+    public int heuristicBufferSize = 0;
+    public int extraBatchTFromHeuristicBuffer = 0;
 
     public float learningRate = 0.001f;
 

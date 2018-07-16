@@ -244,7 +244,7 @@ public class DataBuffer : ISerializable
     /// <returns></returns>
     public Dictionary<string, Array> SampleBatchesReordered(int batchSize, int maxBatchesCount = -1, params ValueTuple<string, int, string>[] fetchAndOffset)
     {
-        Debug.Assert(batchSize <= CurrentCount, "Not enough data to sample");
+        //Debug.Assert(batchSize <= CurrentCount, "Not enough data to sample");
 
         Dictionary<string, Array> result = new Dictionary<string, Array>();
 

@@ -3,54 +3,36 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MazeViewer : MonoBehaviour {
-    public MazeAgent mazeEnvironment;
-
-    public bool enableUpdate = true;
     public float blockDimension = 1.0f;
     public GameObject blockPrefab;
 
     public SpriteRenderer[,] blocks;
 
+   
 
-    // Use this for initialization
-    void Start()
+    public void UpdateGraphics(MazeAgent agent)
     {
-        InitializeGraphic();
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (enableUpdate)
-            UpdateGraphics(mazeEnvironment.map);
-
-    }
-
-
-    public void UpdateGraphics(float[,] map)
-    {
-        for (int i = 0; i < mazeEnvironment.mazeDimension.x; ++i)
+        for (int i = 0; i < agent.mazeDimension.x; ++i)
         {
-            for (int j = 0; j < mazeEnvironment.mazeDimension.y; ++j)
+            for (int j = 0; j < agent.mazeDimension.y; ++j)
             {
-                blocks[i, j].color = ChooseColor((int)map[i, j]);
+                blocks[i, j].color = ChooseColor((int)agent.map[i, j], agent);
             }
         }
     }
 
 
-    private Color ChooseColor(int blockType)
+    private Color ChooseColor(int blockType, MazeAgent agent)
     {
-        if (blockType == mazeEnvironment.WallInt)
+        if (blockType == agent.WallInt)
         {
             return Color.red;
         }
-        else if (blockType == mazeEnvironment.GoalInt)
+        else if (blockType == agent.GoalInt)
         {
             return Color.green;
         }
-        else if (blockType == mazeEnvironment.PlayerInt)
+        else if (blockType == agent.PlayerInt)
         {
             return Color.yellow;
         }
@@ -60,15 +42,15 @@ public class MazeViewer : MonoBehaviour {
         }
     }
 
-    private void InitializeGraphic()
+    public void InitializeGraphic(MazeAgent agent)
     {
-        blocks = new SpriteRenderer[mazeEnvironment.mazeDimension.x, mazeEnvironment.mazeDimension.y];
+        blocks = new SpriteRenderer[agent.mazeDimension.x, agent.mazeDimension.y];
 
-        Vector3 offset = transform.position - new Vector3((mazeEnvironment.mazeDimension.x - 1) * blockDimension / 2, (mazeEnvironment.mazeDimension.y - 1) * blockDimension / 2 );
+        Vector3 offset = transform.position - new Vector3((agent.mazeDimension.x - 1) * blockDimension / 2, (agent.mazeDimension.y - 1) * blockDimension / 2 );
 
-        for (int i = 0; i < mazeEnvironment.mazeDimension.x; ++i)
+        for (int i = 0; i < agent.mazeDimension.x; ++i)
         {
-            for (int j = 0; j < mazeEnvironment.mazeDimension.y; ++j)
+            for (int j = 0; j < agent.mazeDimension.y; ++j)
             {
                 GameObject obj = GameObject.Instantiate(blockPrefab, new Vector3(i * blockDimension, j * blockDimension) + offset, Quaternion.identity, this.transform);
                 blocks[i, j] = obj.GetComponent<SpriteRenderer>();

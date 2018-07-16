@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(MazeViewer))]
 public class MazeAgent : Agent
 {
 
@@ -26,6 +27,8 @@ public class MazeAgent : Agent
     public float[,] map;
     private Dictionary<int, GameState> savedState;
 
+    private MazeViewer viewer;
+
     [Header("Info")]
     [ReadOnly]
     [SerializeField]
@@ -45,11 +48,15 @@ public class MazeAgent : Agent
         public bool win;
     }
 
-
+    private void Awake()
+    {
+        viewer = GetComponent<MazeViewer>();
+    }
     // Use this for initialization
     public override void InitializeAgent()
     {
         savedState = new Dictionary<int, GameState>();
+        viewer.InitializeGraphic(this);
         AgentReset();
     }
 
@@ -148,6 +155,8 @@ public class MazeAgent : Agent
 
         steps++;
         AddReward(returnReward);
+
+        viewer.UpdateGraphics(this);
     }
 
 
@@ -177,12 +186,15 @@ public class MazeAgent : Agent
             goalPosition = state.goalPosition;
             startPosition = state.startPosition;
             Win = state.win;
+            viewer.UpdateGraphics(this);
             return true;
         }
         else
         {
             return false;
         }
+
+        
     }
 
 
@@ -194,6 +206,8 @@ public class MazeAgent : Agent
         map = new float[mazeDimension.x, mazeDimension.y];
         GeneratePossiblePath();
         GenerateExtraPath();
+
+        viewer.UpdateGraphics(this);
     }
 
     //mark a path with true. The generator will guarantee that this path is walkable

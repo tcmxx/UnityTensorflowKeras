@@ -85,7 +85,8 @@ public class TrainerPPO : Trainer
         Debug.Assert(parameters != null, "Please Specify PPO Trainer Parameters");
         dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2, allBufferData.ToArray());
         //a seperate buffer if the agent uses heuristic decision instead of directly from the model
-        dataBufferHeuristic = new DataBuffer(parameters.heuristicBufferSize, allBufferData.ToArray());
+        if(parameters.heuristicBufferSize > 0)
+            dataBufferHeuristic = new DataBuffer(parameters.heuristicBufferSize, allBufferData.ToArray());
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
         
@@ -222,7 +223,7 @@ public class TrainerPPO : Trainer
                 valuesEpisodeHistory[agent].Clear();
 
                 var agentDecision = agent.GetComponent<AgentDependentDecision>();
-                if (agentDecision != null && agentDecision.useDecision)
+                if (agentDecision != null && agentDecision.useDecision && dataBufferHeuristic != null)
                 {
                     //use a seperate buffer if the agent uses heuristic decision instead of directly from the model
                     dataBufferHeuristic.AddData(dataToAdd.ToArray());
@@ -261,7 +262,7 @@ public class TrainerPPO : Trainer
         {
             var agentDecision = agent.GetComponent<AgentDependentDecision>();
 
-            if (agentDecision != null && agentDecision.useDecision)
+            if (agentDecision != null && agentDecision.useDecision && dataBufferHeuristic != null)
             {
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];
@@ -351,37 +352,41 @@ public class TrainerPPO : Trainer
             }
 
             //training from the heuristic data buffer
-            var samplesHeuristic = dataBufferHeuristic.SampleBatchesReordered(parameters.batchSize, parameters.extraBatchTFromHeuristicBuffer, fetches.ToArray());
-            var vectorObsArrayHeuristic = samplesHeuristic.TryGetOr("VectorObservation", null);
-            float[,] vectorObservationsHeuristic = vectorObsArrayHeuristic == null ? null : vectorObsArrayHeuristic as float[,];
-            float[,] actionsHeuristic = (float[,])samplesHeuristic["Action"];
-            float[,] actionProbsHeuristic = (float[,])samplesHeuristic["ActionProb"];
-            float[,] targetValuesHeuristic = (float[,])samplesHeuristic["TargetValue"];
-            float[,] advantagesHeuristic = (float[,])samplesHeuristic["Advantage"];
-
-
-            List<float[,,,]> visualObservationsHeuristic = null;
-            for (int j = 0; j < BrainToTrain.brainParameters.cameraResolutions.Length; ++j)
+            int batchCountHeuristic = 0;
+            if (dataBufferHeuristic != null)
             {
-                if (j == 0)
-                    visualObservationsHeuristic = new List<float[,,,]>();
-                visualObservationsHeuristic.Add((float[,,,])samples["VisualObservation" + j]);
-            }
+                var samplesHeuristic = dataBufferHeuristic.SampleBatchesReordered(parameters.batchSize, parameters.extraBatchTFromHeuristicBuffer, fetches.ToArray());
+                var vectorObsArrayHeuristic = samplesHeuristic.TryGetOr("VectorObservation", null);
+                float[,] vectorObservationsHeuristic = vectorObsArrayHeuristic == null ? null : vectorObsArrayHeuristic as float[,];
+                float[,] actionsHeuristic = (float[,])samplesHeuristic["Action"];
+                float[,] actionProbsHeuristic = (float[,])samplesHeuristic["ActionProb"];
+                float[,] targetValuesHeuristic = (float[,])samplesHeuristic["TargetValue"];
+                float[,] advantagesHeuristic = (float[,])samplesHeuristic["Advantage"];
 
-            int batchCountHeuristic = Mathf.Min(parameters.extraBatchTFromHeuristicBuffer, targetValues.Length / parameters.batchSize);
-            for (int j = 0; j < batchCountHeuristic; ++j)
-            {
 
-                float[] losses = modelRef.TrainBatch(SubRows(vectorObservationsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                    SubRows(visualObservationsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                    SubRows(actionsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                    SubRows(actionProbsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                    SubRows(targetValuesHeuristic, j * parameters.batchSize, parameters.batchSize).Flatten(),
-                    SubRows(advantagesHeuristic, j * parameters.batchSize, parameters.batchSize).Flatten()
-                    );
-                tempLoss += losses[0];
-                tempValueLoss += losses[1];
-                tempPolicyLoss += losses[2];
+                List<float[,,,]> visualObservationsHeuristic = null;
+                for (int j = 0; j < BrainToTrain.brainParameters.cameraResolutions.Length; ++j)
+                {
+                    if (j == 0)
+                        visualObservationsHeuristic = new List<float[,,,]>();
+                    visualObservationsHeuristic.Add((float[,,,])samples["VisualObservation" + j]);
+                }
+
+                batchCountHeuristic = Mathf.Min(parameters.extraBatchTFromHeuristicBuffer, targetValuesHeuristic.Length / parameters.batchSize);
+                for (int j = 0; j < batchCountHeuristic; ++j)
+                {
+
+                    float[] losses = modelRef.TrainBatch(SubRows(vectorObservationsHeuristic, j * parameters.batchSize, parameters.batchSize),
+                        SubRows(visualObservationsHeuristic, j * parameters.batchSize, parameters.batchSize),
+                        SubRows(actionsHeuristic, j * parameters.batchSize, parameters.batchSize),
+                        SubRows(actionProbsHeuristic, j * parameters.batchSize, parameters.batchSize),
+                        SubRows(targetValuesHeuristic, j * parameters.batchSize, parameters.batchSize).Flatten(),
+                        SubRows(advantagesHeuristic, j * parameters.batchSize, parameters.batchSize).Flatten()
+                        );
+                    tempLoss += losses[0];
+                    tempValueLoss += losses[1];
+                    tempPolicyLoss += losses[2];
+                }
             }
             loss += tempLoss / (batchCount+ batchCountHeuristic);
             policyLoss += tempPolicyLoss / (batchCount + batchCountHeuristic);
