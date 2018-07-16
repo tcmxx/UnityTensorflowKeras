@@ -10,9 +10,6 @@ using System.Linq;
 
 public class TrainerMimic : Trainer
 {
-
-    public AgentDependentDecision decisionToMimicRef;
-
     public SupervisedLearningModel modelRef;
     public TrainerParamsMimic parameters;
 
@@ -34,21 +31,25 @@ public class TrainerMimic : Trainer
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
         {
-            var agentNewInfo = newInfo[agent];
-
-            List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
-            dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionOutput[agent].outputAction));
-            if (currentInfo[agent].stackedVectorObservation.Count > 0)
-                dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", currentInfo[agent].stackedVectorObservation.ToArray()));
-
-            for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
+            var agentDecision = agent.GetComponent<AgentDependentDecision>();
+            //only add the data to databuffer if this agent uses decision
+            if (agentDecision != null && agentDecision.useDecision)
             {
-                var res = BrainToTrain.brainParameters.cameraResolutions[i];
-                Array arrayToAdd = TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
-                dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
-            }
-            dataBuffer.AddData(dataToAdd.ToArray());
+                var agentNewInfo = newInfo[agent];
 
+                List<ValueTuple<string, Array>> dataToAdd = new List<ValueTuple<string, Array>>();
+                dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionOutput[agent].outputAction));
+                if (currentInfo[agent].stackedVectorObservation.Count > 0)
+                    dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", currentInfo[agent].stackedVectorObservation.ToArray()));
+
+                for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
+                {
+                    var res = BrainToTrain.brainParameters.cameraResolutions[i];
+                    Array arrayToAdd = TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
+                    dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
+                }
+                dataBuffer.AddData(dataToAdd.ToArray());
+            }
         }
     }
 
@@ -111,7 +112,7 @@ public class TrainerMimic : Trainer
 
     public override bool IsReadyUpdate()
     {
-        return parameters.batchSize <= dataBuffer.CurrentCount;
+        return parameters.requiredDataBeforeTraining <= dataBuffer.CurrentCount;
     }
 
     public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
@@ -134,37 +135,43 @@ public class TrainerMimic : Trainer
         var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
         float[,] actions = null;
-        bool useHeuristic = UnityEngine.Random.Range(0, 1.0f) < parameters.chanceOfUsingheuristicForOptimization ? true : false;
-        if (useHeuristic)
-            actions = modelRef.EvaluateAction(vectorObsAll, visualObsAll);
-        else
-            actions = new float[agentList.Count, BrainToTrain.brainParameters.vectorActionSize];
+        actions = modelRef.EvaluateAction(vectorObsAll, visualObsAll);
 
         int i = 0;
-
+        int agentNumWithDecision = 0;
         float actionDiff = 0;   //difference between decision and from networknetwork
 
         foreach (var agent in agentList)
         {
             var info = agentInfos[agent];
+            var agentDecision = agent.GetComponent<AgentDependentDecision>();
 
-            var action = decisionToMimicRef.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
-
-            var tempAction = new TakeActionOutput();
-            tempAction.outputAction = action;
-            result[agent] = tempAction;
-
-
-            if (useHeuristic)
+            if (agentDecision != null && agentDecision.useDecision)
             {
-                actionDiff += Enumerable.Zip(action, actions.GetRow(i), (a, b) => Mathf.Sqrt((a - b)* (a - b))).Aggregate((a,v)=>a+v);
+                //if this agent will use the decision, use it
+                var action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
+                var tempAction = new TakeActionOutput();
+                tempAction.outputAction = action;
+                result[agent] = tempAction;
+                if(BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
+                    actionDiff += Enumerable.Zip(action, actions.GetRow(i), (a, b) => Mathf.Sqrt((a - b) * (a - b))).Aggregate((a, v) => a + v);
+                else
+                    actionDiff += Enumerable.Zip(action, actions.GetRow(i), (a, b) => (Mathf.RoundToInt(a) == Mathf.RoundToInt(b))?0:1).Aggregate((a, v) => a + v);
+                agentNumWithDecision++;
+            }
+            else
+            {
+                //use result from neural network directly
+                var tempAction = new TakeActionOutput();
+                tempAction.outputAction = actions.GetRow(i);
+                result[agent] = tempAction;
             }
             i++;
         }
 
-        if (useHeuristic)
+        if (agentNumWithDecision > 0)
         {
-            stats.AddData("action difference", actionDiff/ i);
+            stats.AddData("action difference", actionDiff/ agentNumWithDecision,parameters.actionDiffLogInterval);
         }
 
         return result;

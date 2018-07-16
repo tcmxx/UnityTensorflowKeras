@@ -151,7 +151,7 @@ public class DataBuffer : ISerializable
     }
 
     /// <summary>
-    /// get samples form the buffer
+    /// get samples form the buffer. Might have repeated data.
     /// </summary>
     /// <param name="numOfSamples"></param>
     /// <param name="fetchAndOffset">tuple of <key of data to sample, sample index offset, returned dictionary key></param>
@@ -225,14 +225,24 @@ public class DataBuffer : ISerializable
 
 
 
-
     /// <summary>
-    /// sample as many batches as possible with data reordered
+    /// sample as many batches as possible with data reordered. No repeated data.
     /// </summary>
     /// <param name="batchSize"></param>
     /// <param name="fetchAndOffset"></param>
     /// <returns></returns>
-    public Dictionary<string, Array> SampleBatchesReordered(int batchSize, params ValueTuple<string, int, string>[] fetchAndOffset)
+    public Dictionary<string, Array> SampleBatchesReordered(int batchSize,  params ValueTuple<string, int, string>[] fetchAndOffset)
+    {
+        return SampleBatchesReordered(batchSize, -1, fetchAndOffset);
+    }
+    /// <summary>
+    /// sample as many batches as maxBatchesCount with data reordered. No repeated data.
+    /// </summary>
+    /// <param name="batchSize"></param>
+    /// /// <param name="maxBatchesCount">max number of batches to sample. if it is less than one, it will try to get as many as possible</param>
+    /// <param name="fetchAndOffset"></param>
+    /// <returns></returns>
+    public Dictionary<string, Array> SampleBatchesReordered(int batchSize, int maxBatchesCount = -1, params ValueTuple<string, int, string>[] fetchAndOffset)
     {
         Debug.Assert(batchSize <= CurrentCount, "Not enough data to sample");
 
@@ -256,7 +266,8 @@ public class DataBuffer : ISerializable
             result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), (new int[] { numToSample }).Concat(dataset[d.Item1].info.dimension).ToArray());
         }
 
-
+        if (maxBatchesCount > 0)
+            numToSample = Mathf.Min(numToSample, maxBatchesCount);
         for (int i = 0; i < numToSample; ++i)
         {
             int sampleInd = indices[i];

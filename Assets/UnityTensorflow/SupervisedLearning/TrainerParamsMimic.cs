@@ -17,13 +17,12 @@ public class TrainerParamsMimic : ScriptableObject
     public int numIterationPerTrain = 1;
     public float learningRate = 0.001f;
 
+    public int requiredDataBeforeTraining = 1000;
     public int maxBufferSize = 10000;
-
-    [Range(0,1)]
-    public float chanceOfUsingheuristicForOptimization = 1;
+    
     [Header("Log related")]
     public int lossLogInterval = 1;
-    public int rewardLogInterval = 10;
+    public int actionDiffLogInterval = 100;
     public int saveModelInterval = 10000;
     /// Displays the parameters of the CoreBrainInternal in the Inspector 
     public void OnInspector()

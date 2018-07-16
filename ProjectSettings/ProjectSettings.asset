@@ -597,7 +597,8 @@ PlayerSettings:
     1: ENABLE_TENSORFLOW
     7: ENABLE_TENSORFLOW
   platformArchitecture: {}
-  scriptingBackend: {}
+  scriptingBackend:
+    Standalone: 0
   il2cppCompilerConfiguration: {}
   incrementalIl2cppBuild: {}
   allowUnsafeCode: 0

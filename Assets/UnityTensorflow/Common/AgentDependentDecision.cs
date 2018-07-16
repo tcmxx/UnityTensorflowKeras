@@ -5,6 +5,14 @@ using MLAgents;
 
 public abstract class AgentDependentDecision : MonoBehaviour
 {
+
+    public bool useDecision = true;
+
+    private void Awake()
+    {
+        var agent = GetComponent<Agent>();
+        Debug.Assert(agent != null, "Please attach the decision to the Agent you want to make decision on!");
+    }
     /// <summary>
     /// 
     /// </summary>
@@ -14,5 +22,5 @@ public abstract class AgentDependentDecision : MonoBehaviour
     /// <param name="heuristicAction"></param>
     /// <param name="isTraining"></param>
     /// <returns></returns>
-   public  abstract float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction);
+    public  abstract float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction);
 }

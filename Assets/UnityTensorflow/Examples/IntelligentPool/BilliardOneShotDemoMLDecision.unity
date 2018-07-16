@@ -214,69 +214,6 @@ MonoBehaviour:
   ActionPlaceholderName: action
   PreviousActionPlaceholderName: prev_action
   brain: {fileID: 0}
---- !u!1 &560737956
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 560737957}
-  - component: {fileID: 560737959}
-  - component: {fileID: 560737958}
-  m_Layer: 0
-  m_Name: MEASDecision
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &560737957
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 560737956}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1415431051}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &560737958
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 560737956}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c67feb94ae2e414d949fac368cf694f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  doOptimize: 1
-  useMAESParamsFromAgent: 1
---- !u!114 &560737959
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 560737956}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a7d1d4617c19074448560370226ed445, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  iterationPerUpdate: 1
-  populationSize: 16
-  optimizerType: 0
-  initialStepSize: 1
-  mode: 1
-  maxIteration: 10
-  targetValue: 8
-  evaluationBatchSize: 8
-  iteration: 0
 --- !u!1001 &644482134
 Prefab:
   m_ObjectHideFlags: 0
@@ -423,7 +360,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1415431051}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &791075477
 MonoBehaviour:
@@ -437,6 +374,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   network: {fileID: 11400000, guid: 6d9a02d5cb79c714f9257f03428caa9f, type: 2}
+  trainingEnabled: 0
 --- !u!1 &824392021
 GameObject:
   m_ObjectHideFlags: 0
@@ -526,9 +464,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccef2861e2c92c5429d18b9c7891ea23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  academyRef: {fileID: 1415431052}
   isTraining: 1
-  decisionToMimicRef: {fileID: 560737958}
   modelRef: {fileID: 791075477}
   parameters: {fileID: 11400000, guid: 2891adc9117296a4faec323f41fa9afb, type: 2}
   steps: 0
@@ -755,55 +691,50 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalPosition.x
       value: 3.2960463
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalPosition.y
       value: -2.6526384
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalPosition.z
       value: -7.585304
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+    - target: {fileID: 4123423695662692, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
       propertyPath: m_RootOrder
       value: 3
       objectReference: {fileID: 0}
-    - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
+    - target: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
         type: 2}
       propertyPath: brain
       value: 
       objectReference: {fileID: 1327012119}
-    - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
+    - target: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
         type: 2}
-      propertyPath: autoRequestDecision
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
-        type: 2}
-      propertyPath: initialStepSize
-      value: 0.3
+      propertyPath: agentParameters.resetOnDone
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
+  m_ParentPrefab: {fileID: 100100000, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
   m_IsPrefabParent: 0
 --- !u!1 &1415431050
 GameObject:
@@ -833,7 +764,6 @@ Transform:
   m_Children:
   - {fileID: 1327012120}
   - {fileID: 949524765}
-  - {fileID: 560737957}
   - {fileID: 791075476}
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -883,7 +813,7 @@ MonoBehaviour:
   brain: {fileID: 0}
 --- !u!114 &1914681085 stripped
 MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
+  m_PrefabParentObject: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
     type: 2}
   m_PrefabInternal: {fileID: 1363941755}
   m_Script: {fileID: 11500000, guid: ed914abdae7f7844781da0b49bebd1c9, type: 3}

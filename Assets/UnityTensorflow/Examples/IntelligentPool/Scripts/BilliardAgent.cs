@@ -48,13 +48,14 @@ public class BilliardAgent : AgentES
 
     private void FixedUpdate()
     {
+        bool doReset = false;
         if (gameSystem.GameComplete())
         {
             gameSystem.Reset(randomizeRedballs);
-            Done();
+            doReset = true;
         }
 
-        if(autoRequestDecision && gameSystem.AllShotsComplete())
+        if(autoRequestDecision && gameSystem.AllShotsComplete() && !doReset)
         {
             AddReward(gameSystem.defaultArena.ActualScore);
             RequestDecision();

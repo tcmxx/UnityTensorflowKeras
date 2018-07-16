@@ -41,6 +41,7 @@ public abstract class AgentES : Agent, IESOptimizable
 
     /// <summary>
     /// Don't override this method, implement OnActionReady() instead.
+    /// Set callOnReadyInAgentAction if you want this agent to react when calling AgentAction
     /// </summary>
     /// <param name="vectorAction"></param>
     /// <param name="textAction"></param>

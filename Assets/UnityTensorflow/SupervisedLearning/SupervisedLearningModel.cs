@@ -83,7 +83,8 @@ public class SupervisedLearningModel : MonoBehaviour
             if (ActionSpace == SpaceType.discrete)
             {
                 Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                loss = K.mean(K.categorical_crossentropy(actionOnehot, outputAction, false));
+                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSize });
+                loss = K.mean(K.categorical_crossentropy(reshapedOnehot, outputAction, false));
             }
             else
             {
@@ -112,8 +113,8 @@ public class SupervisedLearningModel : MonoBehaviour
         }
         
         //test
-        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        //((UnityTFBackend)K).ExportGraphDef("SavedGraph/SuperviseTest.pb");
+        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/SuperviseTest.pb");
 
         K.try_initialize_variables();
         Initialized = true;

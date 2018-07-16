@@ -20,6 +20,8 @@ MonoBehaviour:
   batchSize: 256
   bufferSizeForTrain: 8192
   numEpochPerTrain: 10
+  heuristicBufferSize: 100000
+  extraBatchTFromHeuristicBuffer: 5
   learningRate: 0.01
   lossLogInterval: 1
   rewardLogInterval: 50

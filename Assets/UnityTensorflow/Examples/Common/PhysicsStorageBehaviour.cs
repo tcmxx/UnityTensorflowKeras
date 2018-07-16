@@ -4,10 +4,6 @@ using UnityEngine;
 
 public class PhysicsStorageBehaviour : MonoBehaviour {
 
-
-
-
-
     public class RigidbodyState
     {
         public Rigidbody b;
