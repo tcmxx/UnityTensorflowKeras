@@ -17,12 +17,7 @@ public class TrainerPPO : Trainer
     protected DataBuffer dataBuffer;
     protected DataBuffer dataBufferHeuristic;
     public int DataCountStored { get { return dataBuffer.CurrentCount; } }
-
-    [ReadOnly]
-    [SerializeField]
-    protected int steps = 0;
-    public int Steps { get { return steps; } protected set { steps = value; } }
-
+    
     protected Dictionary<Agent, List<float>> statesEpisodeHistory = null;
     protected Dictionary<Agent, List<float>> rewardsEpisodeHistory = null;
     protected Dictionary<Agent, List<float>> actionsEpisodeHistory = null;
@@ -34,8 +29,7 @@ public class TrainerPPO : Trainer
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
     
-    public bool continueFromCheckpoint = true;
-    public string checkpointPath = @"Assets\testcheckpoint.bytes";
+    
 
     protected RLModelPPO modelPPO;
 
@@ -150,22 +144,13 @@ public class TrainerPPO : Trainer
 
     }
 
-    public override int GetMaxStep()
-    {
-        return parametersPPO.maxTotalSteps;
-    }
 
-    public override int GetStep()
-    {
-        return Steps;
-    }
 
     public override void IncrementStep()
     {
-        Steps++;
-        if(Steps% parametersPPO.saveModelInterval == 0)
+        base.IncrementStep();
+        if(GetStep() % parametersPPO.saveModelInterval == 0)
         {
-            SaveModel();
             SaveHeuristicData();
         }
     }
@@ -431,29 +416,6 @@ public class TrainerPPO : Trainer
         return result;
     }
 
-    public void SaveModel()
-    {
-        var data = modelRef.SaveCheckpoint();
-        var fullPath = Path.GetFullPath(checkpointPath);
-        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-        File.WriteAllBytes(fullPath, data);
-        Debug.Log("Saved Checkpoint to " + fullPath);
-    }
-    public void LoadModel()
-    {
-        string fullPath = Path.GetFullPath(checkpointPath);
-        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-        if (!File.Exists(fullPath))
-        {
-            Debug.Log("Checkpoint Not exist at: " + fullPath);
-            return;
-        }
-        var bytes = File.ReadAllBytes(fullPath);
-        modelRef.RestoreCheckpoint(bytes);
-        Debug.Log("Loaded from Checkpoint " + fullPath);
-    }
 
 
     public void SaveHeuristicData()

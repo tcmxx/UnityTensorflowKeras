@@ -8,7 +8,6 @@ public class TrainerParamsPPO : TrainerParams
 {
 
     [Header("Learning related")]
-    public int maxTotalSteps = 100000000;
 
     public float rewardDiscountFactor = 0.99f;
     public float rewardGAEFactor = 0.95f;
@@ -27,8 +26,7 @@ public class TrainerParamsPPO : TrainerParams
     public int extraBatchTFromHeuristicBuffer = 0;
     
     [Header("Log related")]
-    public int lossLogInterval = 1;
+    
     public int rewardLogInterval = 10;
-    public int saveModelInterval = 10000;
 
 }

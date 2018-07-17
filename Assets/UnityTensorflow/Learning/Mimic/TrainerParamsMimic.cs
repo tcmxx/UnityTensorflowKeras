@@ -11,7 +11,6 @@ public class TrainerParamsMimic : TrainerParams
 {
 
     [Header("Learning related")]
-    public int maxTotalSteps = 100000000;
     
     public int batchSize = 32;
     public int numIterationPerTrain = 1;
@@ -20,7 +19,5 @@ public class TrainerParamsMimic : TrainerParams
     public int maxBufferSize = 10000;
     
     [Header("Log related")]
-    public int lossLogInterval = 1;
     public int actionDiffLogInterval = 100;
-    public int saveModelInterval = 10000;
 }

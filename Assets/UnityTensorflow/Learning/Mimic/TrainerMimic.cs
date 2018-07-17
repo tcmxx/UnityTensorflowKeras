@@ -17,13 +17,7 @@ public class TrainerMimic : Trainer
 
     protected DataBuffer dataBuffer;
 
-    [ReadOnly]
-    [SerializeField]
-    private int steps = 0;
-    public int Steps { get { return steps; } protected set { steps = value; } }
 
-    public bool continueFromCheckpoint = true;
-    public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
     protected SupervisedLearningModel modelSL;
 
@@ -96,22 +90,11 @@ public class TrainerMimic : Trainer
         }
     }
 
-    public override int GetMaxStep()
-    {
-        return parametersMimic.maxTotalSteps;
-    }
-
-    public override int GetStep()
-    {
-        return Steps;
-    }
-
     public override void IncrementStep()
     {
-        Steps++;
-        if (Steps % parametersMimic.saveModelInterval == 0)
+        base.IncrementStep();
+        if (GetStep() % parametersMimic.saveModelInterval == 0)
         {
-            SaveModel();
             SaveTrainingData();
         }
     }
@@ -222,29 +205,7 @@ public class TrainerMimic : Trainer
 
 
 
-    public void SaveModel()
-    {
-        var data = modelRef.SaveCheckpoint();
-        var fullPath = Path.GetFullPath(checkpointPath);
-        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-        File.WriteAllBytes(fullPath, data);
-        Debug.Log("Saved model checkpoint to " + fullPath);
-    }
-    public void LoadModel()
-    {
-        string fullPath = Path.GetFullPath(checkpointPath);
-        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-        if (!File.Exists(fullPath))
-        {
-            Debug.Log("Model checkpoint not exist at: " + fullPath);
-            return;
-        }
-        var bytes = File.ReadAllBytes(fullPath);
-        modelRef.RestoreCheckpoint(bytes);
-        Debug.Log("Model loaded  from checkpoint " + fullPath);
-    }
+
 
     public void SaveTrainingData()
     {

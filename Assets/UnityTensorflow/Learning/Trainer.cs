@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Accord.Math;
 using MLAgents;
+using System.IO;
 
 public struct TakeActionOutput
 {
@@ -33,6 +34,14 @@ public abstract class Trainer : MonoBehaviour
     protected bool prevIsTraining;
 
     public TrainerParams parameters;
+    public bool continueFromCheckpoint = true;
+    public string checkpointPath = @"Assets\testcheckpoint.bytes";
+
+    [ReadOnly]
+    [SerializeField]
+    private int steps = 0;
+
+
     public Brain BrainToTrain { get; private set; }
 
     private void Start()
@@ -70,18 +79,54 @@ public abstract class Trainer : MonoBehaviour
 
     public abstract void Initialize();
 
-    public abstract int GetStep();
-    public abstract int GetMaxStep();
+    public virtual int GetMaxStep()
+    {
+        return parameters.maxTotalSteps;
+    }
 
+    public virtual int GetStep()
+    {
+        return steps;
+    }
+    public virtual void IncrementStep()
+    {
+        steps++;
+        if (steps % parameters.saveModelInterval == 0)
+        {
+            SaveModel();
+        }
+    }
     public abstract Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
     public abstract void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput);
     public abstract void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
     public abstract bool IsReadyUpdate();
     public abstract void UpdateModel();
-    public abstract void IncrementStep();
 
 
 
+    public void SaveModel()
+    {
+        var data = modelRef.SaveCheckpoint();
+        var fullPath = Path.GetFullPath(checkpointPath);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        File.WriteAllBytes(fullPath, data);
+        Debug.Log("Saved model checkpoint to " + fullPath);
+    }
+    public void LoadModel()
+    {
+        string fullPath = Path.GetFullPath(checkpointPath);
+        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
+        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        if (!File.Exists(fullPath))
+        {
+            Debug.Log("Model checkpoint not exist at: " + fullPath);
+            return;
+        }
+        var bytes = File.ReadAllBytes(fullPath);
+        modelRef.RestoreCheckpoint(bytes);
+        Debug.Log("Model loaded  from checkpoint " + fullPath);
+    }
 
 
     public static float[,,] TextureToArray(Texture2D tex, bool blackAndWhite)
@@ -105,23 +150,12 @@ public abstract class Trainer : MonoBehaviour
                 Color32 currentPixel = cc[(height - h - 1) * width + w];
                 if (!blackAndWhite)
                 {
-                    // For Color32, the r, g and b values are between
-                    // 0 and 255.
-                    /*result[height - h - 1, w, 0] =
-                        currentPixel.r / 255.0f;
-                    result[height - h - 1, w, 1] =
-                        currentPixel.g / 255.0f;
-                    result[height - h - 1, w, 2] =
-                        currentPixel.b / 255.0f;*/
                     resultTemp[h * wp + w * pixels] = currentPixel.r / 255.0f;
                     resultTemp[h * wp + w * pixels + 1] = currentPixel.g / 255.0f;
                     resultTemp[h * wp + w * pixels + 2] = currentPixel.b / 255.0f;
                 }
                 else
                 {
-                    /*result[tex.height - h - 1, w, 0] =
-                        (currentPixel.r + currentPixel.g + currentPixel.b)
-                        / 3;*/
                     resultTemp[h * wp + w * pixels] =
                     (currentPixel.r + currentPixel.g + currentPixel.b)
                     / 3;
