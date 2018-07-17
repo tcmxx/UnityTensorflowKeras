@@ -10,10 +10,9 @@ using System.Linq;
 
 public class TrainerMimic : Trainer
 {
-    public SupervisedLearningModel modelRef;
-    public TrainerParamsMimic parameters;
+    protected TrainerParamsMimic parametersMimic;
 
-    public Brain BrainToTrain { get; private set; }
+    
     StatsLogger stats;
 
     protected DataBuffer dataBuffer;
@@ -25,6 +24,50 @@ public class TrainerMimic : Trainer
 
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";
+
+    protected SupervisedLearningModel modelSL;
+
+
+    public override void Initialize()
+    {
+        modelSL = modelRef as SupervisedLearningModel;
+        Debug.Assert(modelSL != null, "Please assign a SupervisedLearningModel to modelRef");
+
+        parametersMimic = parameters as TrainerParamsMimic;
+        Debug.Assert(parametersMimic != null, "Please Specify PPO Trainer Parameters");
+        stats = new StatsLogger();
+        modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);
+
+        var brainParameters = BrainToTrain.brainParameters;
+
+        //intialize data buffer
+        List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 })
+        };
+
+        if (brainParameters.vectorObservationSize > 0)
+            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] { brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations }));
+
+        for (int i = 0; i < brainParameters.cameraResolutions.Length; ++i)
+        {
+            int width = brainParameters.cameraResolutions[i].width;
+            int height = brainParameters.cameraResolutions[i].height;
+            int channels;
+            if (brainParameters.cameraResolutions[i].blackAndWhite)
+                channels = 1;
+            else
+                channels = 3;
+
+            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, width, channels }));
+        }
+        dataBuffer = new DataBuffer(parametersMimic.maxBufferSize, allBufferData.ToArray());
+
+        if (continueFromCheckpoint)
+        {
+            LoadModel();
+            LoadTrainingData();
+        }
+    }
 
     public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput)
     {
@@ -55,7 +98,7 @@ public class TrainerMimic : Trainer
 
     public override int GetMaxStep()
     {
-        return parameters.maxTotalSteps;
+        return parametersMimic.maxTotalSteps;
     }
 
     public override int GetStep()
@@ -66,53 +109,18 @@ public class TrainerMimic : Trainer
     public override void IncrementStep()
     {
         Steps++;
-        if (Steps % parameters.saveModelInterval == 0)
+        if (Steps % parametersMimic.saveModelInterval == 0)
         {
             SaveModel();
             SaveTrainingData();
         }
     }
 
-    public override void Initialize()
-    {
-        stats = new StatsLogger();
 
-        modelRef.Initialize(BrainToTrain.brainParameters,isTraining);
-
-        var brainParameters = BrainToTrain.brainParameters;
-
-        //intialize data buffer
-        List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
-            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 })
-        };
-
-        if (brainParameters.vectorObservationSize > 0)
-            allBufferData.Add(new DataBuffer.DataInfo("VectorObservation", typeof(float), new int[] {brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations  }));
-
-        for (int i = 0; i < brainParameters.cameraResolutions.Length; ++i)
-        {
-            int width = brainParameters.cameraResolutions[i].width;
-            int height = brainParameters.cameraResolutions[i].height;
-            int channels;
-            if (brainParameters.cameraResolutions[i].blackAndWhite)
-                channels = 1;
-            else
-                channels = 3;
-
-            allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, width, channels }));
-        }
-        dataBuffer = new DataBuffer(parameters.maxBufferSize, allBufferData.ToArray());
-
-        if (continueFromCheckpoint)
-        {
-            LoadModel();
-            LoadTrainingData();
-        }
-    }
 
     public override bool IsReadyUpdate()
     {
-        return parameters.requiredDataBeforeTraining <= dataBuffer.CurrentCount;
+        return parametersMimic.requiredDataBeforeTraining <= dataBuffer.CurrentCount;
     }
 
     public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
@@ -120,10 +128,7 @@ public class TrainerMimic : Trainer
         return;
     }
 
-    public override void SetBrain(Brain brain)
-    {
-        this.BrainToTrain = brain;
-    }
+
 
     public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
@@ -135,7 +140,7 @@ public class TrainerMimic : Trainer
         var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
         float[,] actions = null;
-        actions = modelRef.EvaluateAction(vectorObsAll, visualObsAll);
+        actions = modelSL.EvaluateAction(vectorObsAll, visualObsAll);
 
         int i = 0;
         int agentNumWithDecision = 0;
@@ -171,7 +176,7 @@ public class TrainerMimic : Trainer
 
         if (agentNumWithDecision > 0)
         {
-            stats.AddData("action difference", actionDiff/ agentNumWithDecision,parameters.actionDiffLogInterval);
+            stats.AddData("action difference", actionDiff/ agentNumWithDecision, parametersMimic.actionDiffLogInterval);
         }
 
         return result;
@@ -190,9 +195,9 @@ public class TrainerMimic : Trainer
 
 
         float loss = 0;
-        for (int i = 0; i < parameters.numIterationPerTrain; ++i)
+        for (int i = 0; i < parametersMimic.numIterationPerTrain; ++i)
         {
-            var samples = dataBuffer.RandomSample(parameters.batchSize, fetches.ToArray());
+            var samples = dataBuffer.RandomSample(parametersMimic.batchSize, fetches.ToArray());
 
             var vectorObsArray = samples.TryGetOr("VectorObservation", null);
             float[,] vectorObservations = vectorObsArray == null ? null : vectorObsArray as float[,];
@@ -208,11 +213,11 @@ public class TrainerMimic : Trainer
             //int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
             //int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
-            float temoLoss = modelRef.TrainBatch(vectorObservations, visualObservations, actions);
+            float temoLoss = modelSL.TrainBatch(vectorObservations, visualObservations, actions);
             loss += temoLoss;
         }
 
-        stats.AddData("loss", loss / parameters.numIterationPerTrain, parameters.lossLogInterval);
+        stats.AddData("loss", loss / parametersMimic.numIterationPerTrain, parametersMimic.lossLogInterval);
     }
 
 

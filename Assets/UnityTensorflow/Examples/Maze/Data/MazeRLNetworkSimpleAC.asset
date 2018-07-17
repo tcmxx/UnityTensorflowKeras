@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Name: MazeRLNetworkSimpleAC
   m_EditorClassIdentifier: 
   actorNNHidden: 1
-  actorNNWidth: 64
+  actorNNWidth: 32
   criticNNHidden: 1
-  criticNNWidth: 64
+  criticNNWidth: 32
   hiddenWeightsInitialScale: 1
   outputWeightsInitialScale: 0.01

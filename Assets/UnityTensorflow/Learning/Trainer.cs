@@ -28,8 +28,12 @@ public abstract class Trainer : MonoBehaviour
 {
 
     protected Academy academyRef;
+    public LearningModelBase modelRef;
     public bool isTraining;
     protected bool prevIsTraining;
+
+    public TrainerParams parameters;
+    public Brain BrainToTrain { get; private set; }
 
     private void Start()
     {
@@ -50,13 +54,20 @@ public abstract class Trainer : MonoBehaviour
 
     protected virtual void FixedUpdate()
     {
+        if (isTraining)
+            modelRef.SetLearningRate(parameters.learningRate);
+
         if (IsReadyUpdate() && isTraining && GetStep() <= GetMaxStep())
         {
             UpdateModel();
         }
     }
 
-    public abstract void SetBrain(Brain brain);
+    public virtual void SetBrain(Brain brain)
+    {
+        this.BrainToTrain = brain;
+    }
+
     public abstract void Initialize();
 
     public abstract int GetStep();

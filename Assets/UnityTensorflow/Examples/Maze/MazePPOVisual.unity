@@ -113,29 +113,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &117982828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  graphModel: {fileID: 0}
-  graphScope: 
-  graphPlaceholders: []
-  BatchSizePlaceholderName: batch_size
-  VectorObservationPlacholderName: vector_observation
-  RecurrentInPlaceholderName: recurrent_in
-  RecurrentOutPlaceholderName: recurrent_out
-  VisualObservationPlaceholderName: []
-  ActionPlaceholderName: action
-  PreviousActionPlaceholderName: prev_action
-  brain: {fileID: 0}
 --- !u!1 &240015114
 GameObject:
   m_ObjectHideFlags: 0
@@ -234,9 +211,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80885700eae055d47977cc84fd00de74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  network: {fileID: 11400000, guid: 5bc335624be75ec4a9a8a532b93b9b27, type: 2}
-  trainingEnabled: 0
   checkpointTOLoad: {fileID: 0}
+  trainingEnabled: 0
+  network: {fileID: 11400000, guid: 5bc335624be75ec4a9a8a532b93b9b27, type: 2}
 --- !u!1001 &576378302
 Prefab:
   m_ObjectHideFlags: 0
@@ -283,11 +260,31 @@ Prefab:
       objectReference: {fileID: 1109835115}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
-      value: MazeAgent (3)
+      value: MazeAgentVisual (3)
       objectReference: {fileID: 0}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: randomWallChance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: goToWallReward
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: goCloserReward
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: stepCostReward
+      value: -0.8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
@@ -338,12 +335,32 @@ Prefab:
       objectReference: {fileID: 1109835115}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
-      value: MazeAgent
+      value: MazeAgentVisual
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: randomWallChance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: goToWallReward
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: goCloserReward
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: stepCostReward
+      value: -0.8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &720738641
+--- !u!114 &748601462
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -351,9 +368,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
+  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
+  broadcast: 1
   brain: {fileID: 0}
 --- !u!1 &762086410
 GameObject:
@@ -420,6 +438,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &870622299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  brain: {fileID: 0}
 --- !u!1 &1109835113
 GameObject:
   m_ObjectHideFlags: 0
@@ -476,13 +506,13 @@ MonoBehaviour:
     vectorActionSpaceType: 0
   brainType: 4
   CoreBrains:
-  - {fileID: 1430395477}
-  - {fileID: 1843396433}
-  - {fileID: 720738641}
-  - {fileID: 117982828}
-  - {fileID: 1850400242}
-  instanceID: 20614
---- !u!114 &1430395477
+  - {fileID: 2032286682}
+  - {fileID: 748601462}
+  - {fileID: 870622299}
+  - {fileID: 1833399458}
+  - {fileID: 1406191416}
+  instanceID: 13660
+--- !u!114 &1406191416
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -490,15 +520,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
+  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
-  broadcast: 1
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions: []
-  defaultAction: 0
   brain: {fileID: 1109835115}
+  trainer: {fileID: 2104784860}
 --- !u!1 &1577744296
 GameObject:
   m_ObjectHideFlags: 0
@@ -607,11 +633,7 @@ Prefab:
       objectReference: {fileID: 1109835115}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
-      value: MazeAgent (1)
-      objectReference: {fileID: 0}
-    - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
-      propertyPath: m_IsActive
-      value: 1
+      value: MazeAgentVisual (1)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
@@ -743,16 +765,36 @@ Prefab:
       objectReference: {fileID: 1109835115}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
-      value: MazeAgent (2)
+      value: MazeAgentVisual (2)
       objectReference: {fileID: 0}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: randomWallChance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: goToWallReward
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: goCloserReward
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114244163408449322, guid: 156daa748550a414fabe3af09c5e5b89,
+        type: 2}
+      propertyPath: stepCostReward
+      value: -0.8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &1843396433
+--- !u!114 &1833399458
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -760,12 +802,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
+  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   broadcast: 1
+  graphModel: {fileID: 0}
+  graphScope: 
+  graphPlaceholders: []
+  BatchSizePlaceholderName: batch_size
+  VectorObservationPlacholderName: vector_observation
+  RecurrentInPlaceholderName: recurrent_in
+  RecurrentOutPlaceholderName: recurrent_out
+  VisualObservationPlaceholderName: []
+  ActionPlaceholderName: action
+  PreviousActionPlaceholderName: prev_action
   brain: {fileID: 0}
---- !u!114 &1850400242
+--- !u!114 &2032286682
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -773,11 +825,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
+  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
+  broadcast: 1
+  keyContinuousPlayerActions: []
+  axisContinuousPlayerActions: []
+  discretePlayerActions: []
+  defaultAction: 0
   brain: {fileID: 1109835115}
-  trainer: {fileID: 2104784860}
 --- !u!1 &2104784858
 GameObject:
   m_ObjectHideFlags: 0
@@ -787,6 +843,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2104784859}
   - component: {fileID: 2104784860}
+  - component: {fileID: 2104784861}
   m_Layer: 0
   m_Name: Trainer
   m_TagString: Untagged
@@ -818,9 +875,71 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d491f9276717f244b7c13d65e0cb335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isTraining: 1
   modelRef: {fileID: 383050329}
+  isTraining: 0
   parameters: {fileID: 11400000, guid: 2abb9a36292a32e4c8e7d2ec9e3d65b3, type: 2}
   steps: 0
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\Maze\Data\MazeCheckpointVisualObsPPO.bytes
+--- !u!114 &2104784861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2104784858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20d7a4d101811ac428e6ca8ec503cfcc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  overrides:
+  - name: learningRate
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: -3.0792127
+        outSlope: -3.0792127
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.044036698
+      - serializedVersion: 3
+        time: 1
+        value: 0.013587952
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+  - name: entropyLossWeight
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: -2.974347
+        outSlope: -2.974347
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.034862384
+      - serializedVersion: 3
+        time: 1
+        value: 0.013587952
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0

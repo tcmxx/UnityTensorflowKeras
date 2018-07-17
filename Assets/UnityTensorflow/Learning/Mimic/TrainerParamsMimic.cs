@@ -7,7 +7,7 @@ using UnityEditor;
 #endif
 
 [CreateAssetMenu()]
-public class TrainerParamsMimic : ScriptableObject
+public class TrainerParamsMimic : TrainerParams
 {
 
     [Header("Learning related")]
@@ -15,7 +15,6 @@ public class TrainerParamsMimic : ScriptableObject
     
     public int batchSize = 32;
     public int numIterationPerTrain = 1;
-    public float learningRate = 0.001f;
 
     public int requiredDataBeforeTraining = 1000;
     public int maxBufferSize = 10000;
@@ -24,11 +23,4 @@ public class TrainerParamsMimic : ScriptableObject
     public int lossLogInterval = 1;
     public int actionDiffLogInterval = 100;
     public int saveModelInterval = 10000;
-    /// Displays the parameters of the CoreBrainInternal in the Inspector 
-    public void OnInspector()
-    {
-#if UNITY_EDITOR
-        Editor.CreateEditor(this).OnInspectorGUI();
-#endif
-    }
 }

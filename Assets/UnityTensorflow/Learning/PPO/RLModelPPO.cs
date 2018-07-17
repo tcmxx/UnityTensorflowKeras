@@ -24,24 +24,17 @@ using KerasSharp.Initializers;
 using KerasSharp;
 using KerasSharp.Losses;
 
-public class RLModelPPO : MonoBehaviour
+public class RLModelPPO : LearningModelBase
 {
 
-    public int StateSize { get; private set; }
-    public int ActionSize { get; private set; }
-    public SpaceType ActionSpace { get; private set; }
 
     public Function ValueFunction { get; private set; }
-    public Function ActionFunction { get; private set; }
-    public Function UpdateFunction { get; private set; }
-
-    public Adam optimizer;
+    protected Function ActionFunction { get; set; }
+    protected Function UpdateFunction { get; set; }
 
     public RLNetworkAC network;
 
-    public bool HasVisualObservation { get; private set; }
-    public bool HasVectorObservation { get; private set; }
-    public bool HasRecurrent { get; private set; } = false;
+
     
     public float EntropyLossWeight { get; set; }
     public float ValueLossWeight { get; set; }
@@ -56,32 +49,17 @@ public class RLModelPPO : MonoBehaviour
     protected Tensor outputValue = null;
     protected Tensor inputStateTensor = null;
     protected List<Tensor> inputVisualTensors = null;
+    
 
-
-    public bool TrainingEnabled { get { return trainingEnabled; } protected set { trainingEnabled = value; } }
-    [SerializeField]
-    [ReadOnly]
-    public bool trainingEnabled = false;
-
-    public bool Initialized { get; protected set; } = false;
-    public TextAsset checkpointTOLoad = null;
     /// <summary>
     /// Initialize the model without training parts
     /// </summary>
     /// <param name="brainParameters"></param>
-    public virtual void Initialize(BrainParameters brainParameters)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
     {
-        Debug.Assert(Initialized == false, "Model already Initalized");
 
-        ActionSize = brainParameters.vectorActionSize;
-        StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
-        ActionSpace = brainParameters.vectorActionSpaceType;
-
-        //create basic inputs
-        inputStateTensor = StateSize > 0 ? UnityTFUtils.Input(new int?[] { StateSize }, name: "InputStates")[0] : null;
-        HasVectorObservation = inputStateTensor != null;
-        inputVisualTensors = CreateVisualInputs(brainParameters);
-        HasVisualObservation = inputVisualTensors != null;
+        inputStateTensor = stateTensor;
+        inputVisualTensors = visualTensors;
 
         //build the network
         network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue);
@@ -93,168 +71,99 @@ public class RLModelPPO : MonoBehaviour
             outputVariance = K.exp(logSigmaSq);
         }
 
-        //create functions for evaluation
-        List<Tensor> observationInputs = new List<Tensor>();
 
-        if (HasVectorObservation)
-        {
-            observationInputs.Add(inputStateTensor);
-        }
-        if (HasVisualObservation)
-        {
-            observationInputs.AddRange(inputVisualTensors);
-        }
-        ValueFunction = K.function(observationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
+        ValueFunction = K.function(allobservationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
         if (ActionSpace == SpaceType.continuous)
         {
-            ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction, outputVariance }, null, "ActionFunction");
+            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputAction, outputVariance }, null, "ActionFunction");
         }
         else
         {
-            ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
+            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
         }
-        K.try_initialize_variables();
-        if(checkpointTOLoad != null){
-            RestoreCheckpoint(checkpointTOLoad.bytes);
-        }
-        Initialized = true;
-        TrainingEnabled = false;
 
-
-    }
-    /// <summary>
-    /// Initialize the model with training enabled
-    /// </summary>
-    /// <param name="brainParameters"></param>
-    /// <param name="trainingParams"></param>
-    public virtual void Initialize(BrainParameters brainParameters, TrainerParamsPPO trainingParams)
-    {
-
-        Debug.Assert(Initialized == false, "Model already Initalized");
-
-        //initalize the evaluation parts
-        Initialize(brainParameters);
-
-        //training needed inputs
-        var inputAction = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous?ActionSize:1 }, name: "InputAction", dtype:ActionSpace == SpaceType.continuous?DataType.Float:DataType.Int32)[0];
-        var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
-        var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
-        var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
-
-        ClipEpsilon = trainingParams.clipEpsilon;
-        ValueLossWeight = trainingParams.valueLossWeight;
-        EntropyLossWeight = trainingParams.entroyLossWeight;
-
-        /*var inputClipEpsilon = K.constant(trainingParams.clipEpsilon, name: "ClipEpsilon");
-        var inputValuelossWeight = K.constant(trainingParams.valueLossWeight, name: "ValueLossWeight");
-        var inputEntropyLossWeight = K.constant(trainingParams.entroyLossWeight, name: "EntropyLossWeight");*/
-        var inputClipEpsilon = UnityTFUtils.Input(batch_shape:new int?[] {  }, name: "ClipEpsilon", dtype: DataType.Float)[0];
-        var inputValuelossWeight = UnityTFUtils.Input(batch_shape: new int?[] {  }, name: "ValueLossWeight", dtype: DataType.Float)[0];
-        var inputEntropyLossWeight = UnityTFUtils.Input(batch_shape: new int?[] {  }, name: "EntropyLossWeight", dtype: DataType.Float)[0];
-
-        // action probability from input action
-        Tensor outputEntropy;
-        Tensor actionProb;
-        using (K.name_scope("ActionProb"))
+        TrainerParamsPPO trainingParams = trainerParams as TrainerParamsPPO;
+        if (trainingParams != null)
         {
-            if (ActionSpace == SpaceType.continuous)
+            //training needed inputs
+            var inputAction = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+            var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
+            var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
+            var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
+
+            ClipEpsilon = trainingParams.clipEpsilon;
+            ValueLossWeight = trainingParams.valueLossWeight;
+            EntropyLossWeight = trainingParams.entropyLossWeight;
+
+            var inputClipEpsilon = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "ClipEpsilon", dtype: DataType.Float)[0];
+            var inputValuelossWeight = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "ValueLossWeight", dtype: DataType.Float)[0];
+            var inputEntropyLossWeight = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "EntropyLossWeight", dtype: DataType.Float)[0];
+
+            // action probability from input action
+            Tensor outputEntropy;
+            Tensor actionProb;
+            using (K.name_scope("ActionProb"))
             {
-                var temp = K.mul(outputVariance, 2 * Mathf.PI * 2.7182818285);
-                temp = K.mul(K.log(temp), 0.5);
-                outputEntropy = K.mean(temp, 0, false, name: "OutputEntropy");
-                actionProb = K.normal_probability(inputAction, outputAction, outputVariance);
+                if (ActionSpace == SpaceType.continuous)
+                {
+                    var temp = K.mul(outputVariance, 2 * Mathf.PI * 2.7182818285);
+                    temp = K.mul(K.log(temp), 0.5);
+                    outputEntropy = K.mean(temp, 0, false, name: "OutputEntropy");
+                    actionProb = K.normal_probability(inputAction, outputAction, outputVariance);
+                }
+                else
+                {
+                    var onehotInputAction = K.one_hot(inputAction, K.constant<int>(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
+                    onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize });
+                    outputEntropy = K.mean((-1.0f) * K.sum(outputAction * K.log(outputAction + 0.00000001f), axis: 1), 0);
+                    actionProb = K.reshape(K.sum(outputAction * onehotInputAction, 1), new int[] { -1, 1 });
+                }
             }
-            else
+
+            // value loss
+            var outputValueLoss = K.mean(new MeanSquareError().Call(outputValue, inputTargetValue));
+
+            // Clipped Surrogate loss
+            Tensor outputPolicyLoss;
+            using (K.name_scope("ClippedCurreogateLoss"))
             {
-                var onehotInputAction = K.one_hot(inputAction, K.constant<int>(ActionSize,dtype:DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize });
-                outputEntropy = K.mean((-1.0f) * K.sum(outputAction * K.log(outputAction + 0.00000001f), axis: 1),0);
-                actionProb = K.reshape(K.sum(outputAction* onehotInputAction,1),new int[] { -1,1});
+                var probRatio = actionProb / (inputOldProb + 0.0000001f);
+                var p_opt_a = probRatio * inputAdvantage;
+                var p_opt_b = K.clip(probRatio, 1.0f - inputClipEpsilon, 1.0f + inputClipEpsilon) * inputAdvantage;
+
+                outputPolicyLoss = K.mean(1 - K.mean(K.min(p_opt_a, p_opt_b)), name: "ClippedCurreogateLoss");
             }
+            //final weighted loss
+            var outputLoss = outputPolicyLoss + inputValuelossWeight * outputValueLoss;
+            outputLoss = outputLoss - inputEntropyLossWeight * outputEntropy;
+
+
+            //add inputs, outputs and parameters to the list
+            List<Tensor> updateParameters = GetAllModelWeights();
+            List<Tensor> allInputs = new List<Tensor>();
+            if (HasVectorObservation)
+            {
+                allInputs.Add(inputStateTensor);
+            }
+            if (HasVisualObservation)
+            {
+                allInputs.AddRange(inputVisualTensors);
+            }
+            allInputs.Add(inputAction);
+            allInputs.Add(inputOldProb);
+            allInputs.Add(inputTargetValue);
+            allInputs.Add(inputAdvantage);
+            allInputs.Add(inputClipEpsilon);
+            allInputs.Add(inputValuelossWeight);
+            allInputs.Add(inputEntropyLossWeight);
+
+            //create optimizer and create necessary functions
+            var updates = CreateOptimizer(updateParameters, outputLoss,trainerParams) ;
+            UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
         }
-        
-        // value loss
-        var outputValueLoss = K.mean(new MeanSquareError().Call(outputValue, inputTargetValue));
-
-        // Clipped Surrogate loss
-        Tensor outputPolicyLoss;
-        using (K.name_scope("ClippedCurreogateLoss"))
-        {
-            var probRatio = actionProb / (inputOldProb + 0.0000001f);
-            var p_opt_a = probRatio * inputAdvantage;
-            var p_opt_b = K.clip(probRatio, 1.0f - inputClipEpsilon, 1.0f + inputClipEpsilon) * inputAdvantage;
-
-            outputPolicyLoss = K.mean(1 - K.mean(K.min(p_opt_a, p_opt_b)), name: "ClippedCurreogateLoss");
-        }
-        //final weighted loss
-        var outputLoss = outputPolicyLoss + inputValuelossWeight * outputValueLoss;
-        outputLoss = outputLoss - inputEntropyLossWeight * outputEntropy;
 
 
-        //add inputs, outputs and parameters to the list
-        List<Tensor> updateParameters = GetAllModelWeights();
-        List<Tensor> allInputs = new List<Tensor>();
-        if (HasVectorObservation)
-        {
-            allInputs.Add(inputStateTensor);
-        }
-        if (HasVisualObservation)
-        {
-            allInputs.AddRange(inputVisualTensors);
-        }
-        allInputs.Add(inputAction);
-        allInputs.Add(inputOldProb);
-        allInputs.Add(inputTargetValue);
-        allInputs.Add(inputAdvantage);
-        allInputs.Add(inputClipEpsilon);
-        allInputs.Add(inputValuelossWeight);
-        allInputs.Add(inputEntropyLossWeight);
-
-        //create optimizer and create necessary functions
-        optimizer = new Adam(lr: 0.001);
-        var updates = optimizer.get_updates(updateParameters, null, outputLoss); ;
-        UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
-
-        //test
-        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-            ((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
-
-        Initialized = true;
-        TrainingEnabled = true;
-        K.try_initialize_variables();
     }
-
-    protected List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
-    {
-        if(brainParameters.cameraResolutions == null || brainParameters.cameraResolutions.Length == 0)
-        {
-            return null;
-        }
-        List<Tensor> allInputs = new List<Tensor>();
-        int i = 0;
-        foreach(var r in brainParameters.cameraResolutions)
-        {
-            int width = r.width;
-            int height = r.height;
-            int channels;
-            if (r.blackAndWhite)
-                channels = 1;
-            else
-                channels = 3;
-
-            var input = UnityTFUtils.Input(new int?[] { height, width, channels }, name: "InputVisual" + i)[0];
-            allInputs.Add(input);
-
-            i ++;
-        }
-
-        return allInputs;
-    }
-
-
-
-
-
 
     /// <summary>
     /// evaluate the value of current states
@@ -397,11 +306,6 @@ public class RLModelPPO : MonoBehaviour
     }
 
 
-    public virtual void SetLearningRate(float rl)
-    {
-        Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use SetLearningRate()");
-        optimizer.SetLearningRate(rl);
-    }
 
     public virtual float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
     {
@@ -435,49 +339,8 @@ public class RLModelPPO : MonoBehaviour
         //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
         //return new float[] { 0, 0, 0 }; //test for memeory allocation
     }
-
-
-
-    /// <summary>
-    /// save the models all parameters to a byte array
-    /// </summary>
-    /// <returns></returns>
-    public virtual byte[] SaveCheckpoint()
-    {
-        List<Array> data = GetAllModelWeights().Select(t => (Array)t.eval()).ToList();
-        data.AddRange(GetAllOptimizerWeights());
-
-        List<float[]> flattenedData = new List<float[]>();
-        foreach(var d in data)
-        {
-            flattenedData.Add(d.FlattenAndConvertArray<float>());
-        }
-
-        var binFormatter = new BinaryFormatter();
-        var mStream = new MemoryStream();
-        binFormatter.Serialize(mStream, flattenedData);
-        return mStream.ToArray();
-    }
-
-    public virtual void RestoreCheckpoint(byte[]  data)
-    {
-        //deserialize the data
-        var mStream = new MemoryStream(data);
-        var binFormatter = new BinaryFormatter();
-        var floatData = (List<float[]>)binFormatter.Deserialize(mStream);
-
-        List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
-        var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
-        var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
-        SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
-
-        if (arrayData.Count >= modelWeigthLength + optimizerWeightLength && optimizerWeightLength > 0)
-        {
-            SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
-        }
-    }
-
-    public virtual List<Tensor> GetAllModelWeights()
+    
+    public override List<Tensor> GetAllModelWeights()
     {
         List<Tensor> updateParameters = new List<Tensor>();
         updateParameters.AddRange(network.GetWeights());
@@ -485,27 +348,5 @@ public class RLModelPPO : MonoBehaviour
             updateParameters.Add(logSigmaSq);
         return updateParameters;
     }
-    public virtual List<Array> GetAllOptimizerWeights()
-    {
-        if (!TrainingEnabled)
-            return new List<Array>();
-        return optimizer.get_weights();
-    }
-
-    public virtual void SetAllModelWeights(List<Array> values)
-    {
-        List<Tensor> updateParameters = GetAllModelWeights();
-
-        Debug.Assert(values.Count == updateParameters.Count, "SetAllModelWeights(): Counts of input values and parameters to update do not match.");
-
-        for(int i = 0; i < updateParameters.Count; ++i)
-        {
-            Debug.Assert(values[i].GetLength().IsEqual(Mathf.Abs(updateParameters[i].shape.Aggregate((t, s) => t * s).Value)), "Input array shape does not match the Tensor to set value");
-            K.set_value(updateParameters[i], values[i]);
-        }
-    }
-    public virtual void SetAllOptimizerWeights(List<Array> values)
-    {
-        optimizer.set_weights(values);
-    }
+    
 }

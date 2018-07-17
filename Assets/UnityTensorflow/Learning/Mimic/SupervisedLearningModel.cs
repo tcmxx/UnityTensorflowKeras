@@ -21,30 +21,15 @@ using KerasSharp.Backends;
 /// <summary>
 /// actor critic network abstract class
 /// </summary>
-public class SupervisedLearningModel : MonoBehaviour
+public class SupervisedLearningModel : LearningModelBase
 {
-    public int StateSize { get; private set; }
-    public int ActionSize { get; private set; }
-    public SpaceType ActionSpace { get; private set; }
-
-    public Adam optimizer;
+    
     public SupervisedLearningNetwork network;
+    protected Function ActionFunction { get; set; }
+    protected Function UpdateFunction { get; set; }
 
-    public Function ActionFunction { get; private set; }
-    public Function UpdateFunction { get; private set; }
 
-    public bool HasVisualObservation { get; private set; }
-    public bool HasVectorObservation { get; private set; }
-    public bool HasRecurrent { get; private set; } = false;
-
-    public bool TrainingEnabled { get { return trainingEnabled; } protected set { trainingEnabled = value; } }
-    [SerializeField]
-    [ReadOnly]
-    public bool trainingEnabled = false;
-
-    public bool Initialized { get; protected set; } = false;
-
-    public virtual void Initialize(BrainParameters brainParameters, bool enableTraining = true)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
     {
         Debug.Assert(Initialized == false, "Model already Initalized");
 
@@ -74,7 +59,8 @@ public class SupervisedLearningModel : MonoBehaviour
         ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
 
         //build the parts for training
-        if (enableTraining)
+        TrainerParamsMimic trainingParams = trainerParams as TrainerParamsMimic;
+        if (trainingParams != null)
         {
             //training inputs
             var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
@@ -107,19 +93,11 @@ public class SupervisedLearningModel : MonoBehaviour
             }
             allInputs.Add(inputActionLabel);
             //create optimizer and create necessary functions
-            optimizer = new Adam(lr: 0.001);
-            var updates = optimizer.get_updates(updateParameters, null, loss); ;
+            mainOptimizer = new Adam(lr: trainingParams.learningRate);
+            var updates = mainOptimizer.get_updates(updateParameters, null, loss); ;
             UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
         }
         
-        //test
-        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/SuperviseTest.pb");
-
-        K.try_initialize_variables();
-        Initialized = true;
-        TrainingEnabled = enableTraining;
-
     }
 
 
@@ -196,115 +174,13 @@ public class SupervisedLearningModel : MonoBehaviour
     }
 
 
-    protected List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
-    {
-        if (brainParameters.cameraResolutions == null || brainParameters.cameraResolutions.Length == 0)
-        {
-            return null;
-        }
-        List<Tensor> allInputs = new List<Tensor>();
-        int i = 0;
-        foreach (var r in brainParameters.cameraResolutions)
-        {
-            int width = r.width;
-            int height = r.height;
-            int channels;
-            if (r.blackAndWhite)
-                channels = 1;
-            else
-                channels = 3;
 
-            var input = UnityTFUtils.Input(new int?[] { height, width, channels }, name: "InputVisual" + i)[0];
-            allInputs.Add(input);
 
-            i++;
-        }
-
-        return allInputs;
-    }
-
-    /// <summary>
-    /// save the models all parameters to a byte array
-    /// </summary>
-    /// <returns></returns>
-    public virtual byte[] SaveCheckpoint()
-    {
-        List<Array> data = GetAllModelWeights().Select(t => (Array)t.eval()).ToList();
-        data.AddRange(GetAllOptimizerWeights());
-
-        List<float[]> flattenedData = new List<float[]>();
-        foreach (var d in data)
-        {
-            flattenedData.Add(d.FlattenAndConvertArray<float>());
-        }
-
-        var binFormatter = new BinaryFormatter();
-        var mStream = new MemoryStream();
-
-        binFormatter.Serialize(mStream, flattenedData);
-        return mStream.ToArray();
-
-    }
-
-    public virtual void RestoreCheckpoint(byte[] data)
-    {
-        //deserialize the data
-        var mStream = new MemoryStream(data);
-        var binFormatter = new BinaryFormatter();
-        var floatData = (List<float[]>)binFormatter.Deserialize(mStream);
-
-        List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
-        var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
-        var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
-        SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
-        if (arrayData.Count >= modelWeigthLength + optimizerWeightLength && optimizerWeightLength > 0)
-        {
-            SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
-        }
-    }
-
-    public virtual List<Tensor> GetAllModelWeights()
+    public override List<Tensor> GetAllModelWeights()
     {
         List<Tensor> parameters = new List<Tensor>();
         parameters.AddRange(network.GetWeights());
         return parameters;
     }
-    public virtual List<Array> GetAllOptimizerWeights()
-    {
-        if (!TrainingEnabled)
-            return new List<Array>();
-        return optimizer.get_weights();
-    }
 
-    public virtual void SetAllModelWeights(List<Array> values)
-    {
-        List<Tensor> updateParameters = new List<Tensor>();
-        updateParameters.AddRange(network.GetWeights());
-
-        Debug.Assert(values.Count == updateParameters.Count, "Counts of input values and parameters to update do not match.");
-
-        for (int i = 0; i < updateParameters.Count; ++i)
-        {
-            Debug.Assert(values[i].GetLength().IsEqual(Mathf.Abs(updateParameters[i].shape.Aggregate((t, s) => t * s).Value)), "Input array shape does not match the Tensor to set value");
-            K.set_value(updateParameters[i], values[i]);
-        }
-    }
-    public virtual void SetAllOptimizerWeights(List<Array> values)
-    {
-        optimizer.set_weights(values);
-    }
-
-
-
-
-
-
-
-
-    public virtual void OnInspector()
-    {
-#if UNITY_EDITOR
-        Editor.CreateEditor(this).OnInspectorGUI();
-#endif
-    }
 }

@@ -11,10 +11,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class TrainerPPO : Trainer
 {
-
-    public RLModelPPO modelRef;
-    public TrainerParamsPPO parameters;
-    public Brain BrainToTrain { get; private set; }
+    
+    protected TrainerParamsPPO parametersPPO;
     
     protected DataBuffer dataBuffer;
     protected DataBuffer dataBufferHeuristic;
@@ -39,12 +37,15 @@ public class TrainerPPO : Trainer
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
-    public override void SetBrain(Brain brain)
-    {
-        this.BrainToTrain = brain;
-    }
+    protected RLModelPPO modelPPO;
+
     public override void Initialize()
     {
+        modelPPO = modelRef as RLModelPPO;
+        Debug.Assert(modelPPO != null, "Please assign a RLModelPPO to modelRef");
+        parametersPPO = parameters as TrainerParamsPPO;
+        Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
+
         //initialize all data buffers
         statesEpisodeHistory = new Dictionary<Agent, List<float>>();
         rewardsEpisodeHistory = new Dictionary<Agent, List<float>>();
@@ -82,19 +83,16 @@ public class TrainerPPO : Trainer
             allBufferData.Add(new DataBuffer.DataInfo("VisualObservation"+i, typeof(float), new int[] { height, width,  channels }));
         }
 
-        Debug.Assert(parameters != null, "Please Specify PPO Trainer Parameters");
-        dataBuffer = new DataBuffer(parameters.bufferSizeForTrain * 2, allBufferData.ToArray());
+
+        dataBuffer = new DataBuffer(parametersPPO.bufferSizeForTrain * 2, allBufferData.ToArray());
         //a seperate buffer if the agent uses heuristic decision instead of directly from the model
-        if(parameters.heuristicBufferSize > 0)
-            dataBufferHeuristic = new DataBuffer(parameters.heuristicBufferSize, allBufferData.ToArray());
+        if(parametersPPO.heuristicBufferSize > 0)
+            dataBufferHeuristic = new DataBuffer(parametersPPO.heuristicBufferSize, allBufferData.ToArray());
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
         
-        if(isTraining)
-            modelRef.Initialize(BrainToTrain.brainParameters,parameters);
-        else
-            modelRef.Initialize(BrainToTrain.brainParameters);
-
+        
+        modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);
         if (continueFromCheckpoint)
         {
             LoadModel();
@@ -102,15 +100,13 @@ public class TrainerPPO : Trainer
         }
     }
 
-    public override void Update()
+    protected override void FixedUpdate()
     {
-        if(isTraining)
-            modelRef.SetLearningRate(parameters.learningRate);
-        modelRef.ValueLossWeight = parameters.valueLossWeight;
-        modelRef.EntropyLossWeight = parameters.entroyLossWeight;
-        modelRef.ClipEpsilon = parameters.clipEpsilon;
+        modelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
+        modelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
+        modelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
 
-        base.Update();
+        base.FixedUpdate();
     }
 
 
@@ -156,7 +152,7 @@ public class TrainerPPO : Trainer
 
     public override int GetMaxStep()
     {
-        return parameters.maxTotalSteps;
+        return parametersPPO.maxTotalSteps;
     }
 
     public override int GetStep()
@@ -167,7 +163,7 @@ public class TrainerPPO : Trainer
     public override void IncrementStep()
     {
         Steps++;
-        if(Steps% parameters.saveModelInterval == 0)
+        if(Steps% parametersPPO.saveModelInterval == 0)
         {
             SaveModel();
             SaveHeuristicData();
@@ -176,7 +172,7 @@ public class TrainerPPO : Trainer
 
     public override bool IsReadyUpdate()
     {
-        return dataBuffer.CurrentCount >= parameters.bufferSizeForTrain;
+        return dataBuffer.CurrentCount >= parametersPPO.bufferSizeForTrain;
     }
 
     public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
@@ -188,10 +184,10 @@ public class TrainerPPO : Trainer
             if (agentNewInfo.done || agentNewInfo.maxStepReached)
             {
                 //update process the episode data for PPO.
-                float nextValue = modelRef.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
+                float nextValue = modelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
                     CreateVisualIInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
                 var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
-                    valuesEpisodeHistory[agent].ToArray(), parameters.rewardDiscountFactor, parameters.rewardGAEFactor, nextValue);
+                    valuesEpisodeHistory[agent].ToArray(), parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
                 float[] targetValues = new float[advantages.Length];
 
                 var valueHistory = valuesEpisodeHistory[agent];
@@ -232,8 +228,8 @@ public class TrainerPPO : Trainer
                 {
                     dataBuffer.AddData(dataToAdd.ToArray());
                     //update stats if the agent is not using heuristic
-                    stats.AddData("accumulatedRewards", accumulatedRewards[agent], parameters.rewardLogInterval);
-                    stats.AddData("episodeSteps", episodeSteps[agent], parameters.rewardLogInterval);
+                    stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
+                    stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
                 }
                 
                 accumulatedRewards[agent] = 0;
@@ -253,8 +249,8 @@ public class TrainerPPO : Trainer
 
 
         float[,] actionProbs = null;
-        var actions = modelRef.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
-        var values = modelRef.EvaluateValue(vectorObsAll, visualObsAll);
+        var actions = modelPPO.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
+        var values = modelPPO.EvaluateValue(vectorObsAll, visualObsAll);
 
 
         int i = 0;
@@ -269,7 +265,7 @@ public class TrainerPPO : Trainer
                 var action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
                 float[,] vectorOb = CreateVectorIInputBatch(agentInfos, new List<Agent>() { agent});
                 var visualOb = CreateVisualIInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
-                var probs = modelRef.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);
+                var probs = modelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);
 
                 var temp = new TakeActionOutput();
                 temp.allProbabilities = probs.GetRow(0);
@@ -310,10 +306,10 @@ public class TrainerPPO : Trainer
 
 
         float loss = 0, policyLoss = 0, valueLoss = 0;
-        for (int i = 0; i < parameters.numEpochPerTrain; ++i)
+        for (int i = 0; i < parametersPPO.numEpochPerTrain; ++i)
         {
             //training from the main data buffer
-            var samples = dataBuffer.SampleBatchesReordered(parameters.batchSize, fetches.ToArray());
+            var samples = dataBuffer.SampleBatchesReordered(parametersPPO.batchSize, fetches.ToArray());
 
             var vectorObsArray = samples.TryGetOr("VectorObservation", null);
             float[,] vectorObservations = vectorObsArray== null? null: vectorObsArray as float[,];
@@ -331,7 +327,7 @@ public class TrainerPPO : Trainer
                 visualObservations.Add((float[,,,])samples["VisualObservation" + j]);
             }
 
-            int batchCount = targetValues.Length / parameters.batchSize;
+            int batchCount = targetValues.Length / parametersPPO.batchSize;
             //int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
             //int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
@@ -339,12 +335,12 @@ public class TrainerPPO : Trainer
             for (int j = 0; j < batchCount; ++j)
             {
                 
-                float[] losses = modelRef.TrainBatch(SubRows(vectorObservations, j * parameters.batchSize , parameters.batchSize ),
-                    SubRows(visualObservations, j * parameters.batchSize, parameters.batchSize),
-                    SubRows(actions, j * parameters.batchSize , parameters.batchSize ),
-                    SubRows(actionProbs, j * parameters.batchSize , parameters.batchSize ),
-                    SubRows(targetValues, j * parameters.batchSize, parameters.batchSize).Flatten(),
-                    SubRows(advantages, j * parameters.batchSize, parameters.batchSize).Flatten()
+                float[] losses = modelPPO.TrainBatch(SubRows(vectorObservations, j * parametersPPO.batchSize , parametersPPO.batchSize ),
+                    SubRows(visualObservations, j * parametersPPO.batchSize, parametersPPO.batchSize),
+                    SubRows(actions, j * parametersPPO.batchSize , parametersPPO.batchSize ),
+                    SubRows(actionProbs, j * parametersPPO.batchSize , parametersPPO.batchSize ),
+                    SubRows(targetValues, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
+                    SubRows(advantages, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten()
                     );
                 tempLoss += losses[0];
                 tempValueLoss  += losses[1];
@@ -355,7 +351,7 @@ public class TrainerPPO : Trainer
             int batchCountHeuristic = 0;
             if (dataBufferHeuristic != null)
             {
-                var samplesHeuristic = dataBufferHeuristic.SampleBatchesReordered(parameters.batchSize, parameters.extraBatchTFromHeuristicBuffer, fetches.ToArray());
+                var samplesHeuristic = dataBufferHeuristic.SampleBatchesReordered(parametersPPO.batchSize, parametersPPO.extraBatchTFromHeuristicBuffer, fetches.ToArray());
                 var vectorObsArrayHeuristic = samplesHeuristic.TryGetOr("VectorObservation", null);
                 float[,] vectorObservationsHeuristic = vectorObsArrayHeuristic == null ? null : vectorObsArrayHeuristic as float[,];
                 float[,] actionsHeuristic = (float[,])samplesHeuristic["Action"];
@@ -372,16 +368,16 @@ public class TrainerPPO : Trainer
                     visualObservationsHeuristic.Add((float[,,,])samples["VisualObservation" + j]);
                 }
 
-                batchCountHeuristic = Mathf.Min(parameters.extraBatchTFromHeuristicBuffer, targetValuesHeuristic.Length / parameters.batchSize);
+                batchCountHeuristic = Mathf.Min(parametersPPO.extraBatchTFromHeuristicBuffer, targetValuesHeuristic.Length / parametersPPO.batchSize);
                 for (int j = 0; j < batchCountHeuristic; ++j)
                 {
 
-                    float[] losses = modelRef.TrainBatch(SubRows(vectorObservationsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                        SubRows(visualObservationsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                        SubRows(actionsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                        SubRows(actionProbsHeuristic, j * parameters.batchSize, parameters.batchSize),
-                        SubRows(targetValuesHeuristic, j * parameters.batchSize, parameters.batchSize).Flatten(),
-                        SubRows(advantagesHeuristic, j * parameters.batchSize, parameters.batchSize).Flatten()
+                    float[] losses = modelPPO.TrainBatch(SubRows(vectorObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
+                        SubRows(visualObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
+                        SubRows(actionsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
+                        SubRows(actionProbsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
+                        SubRows(targetValuesHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
+                        SubRows(advantagesHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten()
                         );
                     tempLoss += losses[0];
                     tempValueLoss += losses[1];
@@ -394,9 +390,9 @@ public class TrainerPPO : Trainer
         }
         
         //log the stats
-        stats.AddData("loss", loss / parameters.numEpochPerTrain,parameters.lossLogInterval);
-        stats.AddData("policyLoss", policyLoss / parameters.numEpochPerTrain, parameters.lossLogInterval);
-        stats.AddData("valueLoss", valueLoss / parameters.numEpochPerTrain, parameters.lossLogInterval);
+        stats.AddData("loss", loss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
+        stats.AddData("policyLoss", policyLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
+        stats.AddData("valueLoss", valueLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
 
         dataBuffer.ClearData();
     }
@@ -462,6 +458,8 @@ public class TrainerPPO : Trainer
 
     public void SaveHeuristicData()
     {
+        if(dataBufferHeuristic == null)
+            return;
         var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
 
@@ -481,6 +479,8 @@ public class TrainerPPO : Trainer
     }
     public void LoadHeuristicData()
     {
+        if (dataBufferHeuristic == null)
+            return;
         string dir = Path.GetDirectoryName(checkpointPath);
         string file = Path.GetFileNameWithoutExtension(checkpointPath);
         string savepath = Path.Combine(dir, file + "_heuristicdata.bytes");
