@@ -11,6 +11,7 @@ using UnityEngine;
 
 namespace ICM
 {
+    [System.Serializable]
     public class OptimizationSample : System.IComparable
     {
         public double[] x;

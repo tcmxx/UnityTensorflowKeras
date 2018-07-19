@@ -12,11 +12,10 @@ public class SupervisedLearningModelEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        SupervisedLearningModel model = (SupervisedLearningModel)target;
         base.OnInspectorGUI();
-
-        EditorGUILayout.LabelField("",GUI.skin.horizontalSlider);
+        SupervisedLearningModel model = (SupervisedLearningModel)target;
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         EditorGUILayout.LabelField("Network Parameters", GUI.skin.box);
-        model.network?.OnInspector();
+        Editor.CreateEditor(model.network).OnInspectorGUI();
     }
 }

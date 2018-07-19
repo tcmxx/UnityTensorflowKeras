@@ -1,56 +1,37 @@
-﻿using System.Collections;
+﻿using Accord.Math;
+using Accord.Statistics.Distributions.Univariate;
+using KerasSharp;
+using KerasSharp.Backends;
+using KerasSharp.Engine.Topology;
+using KerasSharp.Initializers;
+using KerasSharp.Losses;
+using KerasSharp.Models;
+using MLAgents;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Accord.Statistics.Distributions.Univariate;
-using System;
-using System.Linq;
-using Accord;
-using Accord.Math;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
+using static KerasSharp.Backends.Current;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 
-using static KerasSharp.Backends.Current;
-using KerasSharp.Backends;
-
-using MLAgents;
-using KerasSharp.Models;
-using KerasSharp.Optimizers;
-using KerasSharp.Engine.Topology;
-using KerasSharp.Initializers;
-using KerasSharp;
-using KerasSharp.Losses;
-
-public class RLModelPPO : LearningModelBase
-{
+public class RLModelPPOHierarchy : RLModelPPO {
 
 
-    protected Function ValueFunction { get; set; }
-    protected Function ActionFunction { get; set; }
-    protected Function UpdateFunction { get; set; }
-
-    public RLNetworkAC network;
-
-
+    public RLNetowrkACHierarchy networkHierarchy;
     
-    public float EntropyLossWeight { get; set; }
-    public float ValueLossWeight { get; set; }
-    public float ClipEpsilon { get; set; }
+    public int lowLevelObservationSize;
+    public int highLevelObservationSize;
 
-    //the variable for variance
-    protected Tensor logSigmaSq = null;
+
 
     //some holders for tensors
-    protected Tensor outputVariance = null;
-    protected Tensor outputAction = null;
-    protected Tensor outputValue = null;
-    protected Tensor inputStateTensor = null;
-    protected List<Tensor> inputVisualTensors = null;
+    protected Tensor inputLowLevelTensor = null;
+    protected Tensor inputHighLevelTensor = null;
     
-
     /// <summary>
     /// Initialize the model without training parts
     /// </summary>
@@ -58,18 +39,23 @@ public class RLModelPPO : LearningModelBase
     public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
     {
 
-        inputStateTensor = stateTensor;
-        inputVisualTensors = visualTensors;
+        Debug.Assert(visualTensors == null, "RLModelPPOHierarchy does not support visual input yet");
 
-        //build the network
-        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue);
 
-        //actor network output variance
-        if (ActionSpace == SpaceType.continuous)
+        if (highLevelObservationSize > 0)
         {
-            logSigmaSq = K.variable((new Constant(0)).Call(new int[] { ActionSize }, DataType.Float), name: "PPO.log_sigma_square");
-            outputVariance = K.exp(logSigmaSq);
+            var splited = K.split(stateTensor, K.constant(new int[] { lowLevelObservationSize, highLevelObservationSize }, dtype: DataType.Int32), K.constant(1, dtype: DataType.Int32),2);
+            inputLowLevelTensor = splited[0];
+            inputHighLevelTensor = splited[1];
         }
+        else
+        {
+            inputLowLevelTensor = stateTensor;
+        }
+        //build the network
+        networkHierarchy.BuildNetwork(inputLowLevelTensor, inputHighLevelTensor, ActionSize, ActionSpace, out outputAction, out outputValue,out outputVariance);
+
+
 
 
         ValueFunction = K.function(allobservationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
@@ -141,14 +127,8 @@ public class RLModelPPO : LearningModelBase
             //add inputs, outputs and parameters to the list
             List<Tensor> updateParameters = GetAllModelWeights();
             List<Tensor> allInputs = new List<Tensor>();
-            if (HasVectorObservation)
-            {
-                allInputs.Add(inputStateTensor);
-            }
-            if (HasVisualObservation)
-            {
-                allInputs.AddRange(inputVisualTensors);
-            }
+            
+            allInputs.Add(stateTensor);
             allInputs.Add(inputAction);
             allInputs.Add(inputOldProb);
             allInputs.Add(inputTargetValue);
@@ -158,7 +138,7 @@ public class RLModelPPO : LearningModelBase
             allInputs.Add(inputEntropyLossWeight);
 
             //create optimizer and create necessary functions
-            var updates = CreateOptimizer(updateParameters, outputLoss,trainerParams) ;
+            var updates = CreateOptimizer(updateParameters, outputLoss, trainerParams);
             UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
         }
 
@@ -187,7 +167,7 @@ public class RLModelPPO : LearningModelBase
 
         var result = ValueFunction.Call(inputLists);
         //return new float[] { ((float[,])result[0].eval())[0,0] };
-        var value =  ((float[,])result[0].eval()).Flatten();
+        var value = ((float[,])result[0].eval()).Flatten();
         return value;
     }
 
@@ -198,7 +178,7 @@ public class RLModelPPO : LearningModelBase
     /// <param name="actionProbs">output actions' probabilities</param>
     /// <param name="useProbability">when true, the output actions are sampled based on output mean and variance. Otherwise it uses mean directly.</param>
     /// <returns></returns>
-    public virtual float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true)
+    public override float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
@@ -215,9 +195,9 @@ public class RLModelPPO : LearningModelBase
         var result = ActionFunction.Call(inputLists);
 
         var outputAction = ((float[,])result[0].eval());
-        var vars = ActionSpace == SpaceType.continuous?(float[])result[1].eval():null;
-        
-        float[,] actions = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous?outputAction.GetLength(1):1];
+        var vars = ActionSpace == SpaceType.continuous ? (float[])result[1].eval() : null;
+
+        float[,] actions = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous ? outputAction.GetLength(1) : 1];
         actionProbs = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous ? outputAction.GetLength(1) : 1];
 
         if (ActionSpace == SpaceType.continuous)
@@ -236,7 +216,8 @@ public class RLModelPPO : LearningModelBase
                     actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
                 }
             }
-        }else if(ActionSpace == SpaceType.discrete)
+        }
+        else if (ActionSpace == SpaceType.discrete)
         {
             for (int j = 0; j < outputAction.GetLength(0); ++j)
             {
@@ -244,7 +225,7 @@ public class RLModelPPO : LearningModelBase
                     actions[j, 0] = MathUtils.IndexByChance(outputAction.GetRow(j));
                 else
                     actions[j, 0] = outputAction.GetRow(j).ArgMax();
-                
+
                 actionProbs[j, 0] = outputAction.GetRow(j)[Mathf.RoundToInt(actions[j, 0])];
             }
         }
@@ -257,7 +238,7 @@ public class RLModelPPO : LearningModelBase
     /// <summary>
     /// Query actions' probabilities based on curren states. The first dimension of the array must be batch dimension
     /// </summary>
-    public virtual float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation)
+    public override float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use EvaluateProbability()");
 
@@ -277,7 +258,7 @@ public class RLModelPPO : LearningModelBase
 
         var outputAction = ((float[,])result[0].eval());
         var vars = ActionSpace == SpaceType.continuous ? (float[])result[1].eval() : null;
-        
+
         var actionProbs = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous ? outputAction.GetLength(1) : 1];
 
         if (ActionSpace == SpaceType.continuous)
@@ -288,7 +269,7 @@ public class RLModelPPO : LearningModelBase
                 {
                     var std = Mathf.Sqrt(vars[i]);
                     var dis = new NormalDistribution(outputAction[j, i], std);
-                    
+
                     actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
                 }
             }
@@ -307,7 +288,7 @@ public class RLModelPPO : LearningModelBase
 
 
 
-    public virtual float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
+    public override float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
 
@@ -316,9 +297,9 @@ public class RLModelPPO : LearningModelBase
             inputs.Add(vectorObservations);
         if (visualObservations != null)
             inputs.AddRange(visualObservations);
-        if(ActionSpace == SpaceType.continuous)
+        if (ActionSpace == SpaceType.continuous)
             inputs.Add(actions);
-        else if(ActionSpace == SpaceType.discrete)
+        else if (ActionSpace == SpaceType.discrete)
         {
             int[,] actionsInt = actions.Convert(t => Mathf.RoundToInt(t));
             inputs.Add(actionsInt);
@@ -332,21 +313,18 @@ public class RLModelPPO : LearningModelBase
         inputs.Add(new float[] { EntropyLossWeight });
 
         var loss = UpdateFunction.Call(inputs);
-        var result =  new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
+        var result = new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
 
         return result;
         //Debug.LogWarning("test save graph");
         //((UnityTFBackend)K).ExportGraphDef("SavedGraph/PPOTest.pb");
         //return new float[] { 0, 0, 0 }; //test for memeory allocation
     }
-    
+
     public override List<Tensor> GetAllModelWeights()
     {
-        List<Tensor> updateParameters = new List<Tensor>();
-        updateParameters.AddRange(network.GetWeights());
-        if(logSigmaSq != null)
-            updateParameters.Add(logSigmaSq);
-        return updateParameters;
+        return networkHierarchy.GetHighLevelWeights();
     }
+
 
 }

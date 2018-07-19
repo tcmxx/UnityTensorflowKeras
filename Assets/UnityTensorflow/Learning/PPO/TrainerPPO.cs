@@ -25,7 +25,7 @@ public class TrainerPPO : Trainer
     protected Dictionary<Agent, List<float>> valuesEpisodeHistory = null;
     protected Dictionary<Agent, List<List<float[,,]>>> visualEpisodeHistory = null;
 
-    StatsLogger stats;
+    public StatsLogger stats { get; protected set; }
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
     
@@ -166,7 +166,7 @@ public class TrainerPPO : Trainer
         foreach (var agent in agentList)
         {
             var agentNewInfo = newInfo[agent];
-            if (agentNewInfo.done || agentNewInfo.maxStepReached)
+            if (agentNewInfo.done || agentNewInfo.maxStepReached || actionsEpisodeHistory[agent].Count > parametersPPO.timeHorizon)
             {
                 //update process the episode data for PPO.
                 float nextValue = modelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),

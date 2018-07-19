@@ -11,6 +11,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public abstract class LearningModelBase : MonoBehaviour {
 
@@ -63,8 +66,8 @@ public abstract class LearningModelBase : MonoBehaviour {
         InitializeInner(brainParameters, inputStateTensor, inputVisualTensors, observationInputs, enableTraining? trainerParams:null);
 
         //test
-        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
-        //((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/PPOTest.pb");
+        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        ((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/"+name+".pb");
 
         Current.K.try_initialize_variables();
         if (checkpointTOLoad != null)
@@ -189,4 +192,5 @@ public abstract class LearningModelBase : MonoBehaviour {
         binFormatter.Serialize(mStream, flattenedData);
         return mStream.ToArray();
     }
+
 }

@@ -5,6 +5,7 @@ using UnityEngine;
 using Accord.Math;
 using MLAgents;
 using System.IO;
+using KerasSharp.Backends;
 
 public struct TakeActionOutput
 {
@@ -95,6 +96,11 @@ public abstract class Trainer : MonoBehaviour
         {
             SaveModel();
         }
+    }
+
+    public virtual void ResetStep()
+    {
+        steps = 0;
     }
     public abstract Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
     public abstract void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput);
