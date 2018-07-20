@@ -104,6 +104,25 @@ public class TrainerPPO : Trainer
     }
 
 
+    public override void ResetTrainer()
+    {
+        base.ResetTrainer();
+
+        var agents = statesEpisodeHistory.Keys;
+        stats.ClearAll();
+        foreach (var agent in agents)
+        {
+            statesEpisodeHistory[agent].Clear();
+            rewardsEpisodeHistory[agent].Clear();
+            actionsEpisodeHistory[agent].Clear();
+            actionprobsEpisodeHistory[agent].Clear();
+            valuesEpisodeHistory[agent].Clear();
+            accumulatedRewards[agent] = 0;
+            episodeSteps[agent] = 0;
+            agent.AgentReset();
+        }
+    }
+
     public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         var agentList = currentInfo.Keys;

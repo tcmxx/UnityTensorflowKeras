@@ -92,8 +92,9 @@ public class NeuralEvolutionTest : MonoBehaviour
     {
         if (trainer.GetStep() >= evaluationSteps)
         {
-            trainer.ResetStep();
+            //set the objective function value to the samples
             var rewards = trainer.stats.GetStat("accumulatedRewards");
+            
             float aveRewards = 0;
             for (int i = 0; i < evaluationLastRewardsNum; ++i)
             {
@@ -102,14 +103,17 @@ public class NeuralEvolutionTest : MonoBehaviour
             aveRewards = aveRewards / evaluationLastRewardsNum;
             samples[currentEvaluationIndex].objectiveFuncVal = aveRewards;
 
+            //reset stuff
             currentEvaluationIndex++;
-
             Current.K.try_initialize_variables();
+            trainer.ResetTrainer();
             if (currentEvaluationIndex < populationSize)
             {
                 SaveToFile();
                 SetWeights(samples[currentEvaluationIndex]);
             }
+
+            
         }
 
         if (currentEvaluationIndex >= populationSize)

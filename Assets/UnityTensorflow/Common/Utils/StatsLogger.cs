@@ -13,7 +13,7 @@ public class StatsLogger
     public bool LogToGrapher { get; set; } = true;
 
     protected MethodInfo logMethodInfo = null;
-
+    protected MethodInfo resetMethodInfo = null;
 
     public StatsLogger()
     {
@@ -24,6 +24,7 @@ public class StatsLogger
         if (type != null)
         {
             logMethodInfo = type.GetMethod("Log", new Type[] { typeof(float), typeof(string) });
+            resetMethodInfo = type.GetMethod("Reset", new Type[] { typeof(float), typeof(string) });
         }
     }
 
@@ -69,5 +70,13 @@ public class StatsLogger
     {
         data.Clear();
         averageCounter.Clear();
+#if UNITY_EDITOR
+        //Grapher.Log(averageCounter[name].Average, name);
+        if (resetMethodInfo != null)
+        {
+            resetMethodInfo.Invoke(null, null);
+
+        }
+#endif
     }
 }

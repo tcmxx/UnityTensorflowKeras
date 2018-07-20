@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Name: WalkerHierarchyNetwork
   m_EditorClassIdentifier: 
   inLowlevelLayers: 2
-  inLowlevelWidth: 64
+  inLowlevelWidth: 128
   actorHighlevelLayers: 2
   actorHighlevelWidth: 64
   valueHighlevelOutLayers: 2
   valueHighlevelOutWidth: 64
-  actorOutLowlevelLayers: 2
-  actorOutLowlevelWidth: 64
+  actorOutLowlevelLayers: 1
+  actorOutLowlevelWidth: 128
   lowLevelWeightsInitialScale: 0.07
   highLevelWeightsInitialScale: 0.07
