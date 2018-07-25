@@ -559,10 +559,10 @@ MonoBehaviour:
   trainer: {fileID: 1387614153}
   model: {fileID: 1660287623}
   optimizerType: 1
-  populationSize: 12
+  populationSize: 20
   mode: 1
-  initialStepSize: 0.1
-  evaluationSteps: 15000
+  initialStepSize: 0.01
+  evaluationSteps: 25000
   evaluationLastRewardsNum: 100
   checkpointPath: Assets\evolutionCheckpoint.bytes
   continueFromPrev: 1

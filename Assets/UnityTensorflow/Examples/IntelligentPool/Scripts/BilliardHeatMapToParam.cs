@@ -8,12 +8,14 @@ public class BilliardHeatMapToParam : MonoBehaviour {
     public BilliardGameSystem gameSystemRef;
     public BilliardAgent agentRef;
     public BilliardSimple agentSimplRef;
-
+    public LayerMask heatmapLayer;
     public bool IsSampling { get {
             return isSampling;
         } set {
+            
             Physics.autoSimulation = !value;
             isSampling = value;
+            //print("Is samplling:" + isSampling);
         } }
     protected bool isSampling;
     protected Vector3 sampledForce;
@@ -26,7 +28,7 @@ public class BilliardHeatMapToParam : MonoBehaviour {
 	void Update () {
         if (isSampling) {
             RaycastHit hit;
-            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit))
+            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit, heatmapLayer))
             {
                 if (hit.collider.gameObject.name == "HeatMap")
                 {

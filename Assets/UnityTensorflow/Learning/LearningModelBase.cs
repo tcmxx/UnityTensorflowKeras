@@ -84,10 +84,10 @@ public abstract class LearningModelBase : MonoBehaviour {
     public abstract void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams);
 
 
-    public List<List<Tensor>> CreateOptimizer(List<Tensor> allInputs, Tensor loss, TrainerParams trainerParams) 
+    public List<List<Tensor>> CreateOptimizer(List<Tensor> allWeights, Tensor loss, TrainerParams trainerParams) 
     {
         mainOptimizer = new Adam(lr: 0.001);
-        return mainOptimizer.get_updates(allInputs, null, loss); ;
+        return mainOptimizer.get_updates(allWeights, null, loss); ;
     } 
 
     public virtual List<Array> GetAllOptimizerWeights()

@@ -17,24 +17,75 @@ namespace TCUtils{
 
 
 
+    
 
-	/// Poisson-disc sampling using Bridson's algorithm.
-	/// Adapted from Mike Bostock's Javascript source: http://bl.ocks.org/mbostock/19168c663618b7f07158
-	///
-	/// See here for more information about this algorithm:
-	///   http://devmag.org.za/2009/05/03/poisson-disk-sampling/
-	///   http://bl.ocks.org/mbostock/dbb02448b0f93e4c82c3
-	///
-	/// Usage:
-	///   PoissonDiscSampler sampler = new PoissonDiscSampler(10, 5, 0.3f);
-	///   foreach (Vector2 sample in sampler.Samples()) {
-	///       // ... do something, like instantiate an object at (sample.x, sample.y) for example:
-	///       Instantiate(someObject, new Vector3(sample.x, 0, sample.y), Quaternion.identity);
-	///   }
-	///
-	/// Author: Gregory Schlomoff (gregory.schlomoff@gmail.com)
-	/// Released in the public domain
-	public class PoissonDiscSampler
+    public class PoissonDiscSamplerBruteforce
+    {
+        protected List<Vector2> samples;
+        public float Radius { get; private set; }
+        public float MaxIteration { get; set; } = 1000;
+        public PoissonDiscSamplerBruteforce(float radius)
+        {
+            samples = new List<Vector2>();
+            Radius = radius;
+        }
+
+        public Vector2 NextSample(float width, float height)
+        {
+            int it = 0;
+            Vector2 result;
+            do
+            {
+                result = new Vector2(Random.Range(Radius, width - Radius), Random.Range(Radius, height - Radius));
+                it++;
+            }
+            while (it <= MaxIteration && CheckCollision(result));
+
+            samples.Add(result);
+            return result;
+        }
+
+        /// <summary>
+        /// return true if there is a collision
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public bool CheckCollision(Vector2 position)
+        {
+            foreach(var s in samples)
+            {
+                if((position - s).magnitude < Radius * 2)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        public void Clear()
+        {
+            samples.Clear();
+        }
+    }
+
+    /// Poisson-disc sampling using Bridson's algorithm.
+    /// Adapted from Mike Bostock's Javascript source: http://bl.ocks.org/mbostock/19168c663618b7f07158
+    ///
+    /// See here for more information about this algorithm:
+    ///   http://devmag.org.za/2009/05/03/poisson-disk-sampling/
+    ///   http://bl.ocks.org/mbostock/dbb02448b0f93e4c82c3
+    ///
+    /// Usage:
+    ///   PoissonDiscSampler sampler = new PoissonDiscSampler(10, 5, 0.3f);
+    ///   foreach (Vector2 sample in sampler.Samples()) {
+    ///       // ... do something, like instantiate an object at (sample.x, sample.y) for example:
+    ///       Instantiate(someObject, new Vector3(sample.x, 0, sample.y), Quaternion.identity);
+    ///   }
+    ///
+    /// Author: Gregory Schlomoff (gregory.schlomoff@gmail.com)
+    /// Released in the public domain
+    public class PoissonDiscSampler
 	{
 		private const int k = 30;  // Maximum number of attempts before marking a sample as inactive.
 

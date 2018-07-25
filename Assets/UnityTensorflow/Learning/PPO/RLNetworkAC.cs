@@ -9,7 +9,8 @@ using MLAgents;
 /// <summary>
 /// actor critic network abstract class
 /// </summary>
-public abstract class RLNetworkAC : ScriptableObject {
+public abstract class RLNetworkAC : UnityNetwork
+{
 
 
     /// <summary>
@@ -29,10 +30,4 @@ public abstract class RLNetworkAC : ScriptableObject {
 
     public abstract List<Tensor> GetWeights();
 
-    public virtual void OnInspector()
-    {
-#if UNITY_EDITOR
-        Editor.CreateEditor(this).OnInspectorGUI();
-#endif
-    }
 }

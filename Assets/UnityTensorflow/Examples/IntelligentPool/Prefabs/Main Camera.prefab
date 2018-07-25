@@ -25,7 +25,7 @@ GameObject:
   - component: {fileID: 114689177346702312}
   - component: {fileID: 64037130317241816}
   - component: {fileID: 114173365103390320}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HeatMap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -284,6 +284,9 @@ MonoBehaviour:
   gameSystemRef: {fileID: 0}
   agentRef: {fileID: 0}
   agentSimplRef: {fileID: 0}
+  heatmapLayer:
+    serializedVersion: 2
+    m_Bits: 32
 --- !u!114 &114903751485192714
 MonoBehaviour:
   m_ObjectHideFlags: 1

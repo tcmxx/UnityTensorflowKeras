@@ -12,11 +12,14 @@ public class TrainerMimic : Trainer
 {
     protected TrainerParamsMimic parametersMimic;
 
-    
+
     StatsLogger stats;
 
     protected DataBuffer dataBuffer;
 
+    [ReadOnly]
+    [SerializeField]
+    protected int dataBufferCount;
 
 
     protected SupervisedLearningModel modelSL;
@@ -93,6 +96,7 @@ public class TrainerMimic : Trainer
     public override void IncrementStep()
     {
         base.IncrementStep();
+        dataBufferCount = dataBuffer.CurrentCount;
         if (GetStep() % parametersMimic.saveModelInterval == 0)
         {
             SaveTrainingData();

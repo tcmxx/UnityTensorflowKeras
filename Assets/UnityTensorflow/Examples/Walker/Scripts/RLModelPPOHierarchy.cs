@@ -52,6 +52,8 @@ public class RLModelPPOHierarchy : RLModelPPO {
         {
             inputLowLevelTensor = stateTensor;
         }
+
+        Tensor outputValue = null; Tensor outputAction = null; Tensor outputVariance = null;
         //build the network
         networkHierarchy.BuildNetwork(inputLowLevelTensor, inputHighLevelTensor, ActionSize, ActionSpace, out outputAction, out outputValue,out outputVariance);
 

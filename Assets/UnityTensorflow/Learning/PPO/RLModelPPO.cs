@@ -42,13 +42,9 @@ public class RLModelPPO : LearningModelBase
 
     //the variable for variance
     protected Tensor logSigmaSq = null;
-
-    //some holders for tensors
-    protected Tensor outputVariance = null;
-    protected Tensor outputAction = null;
-    protected Tensor outputValue = null;
-    protected Tensor inputStateTensor = null;
-    protected List<Tensor> inputVisualTensors = null;
+    
+    //protected  inputStateTensor = null;
+    //protected List<Tensor> inputVisualTensors = null;
     
 
     /// <summary>
@@ -58,10 +54,11 @@ public class RLModelPPO : LearningModelBase
     public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
     {
 
-        inputStateTensor = stateTensor;
-        inputVisualTensors = visualTensors;
+        Tensor inputStateTensor = stateTensor;
+        List<Tensor>  inputVisualTensors = visualTensors;
 
         //build the network
+        Tensor outputValue = null; Tensor outputAction = null; Tensor outputVariance = null;
         network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue);
 
         //actor network output variance

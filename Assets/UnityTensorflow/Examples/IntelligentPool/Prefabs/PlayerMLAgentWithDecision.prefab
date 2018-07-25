@@ -55,11 +55,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterationPerUpdate: 1
-  populationSize: 16
+  populationSize: 30
   optimizerType: 0
-  initialStepSize: 1
+  initialStepSize: 0.7
   mode: 1
-  maxIteration: 10
+  maxIteration: 20
   targetValue: 8
   evaluationBatchSize: 8
   iteration: 0
@@ -116,5 +116,6 @@ MonoBehaviour:
   initialStepSize: 0.3
   gameSystem: {fileID: 0}
   shootSequence: 1
+  resetAfterOneShot: 0
   randomizeRedballs: 1
   autoRequestDecision: 1

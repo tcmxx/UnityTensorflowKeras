@@ -12,7 +12,7 @@ using KerasSharp.Engine.Topology;
 /// <summary>
 /// actor critic network abstract class
 /// </summary>
-public abstract class SupervisedLearningNetwork : ScriptableObject
+public abstract class SupervisedLearningNetwork : UnityNetwork
 {
 
 
@@ -29,10 +29,4 @@ public abstract class SupervisedLearningNetwork : ScriptableObject
 
     public abstract List<Tensor> GetWeights();
 
-    public virtual void OnInspector()
-    {
-#if UNITY_EDITOR
-        Editor.CreateEditor(this).OnInspectorGUI();
-#endif
-    }
 }

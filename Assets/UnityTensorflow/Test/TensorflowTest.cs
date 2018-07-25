@@ -18,12 +18,12 @@ using KerasSharp.Constraints;
 using KerasSharp.Activations;
 using KerasSharp.Models;
 using KerasSharp.Backends;
-
+using KerasSharp.Layers;
 public class TensorflowTest : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-        
+    // Use this for initialization
+    void Start() {
+
 
         //TestBasicBackendAndOptimizerAndExportGraph();
         //TestLayer();
@@ -39,7 +39,29 @@ public class TensorflowTest : MonoBehaviour {
 
         //print(Path.GetFullPath("Set/setset/set.ser"));
 
-        TestConcatGradient();
+        //TestConcatGradient();
+
+        /*var input1 = UnityTFUtils.Input(new int?[] { 5 });
+        var input2 = UnityTFUtils.Input(new int?[] { 5 });
+        List<Tensor> inputs = new List<Tensor>() { input1[0], input2[0] };
+        var concated = new Concat(1).Call(inputs);
+        var layer = new Dense(10);
+        var y1 = layer.Call(concated);
+
+        var seqMolel = new Sequential();
+        seqMolel.Add(new Dense(5, input_dim:  5 ));
+        seqMolel.Add(new Dense(8));
+        Model model = new Model(seqMolel.input, seqMolel.output);
+        model.Call(input1);
+
+        Model model = new Model(inputs, y1);
+        model.Call(
+            new List<Tensor>() {
+                UnityTFUtils.Input(new int?[] { 5 })[0],
+                UnityTFUtils.Input(new int?[] { 5 })[0]
+        });*/
+
+       
     }
 	
 

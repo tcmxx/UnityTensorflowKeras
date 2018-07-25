@@ -29,21 +29,8 @@ public class SupervisedLearningModel : LearningModelBase
     protected Function UpdateFunction { get; set; }
 
 
-    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
     {
-        Debug.Assert(Initialized == false, "Model already Initalized");
-
-        ActionSize = brainParameters.vectorActionSize;
-        StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
-        ActionSpace = brainParameters.vectorActionSpaceType;
-
-        //create basic inputs
-        var inputStateTensor = StateSize > 0 ? UnityTFUtils.Input(new int?[] { StateSize }, name: "InputStates")[0] : null;
-        HasVectorObservation = inputStateTensor != null;
-        var inputVisualTensors = CreateVisualInputs(brainParameters);
-        HasVisualObservation = inputVisualTensors != null;
-
-
         //build the network
         Tensor outputAction = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize, ActionSpace);
 

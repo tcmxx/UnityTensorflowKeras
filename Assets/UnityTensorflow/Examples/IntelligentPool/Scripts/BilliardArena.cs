@@ -7,7 +7,14 @@ using UnityEngine;
 [RequireComponent(typeof(PhysicsStorageBehaviour))]
 public class BilliardArena : MonoBehaviour
 {
-
+    public float notTouchingBallReward = -1;
+    public float outOfBoundReward = -10;
+    public float whiteBallOnPocketReward = -10;
+    public float redBallOnPocketReward = 1;
+    public float maxPocketDistanceReward = 0.5f;
+    public float pocketDistanceRewardExp = -15;
+    public float redBallBounceReward = -0.2f;
+    public float whiteBallBounceReward = -0.6f;
     [ReadOnly]
     [SerializeField]
     private float scoreRaw = 0;
@@ -17,9 +24,10 @@ public class BilliardArena : MonoBehaviour
     public float ActualScore { get { return scoreRaw + CalculateAdditionalReward(); } }
 
     public float physicsDrag = 0.5f;
-    public Vector2 redBallInitialRangeMin;
-    public Vector2 redBallInitialRangeMax;
-    public float redBallRadius;
+    public Vector2 randomBallInitialRangeMin;
+    public Vector2 randomBallInitialRangeMax;
+    public float ballRadius = 0.07f;
+    public bool alsoRandomizeWhiteBall = false;
 
     public float forceMultiplier = 5;
 
@@ -85,35 +93,29 @@ public class BilliardArena : MonoBehaviour
 
         if(randomize)
         {
-            int count = 0;
-            var size = redBallInitialRangeMax - redBallInitialRangeMin;
-            var sampler = new TCUtils.PoissonDiscSampler(size.x, size.y, redBallRadius);
+            var size = randomBallInitialRangeMax - randomBallInitialRangeMin;
             var ballsList = ballsToPocket.Keys.ToList();
-
-            List<int> numList = new List<int>();
-            foreach (var s in sampler.Samples())
+            TCUtils.PoissonDiscSamplerBruteforce sampler = new TCUtils.PoissonDiscSamplerBruteforce(ballRadius);
+            for (int i = 0; i < ballsList.Count; ++i)
             {
-                count++;
-                if (count >= 50)
-                    break;
-            }
-            for(int i = 0; i < sampler.ActiveSamples.Count; ++i)
-            {
-                numList.Add(i);
-            }
-
-            MathUtils.Shuffle(numList, new System.Random());
-            for(int i = 0; i < ballsList.Count; ++i)
-            {
-                var s = sampler.ActiveSamples[numList[i]];
+                var s = sampler.NextSample(randomBallInitialRangeMax.x - randomBallInitialRangeMin.x,
+                    randomBallInitialRangeMax.y - randomBallInitialRangeMin.y);
                 var p = ballsList[i].transform.localPosition;
-                p.x = redBallInitialRangeMin.x + s.x;
-                p.z = redBallInitialRangeMin.y + s.y;
+                p.x = randomBallInitialRangeMin.x + s.x;
+                p.z = randomBallInitialRangeMin.y + s.y;
                 ballsList[i].transform.localPosition = p;
                 ballsList[i].SetActive(true);
                 ballsToPocket[ballsList[i]] = true;
             }
-
+            if (alsoRandomizeWhiteBall)
+            {
+                var s = sampler.NextSample(randomBallInitialRangeMax.x - randomBallInitialRangeMin.x,
+                    randomBallInitialRangeMax.y - randomBallInitialRangeMin.y);
+                var p = whiteBall.transform.localPosition;
+                p.x = randomBallInitialRangeMin.x + s.x;
+                p.z = randomBallInitialRangeMin.y + s.y;
+                whiteBall.transform.localPosition = p;
+            }
 
         }
         scoreRaw = 0;
@@ -168,7 +170,7 @@ public class BilliardArena : MonoBehaviour
         if (IsAllSleeping() && shootsQueue.Count > 0)
         {
             if (!whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall)
-                scoreRaw -= 10;
+                scoreRaw += notTouchingBallReward;
             ShootRaw(shootsQueue.Dequeue());
         }
     }
@@ -214,16 +216,26 @@ public class BilliardArena : MonoBehaviour
         ShootRaw(force);
     }
 
-
+    public void OnBounceEdge(GameObject ball)
+    {
+        if (ball != whiteBall)
+        {
+            scoreRaw += redBallBounceReward;
+        }
+        else if(!whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall)
+        {
+            scoreRaw += whiteBallBounceReward;
+        }
+    }
     public void OnPocket(GameObject ball)
     {
         if (ball == whiteBall)
         {
-            scoreRaw -= 10;
+            scoreRaw += whiteBallOnPocketReward;
         }
         else
         {
-            scoreRaw += 1;
+            scoreRaw += redBallOnPocketReward;
             if (!ballsToPocket.ContainsKey(ball))
             {
                 var keys = new List<GameObject>(ballsToPocket.Keys);
@@ -238,7 +250,7 @@ public class BilliardArena : MonoBehaviour
     public void OnOutOfBound(GameObject ball)
     {
 
-        scoreRaw -= 10;
+        scoreRaw += outOfBoundReward;
         if (!ballsToPocket.ContainsKey(ball) && ball != whiteBall)
         {
             Debug.LogError("Other ball into the pocket");
@@ -352,12 +364,12 @@ public class BilliardArena : MonoBehaviour
                     minSqDist = Mathf.Min(minSqDist, (pocketPositions[i] - ballPos).sqrMagnitude);
                 }
                 //each ball that is close to a pocket adds something
-                addRewards += Mathf.Min(0.5f * Mathf.Exp(-15f * minSqDist), 0.5f);
+                addRewards += Mathf.Min(Mathf.Exp(pocketDistanceRewardExp * minSqDist), maxPocketDistanceReward);
             }
         }
 
         if (!whiteBall.GetComponent<BilliardWhiteBall>().TouchedOtherBall)
-            addRewards -= 1;
+            addRewards += notTouchingBallReward;
         return addRewards;
     }
 }

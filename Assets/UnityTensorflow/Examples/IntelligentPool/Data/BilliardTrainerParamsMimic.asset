@@ -11,12 +11,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8529238a3b364a64a84c7598158b11f8, type: 3}
   m_Name: BilliardTrainerParamsMimic
   m_EditorClassIdentifier: 
+  learningRate: 0.0004
   maxTotalSteps: 100000000
-  batchSize: 64
-  numIterationPerTrain: 1
-  learningRate: 0.001
-  maxBufferSize: 50000
-  chanceOfUsingheuristicForOptimization: 0.9
-  lossLogInterval: 500
-  rewardLogInterval: 10
+  lossLogInterval: 100
   saveModelInterval: 20
+  batchSize: 64
+  numIterationPerTrain: 10
+  requiredDataBeforeTraining: 5000
+  maxBufferSize: 5000
+  actionDiffLogInterval: 100

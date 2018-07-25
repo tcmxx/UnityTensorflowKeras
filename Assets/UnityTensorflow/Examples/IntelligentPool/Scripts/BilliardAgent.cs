@@ -8,11 +8,14 @@ public class BilliardAgent : AgentES
     
     public BilliardGameSystem gameSystem;
     public int shootSequence = 1;
-
+    public bool resetAfterOneShot = false;
     protected Color visColor;
 
     public bool randomizeRedballs = true;
     public bool autoRequestDecision = false;
+
+    private bool hasShot = false;
+
     private void Start()
     {
         //test
@@ -49,16 +52,18 @@ public class BilliardAgent : AgentES
     private void FixedUpdate()
     {
         bool doReset = false;
-        if (gameSystem.GameComplete())
+        if (gameSystem.GameComplete() || (gameSystem.AllShotsComplete() && hasShot && resetAfterOneShot))
         {
             gameSystem.Reset(randomizeRedballs);
             doReset = true;
+            hasShot = false;
         }
 
         if(autoRequestDecision && gameSystem.AllShotsComplete() && !doReset)
         {
             AddReward(gameSystem.defaultArena.ActualScore);
             RequestDecision();
+            hasShot = true;
         }
     }
 
