@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ced37073ced8bb54aa966079f3c61da8, type: 3}
-  m_Name: New GAN Network Dense
+  m_Name: GANNetworkDense2DPlane
   m_EditorClassIdentifier: 
   generatorHiddenLayers:
   - size: 32

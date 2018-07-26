@@ -28,42 +28,81 @@ public class GANModel : MonoBehaviour {
     public bool HasNoiseInput { get; private set; }
     public bool HasConditionInput { get; private set; }
     public bool HasGeneratorL2Loss { get; private set; }
-    private void Start()
-    {
-        Initialize(new int[] { 2 }, new int[] { 1 }, null, true);
 
-        ((UnityTFBackend)K).ExportGraphDef("SavedGraph/test.pb");
+    public int[] outputShape;
+    public int[] inputNoiseShape;
+    public int[] inputConditionShape;
+    public bool hasGeneratorL2Loss = false;
+
+    protected Adam generatorOptimizer;
+    protected Adam discriminatorOptimizer;
+
+    public bool initializeOnAwake = false;
+
+    
+    public float GeneratorLR { get { return generatorLR; }
+        set {
+            generatorLR = value;
+            generatorOptimizer.SetLearningRate(generatorLR);
+        }
+    }
+    private float generatorLR = 0.001f;
+
+    public float DiscriminatorLR
+    {
+        get { return discriminatorLR; }
+        set
+        {
+            discriminatorLR = value;
+            discriminatorOptimizer.SetLearningRate(discriminatorLR);
+        }
+    }
+    private float discriminatorLR = 0.001f;
+
+    public bool Initialized { get; private set; }
+
+
+
+    private void Awake()
+    {
+        if (initializeOnAwake)
+        {
+            Initialize();
+            //Debug.LogWarning("saved graph for test");
+            //((UnityTFBackend)K).ExportGraphDef("SavedGraph/test.pb");
+        }
+        
     }
 
-    public void Initialize(int[] outputShape, int[] inputNoiseShape = null, int[] inputConditionShape = null, bool hasGeneratorL2Loss = false)
+    public void Initialize()
     {
-        HasNoiseInput = inputNoiseShape != null;
-        HasConditionInput = inputConditionShape != null;
-        HasGeneratorL2Loss = hasGeneratorL2Loss;
+        Debug.Assert(Initialized == false, "model already initialized");
 
+        HasNoiseInput = inputNoiseShape != null && inputNoiseShape.Length > 0;
+        HasConditionInput = inputConditionShape != null && inputConditionShape.Length > 0;
+        HasGeneratorL2Loss = hasGeneratorL2Loss;
+       
+
+        //create generator input tensors
         Tensor inputCondition = null;
-        if(inputConditionShape != null)
+        if(HasConditionInput)
             inputCondition = UnityTFUtils.Input(inputConditionShape.Select((t)=>(int?)t).ToArray(), name:"InputConditoin")[0];
         Tensor inputNoise = null;
-        if (inputNoiseShape != null)
+        if (HasNoiseInput)
             inputNoise = UnityTFUtils.Input(inputNoiseShape.Select((t) => (int?)t).ToArray(), name: "InputNoise")[0];
 
-        Debug.Assert(inputNoiseShape != null || inputConditionShape != null, "GAN needs at least one of noise or condition input");
+        Debug.Assert(HasNoiseInput || HasConditionInput, "GAN needs at least one of noise or condition input");
 
         Tensor inputTargetToJudge = UnityTFUtils.Input(outputShape.Select((t) => (int?)t).ToArray(), name: "InputTargetToJudge")[0];
         
-
-
-
+        //build the network
         Tensor generatorOutput, disOutForGenerator, dicOutTarget;
 
         network.BuildNetwork(inputCondition, inputNoise, inputTargetToJudge, outputShape, out generatorOutput, out dicOutTarget, out disOutForGenerator);
-
-
-
+        
         //build the loss
         //generator gan loss
-        Tensor genGANLoss = K.constant(0.0f, new int[] { },DataType.Float) - K.mean(K.binary_crossentropy(disOutForGenerator, K.constant(0.0f, new int[] { }, DataType.Float), true));
+        Tensor genGANLoss = K.constant(0.0f, new int[] { },DataType.Float) - K.mean(K.binary_crossentropy(disOutForGenerator, K.constant(0.0f, new int[] { }, DataType.Float), false),new int[]{ 0,1});
         Tensor genLoss = genGANLoss;
         //generator l2Loss if use it
         Tensor l2Loss = null;
@@ -73,13 +112,19 @@ public class GANModel : MonoBehaviour {
         {
             inputL2LossWeight = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "l2LossWeight", dtype: DataType.Float)[0];
             inputGeneratorTarget = UnityTFUtils.Input(outputShape.Select((t) => (int?)t).ToArray(), name: "GeneratorTarget")[0];
-            l2Loss = K.mul(inputL2LossWeight, K.mean(new MeanSquareError().Call(inputGeneratorTarget, generatorOutput)));
+
+            int[] reduceDim = new int[outputShape.Length];
+            for(int i = 0; i < reduceDim.Length; ++i)
+            {
+                reduceDim[i] = i;
+            }
+            l2Loss = K.mul(inputL2LossWeight, K.mean(new MeanSquareError().Call(inputGeneratorTarget, generatorOutput), reduceDim));
             genLoss = genGANLoss + l2Loss;
         }
 
         //discriminator loss
         inputCorrectLabel = UnityTFUtils.Input(new int?[] { 1 },name:"InputCorrectLabel")[0];
-        Tensor discLoss = K.mean(K.binary_crossentropy(dicOutTarget, inputCorrectLabel, true));
+        Tensor discLoss = K.mean(K.binary_crossentropy(dicOutTarget, inputCorrectLabel, false),new int[] { 0,1});
 
 
 
@@ -89,13 +134,13 @@ public class GANModel : MonoBehaviour {
         List<Tensor> discriminatorTrainInputs = new List<Tensor>();
         discriminatorTrainInputs.Add(inputTargetToJudge);
         discriminatorTrainInputs.Add(inputCorrectLabel);
-        if (inputCondition != null)
+        if (HasConditionInput)
         {
             generatorTrainInputs.Add(inputCondition);
             generateInputs.Add(inputCondition);
             discriminatorTrainInputs.Add(inputCondition);
         }
-        if(inputNoise != null)
+        if(HasNoiseInput)
         {
             generatorTrainInputs.Add(inputNoise);
             generateInputs.Add(inputNoise);
@@ -106,15 +151,18 @@ public class GANModel : MonoBehaviour {
             generatorTrainInputs.Add(inputL2LossWeight);
         }
 
-        var genOptimizer = new Adam(lr: 0.001);
-        var generatorUpdate =  genOptimizer.get_updates(network.GetGeneratorWeights(), null, genLoss); ;
+        //create optimizers
+        generatorOptimizer = new Adam(lr: GeneratorLR);
+        var generatorUpdate = generatorOptimizer.get_updates(network.GetGeneratorWeights(), null, genLoss); ;
         trainGeneratorFunction = K.function(generatorTrainInputs, new List<Tensor> { genLoss }, generatorUpdate, "GeneratorUpdateFunction");
 
-        var discOptimizer = new Adam(lr: 0.001);
-        var discriminatorUpdate = discOptimizer.get_updates(network.GetDiscriminatorWeights(), null, discLoss); ;
+        discriminatorOptimizer = new Adam(lr: DiscriminatorLR);
+        var discriminatorUpdate = discriminatorOptimizer.get_updates(network.GetDiscriminatorWeights(), null, discLoss); ;
         trainDiscriminatorFunction = K.function(discriminatorTrainInputs, new List<Tensor> { discLoss }, discriminatorUpdate, "DiscriminatorUpdateFunction");
 
         generateFunction = K.function(generateInputs, new List<Tensor> { generatorOutput }, null, "GenerateFunction");
+
+        Initialized = true;
     }
 
 
@@ -135,6 +183,41 @@ public class GANModel : MonoBehaviour {
 
     }
 
+    public float TrainGeneratorBatch(Array inputConditions, Array inputNoise, Array inputGeneratorTargets)
+    {
+        List<Array> inputLists = new List<Array>();
+        if (HasConditionInput)
+        {
+            inputLists.Add(inputConditions);
+        }
+        if (HasNoiseInput)
+        {
+            inputLists.Add(inputNoise);
+        }
+        if (HasGeneratorL2Loss)
+        {
+            inputLists.Add(inputGeneratorTargets);
+            inputLists.Add(new float[] { generatorL2LossWeight });
+        }
 
+        var result = trainGeneratorFunction.Call(inputLists);
+        //Array test = (Array)result[0].eval(); 
+        return (float)result[0].eval();
+    }
+
+    public float TrainDiscriminatorBatch(Array inputTargetsToJudge, float[,] inputCorrectLabels,Array inputConditions)
+    {
+        List<Array> inputLists = new List<Array>();
+        inputLists.Add(inputTargetsToJudge);
+        inputLists.Add(inputCorrectLabels);
+
+        if (HasConditionInput)
+        {
+            inputLists.Add(inputConditions);
+        }
+
+        var result = trainDiscriminatorFunction.Call(inputLists);
+        return (float)result[0].eval();
+    }
 
 }

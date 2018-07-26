@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-
+using Accord.Math;
+using System.Linq;
 public static class MathUtils
 {
 
@@ -19,6 +20,30 @@ public static class MathUtils
         return result;
     }
 
+    public static Array GenerateWhiteNoise(int size, float min, float max, int[] noiseDimension = null)
+    {
+        if (size <= 0)
+            return null;
+        if (noiseDimension == null || noiseDimension.Length == 0)
+            return GenerateWhiteNoise(size, min, max);
+
+        int totalSize = size * noiseDimension.Aggregate((t1, t2) => t1 * t2);
+
+        Debug.Assert(totalSize > 0, "Invalid noiseDimension.");
+
+        float[] result = new float[totalSize];
+
+        for (int i = 0; i < totalSize; ++i)
+        {
+            result[i] = UnityEngine.Random.Range(min, max);
+        }
+
+        Array reshapedResult = Array.CreateInstance(typeof(float), new int[]{ size}.Concatenate( noiseDimension));
+
+        Buffer.BlockCopy(result, 0, reshapedResult, 0, totalSize * sizeof(float));
+
+        return reshapedResult;
+    }
 
     public static float NextGaussianFloat()
     {
@@ -26,8 +51,8 @@ public static class MathUtils
 
         do
         {
-            u = 2.0f * Random.value - 1.0f;
-            v = 2.0f * Random.value - 1.0f;
+            u = 2.0f * UnityEngine.Random.value - 1.0f;
+            v = 2.0f * UnityEngine.Random.value - 1.0f;
             S = u * u + v * v;
         }
         while (S >= 1.0);
@@ -81,7 +106,7 @@ public static class MathUtils
         Debug.Assert(total > 0);
 
         float current = 0;
-        float point = Random.Range(0, total);
+        float point = UnityEngine.Random.Range(0, total);
 
         for (int i = 0; i < list.Count; ++i)
         {
