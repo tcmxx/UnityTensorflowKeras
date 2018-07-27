@@ -31,10 +31,10 @@ public class RLModelPPO : LearningModelBase
     protected Function ValueFunction { get; set; }
     protected Function ActionFunction { get; set; }
     protected Function UpdateFunction { get; set; }
-
+    [ShowAllPropertyAttr]
     public RLNetworkAC network;
 
-
+    public OptimizerCreator optimizer;
     
     public float EntropyLossWeight { get; set; }
     public float ValueLossWeight { get; set; }
@@ -155,7 +155,7 @@ public class RLModelPPO : LearningModelBase
             allInputs.Add(inputEntropyLossWeight);
 
             //create optimizer and create necessary functions
-            var updates = CreateOptimizer(updateParameters, outputLoss,trainerParams) ;
+            var updates = AddOptimizer(updateParameters, outputLoss, optimizer) ;
             UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
         }
 

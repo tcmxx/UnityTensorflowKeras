@@ -12,7 +12,7 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
     //public float lrGenerator = 0.001f;
     //public float lrDiscriminator = 0.001f;
     public bool training = false;
-
+    public bool usePredictionInTraining = true;
 
     public int trainedEpisodes = 0;
 
@@ -45,8 +45,10 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
         float gloss = 0, dloss = 0;
         for (int i = 0; i < episodes; ++i)
         {
-            gloss += trainerRef.TrainGeneratorBatch(32);
-            dloss += trainerRef.TrainDiscriminatorBatch(32);
+            var losses = trainerRef.TrainBothBatch(32,usePrediction:usePredictionInTraining);
+            dloss += losses.Item1;
+            gloss += losses.Item2;
+
             trainedEpisodes++;
         }
 

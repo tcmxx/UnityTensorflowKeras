@@ -26,7 +26,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
     public int lowLevelObservationSize;
     public int highLevelObservationSize;
 
-
+    public OptimizerCreator optimizer;
 
     //some holders for tensors
     protected Tensor inputLowLevelTensor = null;
@@ -140,7 +140,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
             allInputs.Add(inputEntropyLossWeight);
 
             //create optimizer and create necessary functions
-            var updates = CreateOptimizer(updateParameters, outputLoss, trainerParams);
+            var updates = AddOptimizer(updateParameters, outputLoss, optimizer);
             UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
         }
 

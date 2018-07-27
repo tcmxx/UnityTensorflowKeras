@@ -11,7 +11,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class TrainerPPO : Trainer
 {
-    
+    [ShowAllPropertyAttr]
     protected TrainerParamsPPO parametersPPO;
     
     protected DataBuffer dataBuffer;

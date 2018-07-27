@@ -10,7 +10,7 @@ using KerasSharp.Activations;
 using System;
 
 [CreateAssetMenu()]
-public class RLNetowrkACHierarchy : ScriptableObject
+public class RLNetowrkACHierarchy : UnityNetwork
 {
     public int inLowlevelLayers = 1;
     public int inLowlevelWidth = 128;
@@ -105,7 +105,7 @@ public class RLNetowrkACHierarchy : ScriptableObject
     }
 
 
-    protected ValueTuple<Tensor,List<Tensor>> CreateContinuousStateEncoder(Tensor state, int hiddenSize, int numLayers, string scope, float initScale)
+    protected static ValueTuple<Tensor,List<Tensor>> CreateContinuousStateEncoder(Tensor state, int hiddenSize, int numLayers, string scope, float initScale)
     {
         var hidden = state;
         List<Tensor> tempWeights = new List<Tensor>();

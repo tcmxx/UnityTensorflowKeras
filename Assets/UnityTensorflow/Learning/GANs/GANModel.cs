@@ -12,18 +12,24 @@ using System.Linq;
 
 using static KerasSharp.Backends.Current;
 using System;
+using MLAgents;
 
-public class GANModel : MonoBehaviour {
+public class GANModel : LearningModelBase
+{
 
+    [ShowAllPropertyAttr]
     public GANNetwork network;
 
     protected Tensor inputCorrectLabel;
-
+    
     public float generatorL2LossWeight = 1;
 
     protected Function trainGeneratorFunction;
     protected Function trainDiscriminatorFunction;
     protected Function generateFunction;
+
+    protected Function predictFunction;
+    protected Function restoreFromPredictFunction;
 
     public bool HasNoiseInput { get; private set; }
     public bool HasConditionInput { get; private set; }
@@ -34,8 +40,9 @@ public class GANModel : MonoBehaviour {
     public int[] inputConditionShape;
     public bool hasGeneratorL2Loss = false;
 
-    protected Adam generatorOptimizer;
-    protected Adam discriminatorOptimizer;
+
+    public OptimizerCreator generatorOptimizer;
+    public OptimizerCreator discriminatorOptimizer;
 
     public bool initializeOnAwake = false;
 
@@ -43,7 +50,7 @@ public class GANModel : MonoBehaviour {
     public float GeneratorLR { get { return generatorLR; }
         set {
             generatorLR = value;
-            generatorOptimizer.SetLearningRate(generatorLR);
+            SetLearningRate(generatorLR,0);
         }
     }
     private float generatorLR = 0.001f;
@@ -54,13 +61,10 @@ public class GANModel : MonoBehaviour {
         set
         {
             discriminatorLR = value;
-            discriminatorOptimizer.SetLearningRate(discriminatorLR);
+            SetLearningRate(discriminatorLR,1);
         }
     }
     private float discriminatorLR = 0.001f;
-
-    public bool Initialized { get; private set; }
-
 
 
     private void Awake()
@@ -152,15 +156,16 @@ public class GANModel : MonoBehaviour {
         }
 
         //create optimizers
-        generatorOptimizer = new Adam(lr: GeneratorLR);
-        var generatorUpdate = generatorOptimizer.get_updates(network.GetGeneratorWeights(), null, genLoss); ;
+        var generatorUpdate = AddOptimizer(network.GetGeneratorWeights(), genLoss, generatorOptimizer);
         trainGeneratorFunction = K.function(generatorTrainInputs, new List<Tensor> { genLoss }, generatorUpdate, "GeneratorUpdateFunction");
 
-        discriminatorOptimizer = new Adam(lr: DiscriminatorLR);
-        var discriminatorUpdate = discriminatorOptimizer.get_updates(network.GetDiscriminatorWeights(), null, discLoss); ;
+        var discriminatorUpdate = AddOptimizer(network.GetDiscriminatorWeights(), discLoss, discriminatorOptimizer);
         trainDiscriminatorFunction = K.function(discriminatorTrainInputs, new List<Tensor> { discLoss }, discriminatorUpdate, "DiscriminatorUpdateFunction");
 
         generateFunction = K.function(generateInputs, new List<Tensor> { generatorOutput }, null, "GenerateFunction");
+
+        //create functoin for training with prediction method
+        CreateTrainWithPredictionFunctions();
 
         Initialized = true;
     }
@@ -220,4 +225,69 @@ public class GANModel : MonoBehaviour {
         return (float)result[0].eval();
     }
 
+    public void PredictWeights()
+    {
+        predictFunction.Call(new List<Array>());
+    }
+    public void RestoreFromPredictedWeights()
+    {
+        restoreFromPredictFunction.Call(new List<Array>());
+    }
+
+    protected void CreateTrainWithPredictionFunctions()
+    {
+        List<Tensor> discWeights = network.GetDiscriminatorWeights();
+        List<List<Tensor>> predictWeightsUpdate = new List<List<Tensor>>();
+        List<List<Tensor>> restoreWeightsUpdate = new List<List<Tensor>>();
+
+        using (K.name_scope("Prediction"))
+        {
+            IEnumerable<int?[]> shapes;
+            Tensor[] saves;
+
+            using (K.name_scope("Vars"))
+            {
+                shapes = discWeights.Select(p => K.get_variable_shape(p));
+                saves = shapes.Select(shape => K.zeros(shape)).ToArray();
+            }
+
+            using (K.name_scope("Predicts"))
+            {
+                for (int i = 0; i < discWeights.Count; ++i)
+                {
+                    var diff = discWeights[i] - saves[i];
+                    var newWeight = diff + discWeights[i];
+                    predictWeightsUpdate.Add(new List<Tensor> { K.update(saves[i], discWeights[i], discWeights[i].name+"_predict") });
+                    predictWeightsUpdate.Add(new List<Tensor> { K.update(discWeights[i], newWeight, discWeights[i].name + "_save") });
+                }
+            }
+
+            using (K.name_scope("Restore"))
+            {
+                for (int i = 0; i < discWeights.Count; ++i)
+                {
+                    restoreWeightsUpdate.Add(new List<Tensor> { K.update(discWeights[i], saves[i], discWeights[i].name) });
+                }
+            }
+        }
+
+        predictFunction = K.function(null, null, predictWeightsUpdate, "PredictFunction");
+        restoreFromPredictFunction = K.function(null, null, restoreWeightsUpdate, "RestoreFromPredictFunction");
+    }
+
+    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
+    {
+        throw new NotImplementedException();
+    }
+    public override void Initialize(BrainParameters brainParameters, bool enableTraining, TrainerParams trainerParams)
+    {
+        Debug.LogError("GAN Model can not be use for ML agent yet");
+    }
+    public override List<Tensor> GetAllModelWeights()
+    {
+        List<Tensor> weights = new List<Tensor>();
+        weights.AddRange(network.GetGeneratorWeights());
+        weights.AddRange(network.GetDiscriminatorWeights());
+        return weights;
+    }
 }

@@ -6,10 +6,6 @@ using KerasSharp.Activations;
 using System;
 using KerasSharp.Engine.Topology;
 using KerasSharp.Initializers;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 
 
 public abstract class UnityNetwork : ScriptableObject
@@ -55,10 +51,4 @@ public abstract class UnityNetwork : ScriptableObject
         return ValueTuple.Create(temp, weights);
     }
 
-    public virtual void OnInspector()
-    {
-#if UNITY_EDITOR
-        Editor.CreateEditor(this).OnInspectorGUI();
-#endif
-    }
 }

@@ -10,6 +10,7 @@ using System.Linq;
 
 public class TrainerMimic : Trainer
 {
+    [ShowAllPropertyAttr]
     protected TrainerParamsMimic parametersMimic;
 
 

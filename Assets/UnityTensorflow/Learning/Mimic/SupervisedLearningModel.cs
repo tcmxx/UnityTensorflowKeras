@@ -23,7 +23,7 @@ using KerasSharp.Backends;
 /// </summary>
 public class SupervisedLearningModel : LearningModelBase
 {
-    
+    [ShowAllPropertyAttr]
     public SupervisedLearningNetwork network;
     protected Function ActionFunction { get; set; }
     protected Function UpdateFunction { get; set; }
@@ -80,8 +80,8 @@ public class SupervisedLearningModel : LearningModelBase
             }
             allInputs.Add(inputActionLabel);
             //create optimizer and create necessary functions
-            mainOptimizer = new Adam(lr: trainingParams.learningRate);
-            var updates = mainOptimizer.get_updates(updateParameters, null, loss); ;
+            optimiers.Add(new Adam(lr: trainingParams.learningRate));
+            var updates = optimiers[0].get_updates(updateParameters, null, loss); ;
             UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
         }
         

@@ -3,19 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GANTrainer : MonoBehaviour {
-    
+public class GANTrainer : MonoBehaviour
+{
+
     public GANModel ganReference;
 
 
     public int maxDataBufferCount = 50000;
     protected DataBuffer dataBuffer = null;
-   
-    
+
+
     public void AddData(Array inputConditions, Array inputTargets)
     {
 
-        if(dataBuffer == null)
+        if (dataBuffer == null)
         {
             //create databuffer if not exist yet
             List<DataBuffer.DataInfo> dataInfos = new List<DataBuffer.DataInfo>();
@@ -41,9 +42,42 @@ public class GANTrainer : MonoBehaviour {
     //clear all data
     public void ClearData()
     {
-        if(dataBuffer != null)
+        if (dataBuffer != null)
             dataBuffer.ClearData();
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="batchSize"></param>
+    /// <param name="generatorTrainCount"></param>
+    /// <param name="discriminatorTrainCount"></param>
+    /// <param name="usePrediction">https://openreview.net/pdf?id=Skj8Kag0Z</param>
+    /// <returns>discriminator loss, generator loss</returns>
+    public ValueTuple<float, float> TrainBothBatch(int batchSize, int generatorTrainCount = 1, int discriminatorTrainCount = 1, bool usePrediction = false)
+    {
+        float disLoss = 0, genLoss = 0;
+        for (int i = 0; i < discriminatorTrainCount; ++i)
+        {
+            disLoss += TrainDiscriminatorBatch(batchSize);
+        }
+
+        if(usePrediction)
+            ganReference.PredictWeights();
+
+        for (int i = 0; i < generatorTrainCount; ++i)
+        {
+            genLoss += TrainGeneratorBatch(batchSize);
+        }
+
+        if (usePrediction)
+            ganReference.RestoreFromPredictedWeights();
+
+        return ValueTuple.Create(disLoss / discriminatorTrainCount, genLoss / generatorTrainCount);
+    }
+
+
+
 
     public float TrainDiscriminatorBatch(int batchSize)
     {

@@ -34,7 +34,7 @@ public abstract class LearningModelBase : MonoBehaviour {
 
     public bool Initialized { get; protected set; } = false;
 
-    protected Adam mainOptimizer;
+    protected List<OptimizerBase> optimiers;
 
     public virtual void Initialize(BrainParameters brainParameters, bool enableTraining, TrainerParams trainerParams)
     {
@@ -84,31 +84,44 @@ public abstract class LearningModelBase : MonoBehaviour {
     public abstract void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams);
 
 
-    public List<List<Tensor>> CreateOptimizer(List<Tensor> allWeights, Tensor loss, TrainerParams trainerParams) 
+    public List<List<Tensor>> AddOptimizer(List<Tensor> allWeights, Tensor loss, OptimizerCreator optimizerCreator) 
     {
-        mainOptimizer = new Adam(lr: 0.001);
-        return mainOptimizer.get_updates(allWeights, null, loss); ;
+        if (optimiers == null)
+            optimiers = new List<OptimizerBase>();
+        var newOpt = optimizerCreator.CreateOptimizer();
+        optimiers.Add(newOpt);
+        return newOpt.get_updates(allWeights, null, loss); ;
     } 
 
     public virtual List<Array> GetAllOptimizerWeights()
     {
         if (!TrainingEnabled)
             return new List<Array>();
-        return mainOptimizer.get_weights();
+        List<Array> allWeights = new List<Array>();
+        foreach(var o in optimiers)
+        {
+            allWeights.AddRange(o.get_weights());
+        }
+        return allWeights;
     }
     public virtual void SetAllOptimizerWeights(List<Array> values)
     {
-        mainOptimizer.set_weights(values);
+        int currentIndex = 0;
+        foreach(var o in optimiers)
+        {
+            o.set_weights(values.GetRange(currentIndex, o.Weights.Count));
+            currentIndex += o.Weights.Count;
+        }
     }
 
-    public virtual void SetLearningRate(float rl)
+    public virtual void SetLearningRate(float lr, int optimierIndex = 0)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use SetLearningRate()");
-        mainOptimizer.SetLearningRate(rl);
+        optimiers[optimierIndex].SetLearningRate(lr);
     }
 
 
-    protected List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
+    protected static List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
     {
         if (brainParameters.cameraResolutions == null || brainParameters.cameraResolutions.Length == 0)
         {
