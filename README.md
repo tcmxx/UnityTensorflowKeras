@@ -19,32 +19,9 @@ Here is a simple example of how to use your existing UnityML agent and this repo
 7. You can click Window/Grapher from menu to monitor your training process.(It is a modified version of old Grapher, when it was still free. It seems to be not free nor opensource anymore...I will remove it if it is causing any problem.)
 
 
-## Installation
-1. Clone the Unity MLAgent repo: https://github.com/Unity-Technologies/ml-agents. Or make sure you already have a project with ml-agent integrated.
+## Documentation
+For more information including installation and usage instructions, go to [Document](Documents/Readme.md).
 
-2. Import the TenfowflowSharp plugin. One provided by Unity: https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Using-TensorFlow-Sharp-in-Unity.md. It is not fully updated, and some operations are not supported. Or you can go to https://github.com/tcmxx/keras-sharp to download the version provided by me.
-
-3. Clone this repo with submodules, for example you can use: 
- ```
- git clone --recurse-submodules https://github.com/tcmxx/UnityTensorflowKeras.git
- ```
-   Note that you have to clone with submodules since it uses [KerasSharp](https://github.com/tcmxx/keras-sharp). You can also clone KerasSharp by yourself.
- 
-4. Copy the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder and put it into your Unity MLAgent's /Assets folder. Then you need to either replace the Brain.cs in Unity MLAgent's Assets/ML-Agents/Scripts folder with the one from UnityTensorflowKeras, or modify Brain.cs by youself to keep it up with the correct version: Add one line to the BrainType enum:
-```    
-    public enum BrainType
-    {
-        Player,
-        Heuristic,
-        External,
-        Internal,
-        InternalTrainable
-    }
-```
-This enable you to select InternalTrainable as external brain type.
-
-5. Delete the System.ValueTuple.dll in Unity MLAgent's /Assets/ML-Agents/Plugins folder if it is still there and you have updated Unity with .net 4.71 support. 
-6. Done!
 
 ## Platforms:
 Windows is almost fully supported. If you want to use GPU, CUDA and cuDNN are needed(See above). Mac should be fully supported if I have a Mac to build, but now it does not have Concat Gradient. Mac does not support GPU. Linux is not tested at all.
