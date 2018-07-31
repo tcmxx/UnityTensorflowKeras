@@ -18,18 +18,28 @@ using KerasSharp.Losses;
 using KerasSharp;
 using KerasSharp.Backends;
 
+
+
+
+public interface ISupervisedLearningModel
+{
+    float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation);
+    float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions);
+}
+
 /// <summary>
 /// actor critic network abstract class
 /// </summary>
-public class SupervisedLearningModel : LearningModelBase
+public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningModel
 {
     [ShowAllPropertyAttr]
     public SupervisedLearningNetwork network;
+    public OptimizerCreator optimizer;
     protected Function ActionFunction { get; set; }
     protected Function UpdateFunction { get; set; }
 
 
-    public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors,  TrainerParams trainerParams)
     {
         //build the network
         Tensor outputAction = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize, ActionSpace);
@@ -47,6 +57,10 @@ public class SupervisedLearningModel : LearningModelBase
 
         //build the parts for training
         TrainerParamsMimic trainingParams = trainerParams as TrainerParamsMimic;
+        if (trainerParams != null && trainingParams == null)
+        {
+            Debug.LogError("Trainer params for Supervised learning mode needs to be a TrainerParamsMimic type");
+        }
         if (trainingParams != null)
         {
             //training inputs
@@ -79,9 +93,9 @@ public class SupervisedLearningModel : LearningModelBase
                 observationInputs.AddRange(inputVisualTensors);
             }
             allInputs.Add(inputActionLabel);
+
             //create optimizer and create necessary functions
-            optimiers.Add(new Adam(lr: trainingParams.learningRate));
-            var updates = optimiers[0].get_updates(updateParameters, null, loss); ;
+            var updates = AddOptimizer(updateParameters, loss, optimizer);
             UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
         }
         

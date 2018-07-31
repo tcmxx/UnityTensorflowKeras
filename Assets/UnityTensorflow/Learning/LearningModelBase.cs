@@ -36,6 +36,29 @@ public abstract class LearningModelBase : MonoBehaviour {
 
     protected List<OptimizerBase> optimiers;
 
+    /// <summary>
+    /// implement this method for your learning model for use of ML agent. It is called by a Trainer. You should create everything inccluding the neural network and optimizer(if trainer params if not null),
+    /// using the inputs tensors
+    /// </summary>
+    /// <param name="brainParameters">brain parameter of the MLagent brain</param>
+    /// <param name="stateTensor">the input tensor of the vector observation</param>
+    /// <param name="visualTensors">input tensors of visual observations</param>
+    /// <param name="trainerParams">trainer parameters passed by the trainer. You if it is null, training is no enbled and you dont have to implement the optimzing parts. </param>
+    public abstract void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, TrainerParams trainerParams);
+
+    /// <summary>
+    /// Implement this method for getting all model's weights (not including optimizers parameters), for save and restore purpose.
+    /// </summary>
+    /// <returns>list of all model's weights</returns>
+    public abstract List<Tensor> GetAllModelWeights();
+
+
+    /// <summary>
+    /// Trainers will call this method to initialize the model. This method will call the InitializeInner()
+    /// </summary>
+    /// <param name="brainParameters">brain parameter of the MLagent brain</param>
+    /// <param name="enableTraining">whether enable training</param>
+    /// <param name="trainerParams">trainer parameters passed by the trainer. </param>
     public virtual void Initialize(BrainParameters brainParameters, bool enableTraining, TrainerParams trainerParams)
     {
         Debug.Assert(Initialized == false, "Model already Initalized");
@@ -50,20 +73,8 @@ public abstract class LearningModelBase : MonoBehaviour {
         var inputVisualTensors = CreateVisualInputs(brainParameters);
         HasVisualObservation = inputVisualTensors != null;
 
-        //create functions for evaluation
-        List<Tensor> observationInputs = new List<Tensor>();
-
-        if (HasVectorObservation)
-        {
-            observationInputs.Add(inputStateTensor);
-        }
-        if (HasVisualObservation)
-        {
-            observationInputs.AddRange(inputVisualTensors);
-        }
-
-
-        InitializeInner(brainParameters, inputStateTensor, inputVisualTensors, observationInputs, enableTraining? trainerParams:null);
+        //create inner intialization
+        InitializeInner(brainParameters, inputStateTensor, inputVisualTensors,  enableTraining? trainerParams:null);
 
         //test
         //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
@@ -81,9 +92,13 @@ public abstract class LearningModelBase : MonoBehaviour {
 
     }
 
-    public abstract void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams);
-
-
+    /// <summary>
+    /// Add a optimizer to the model. the new optimzier will be append to the optimiers list.
+    /// </summary>
+    /// <param name="allWeights">all weights that this optimizer need to optimzer</param>
+    /// <param name="loss">loss tensor</param>
+    /// <param name="optimizerCreator">A OptimizerCreator object where the information of the optimizer is specified.</param>
+    /// <returns></returns>
     public List<List<Tensor>> AddOptimizer(List<Tensor> allWeights, Tensor loss, OptimizerCreator optimizerCreator) 
     {
         if (optimiers == null)
@@ -91,8 +106,27 @@ public abstract class LearningModelBase : MonoBehaviour {
         var newOpt = optimizerCreator.CreateOptimizer();
         optimiers.Add(newOpt);
         return newOpt.get_updates(allWeights, null, loss); ;
-    } 
+    }
 
+    /// <summary>
+    /// Add a optimizer to the model. the new optimzier will be append to the optimiers list.
+    /// </summary>
+    /// <param name="allWeights">all weights that this optimizer need to optimzer</param>
+    /// <param name="loss">loss tensor</param>
+    /// <param name="optimizer">optimizer</param>
+    /// <returns></returns>
+    public List<List<Tensor>> AddOptimizer(List<Tensor> allWeights, Tensor loss, OptimizerBase optimizer)
+    {
+        if (optimiers == null)
+            optimiers = new List<OptimizerBase>();
+        optimiers.Add(optimizer);
+        return optimizer.get_updates(allWeights, null, loss); ;
+    }
+
+    /// <summary>
+    /// This method will return all weights used in all optimizers
+    /// </summary>
+    /// <returns>all weights used by optimizers</returns>
     public virtual List<Array> GetAllOptimizerWeights()
     {
         if (!TrainingEnabled)
@@ -104,6 +138,11 @@ public abstract class LearningModelBase : MonoBehaviour {
         }
         return allWeights;
     }
+
+    /// <summary>
+    /// Set all the weights of the optimziers
+    /// </summary>
+    /// <param name="values">array of weights. might be values returned by <see cref="GetAllOptimizerWeights"/></param>
     public virtual void SetAllOptimizerWeights(List<Array> values)
     {
         int currentIndex = 0;
@@ -114,13 +153,25 @@ public abstract class LearningModelBase : MonoBehaviour {
         }
     }
 
-    public virtual void SetLearningRate(float lr, int optimierIndex = 0)
+    //the default set learning rate method.
+    public virtual void SetLearningRate(float lr)
+    {
+        SetLearningRate(lr, 0);
+    }
+
+
+    //set the learning weights of certain optimizer
+    public virtual void SetLearningRate(float lr, int optimierIndex)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use SetLearningRate()");
         optimiers[optimierIndex].SetLearningRate(lr);
     }
 
-
+    /// <summary>
+    /// create visual input  tensors for the BrainParameters for MLagent.
+    /// </summary>
+    /// <param name="brainParameters">BrainParameters</param>
+    /// <returns>List of all input visual tensors</returns>
     protected static List<Tensor> CreateVisualInputs(BrainParameters brainParameters)
     {
         if (brainParameters.cameraResolutions == null || brainParameters.cameraResolutions.Length == 0)
@@ -148,10 +199,10 @@ public abstract class LearningModelBase : MonoBehaviour {
         return allInputs;
     }
 
-
-
-    public abstract List<Tensor> GetAllModelWeights();
-
+    /// <summary>
+    /// Set all weigths for the model.
+    /// </summary>
+    /// <param name="values">list of arrays that are the values of each weight</param>
     public virtual void SetAllModelWeights(List<Array> values)
     {
         List<Tensor> updateParameters = GetAllModelWeights();
@@ -165,8 +216,10 @@ public abstract class LearningModelBase : MonoBehaviour {
         }
     }
 
-
-
+    /// <summary>
+    /// set all weights including optimzierss and network's from a input byte array. 
+    /// </summary>
+    /// <param name="data">checkpoint data. It should be the one that is obtained from <see cref="SaveCheckpoint"/>)</param>
     public virtual void RestoreCheckpoint(byte[] data)
     {
         //deserialize the data
@@ -186,9 +239,9 @@ public abstract class LearningModelBase : MonoBehaviour {
     }
 
     /// <summary>
-    /// save the models all parameters to a byte array
+    /// get the models all weights,including neural network's and optimziers to a byte array. 
     /// </summary>
-    /// <returns></returns>
+    /// <returns>the data</returns>
     public virtual byte[] SaveCheckpoint()
     {
         List<Array> data = GetAllModelWeights().Select(t => (Array)t.eval()).ToList();

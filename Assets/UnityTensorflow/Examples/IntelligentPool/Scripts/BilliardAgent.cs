@@ -9,9 +9,10 @@ public class BilliardAgent : AgentES
     public BilliardGameSystem gameSystem;
     public int shootSequence = 1;
     public bool resetAfterOneShot = false;
+    public bool resetOnStart = false;
     protected Color visColor;
 
-    public bool randomizeRedballs = true;
+    public bool randomizeBalls = true;
     public bool autoRequestDecision = false;
 
     private bool hasShot = false;
@@ -20,6 +21,8 @@ public class BilliardAgent : AgentES
     {
         //test
         //gameSystem.ShootSequence(new List<Vector3>() { Vector3.right, Vector3.back });
+        if(resetOnStart)
+            gameSystem.Reset(randomizeBalls);
     }
 
     public override void InitializeAgent()
@@ -54,7 +57,7 @@ public class BilliardAgent : AgentES
         bool doReset = false;
         if (gameSystem.GameComplete() || (gameSystem.AllShotsComplete() && hasShot && resetAfterOneShot))
         {
-            gameSystem.Reset(randomizeRedballs);
+            gameSystem.Reset(randomizeBalls);
             doReset = true;
             hasShot = false;
         }

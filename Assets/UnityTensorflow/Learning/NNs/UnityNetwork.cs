@@ -21,6 +21,10 @@ public abstract class UnityNetwork : ScriptableObject
         public bool useBias = true;
         public Activation.ActivationFunction activationFunction;
 
+        public SimpleDenseLayerDef()
+        {
+            size = 32;
+        }
 
         /// <summary>
         /// return the output tensor and list of weights

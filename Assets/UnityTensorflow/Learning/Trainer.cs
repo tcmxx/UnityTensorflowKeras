@@ -34,6 +34,7 @@ public abstract class Trainer : MonoBehaviour
     public bool isTraining;
     protected bool prevIsTraining;
 
+    [ShowAllPropertyAttr]
     public TrainerParams parameters;
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";

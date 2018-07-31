@@ -9,11 +9,17 @@ public class ShowAllPropertyDrawer : PropertyDrawer
     // Draw the property inside the given rect
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        SerializedObject childObj = new SerializedObject(property.objectReferenceValue);
-        SerializedProperty ite = childObj.GetIterator();
+
 
         //EditorGUI
-       
+
+        if (property.objectReferenceValue == null)
+        {
+            EditorGUI.PropertyField(position, property, true);
+            return;
+        }
+
+
         EditorGUI.LabelField(position, "", GUI.skin.horizontalSlider);
         float standardSpacing = EditorGUI.GetPropertyHeight(property, label, false);
         float prevHeight = standardSpacing + EditorGUIUtility.standardVerticalSpacing;
@@ -22,9 +28,13 @@ public class ShowAllPropertyDrawer : PropertyDrawer
         EditorGUI.PropertyField(anotherRect, property, true);
         prevHeight = prevHeight + anotherRect.height + EditorGUIUtility.standardVerticalSpacing;
 
+
+
         var indent = EditorGUI.indentLevel;
         EditorGUI.indentLevel += 1;
 
+        SerializedObject childObj = new SerializedObject(property.objectReferenceValue);
+        SerializedProperty ite = childObj.GetIterator();
         ite.NextVisible(true);
         while (ite.NextVisible(false))
         {
@@ -47,6 +57,9 @@ public class ShowAllPropertyDrawer : PropertyDrawer
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
+        if (property.objectReferenceValue == null)
+            return base.GetPropertyHeight(property, label);
+
         SerializedObject childObj = new SerializedObject(property.objectReferenceValue);
         SerializedProperty ite = childObj.GetIterator();
 

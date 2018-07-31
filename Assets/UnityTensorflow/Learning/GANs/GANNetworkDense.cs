@@ -110,4 +110,6 @@ public class GANNetworkDense : GANNetwork
         return output;
         
     }
+
+   
 }

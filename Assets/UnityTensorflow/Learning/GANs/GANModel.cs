@@ -14,14 +14,14 @@ using static KerasSharp.Backends.Current;
 using System;
 using MLAgents;
 
-public class GANModel : LearningModelBase
+public class GANModel : LearningModelBase, ISupervisedLearningModel
 {
 
     [ShowAllPropertyAttr]
     public GANNetwork network;
 
     protected Tensor inputCorrectLabel;
-    
+
     public float generatorL2LossWeight = 1;
 
     protected Function trainGeneratorFunction;
@@ -46,6 +46,7 @@ public class GANModel : LearningModelBase
 
     public bool initializeOnAwake = false;
 
+    public TrainerParamsGAN TrainerParams { get; protected set; } = null;
     
     public float GeneratorLR { get { return generatorLR; }
         set {
@@ -78,7 +79,10 @@ public class GANModel : LearningModelBase
         
     }
 
-    public void Initialize()
+    /// <summary>
+    /// Initialize the GAN model based on the current value fields, without considering the MLAgent stuff. 
+    /// </summary>
+    public void Initialize(bool enableTraining = true)
     {
         Debug.Assert(Initialized == false, "model already initialized");
 
@@ -156,18 +160,21 @@ public class GANModel : LearningModelBase
         }
 
         //create optimizers
-        var generatorUpdate = AddOptimizer(network.GetGeneratorWeights(), genLoss, generatorOptimizer);
-        trainGeneratorFunction = K.function(generatorTrainInputs, new List<Tensor> { genLoss }, generatorUpdate, "GeneratorUpdateFunction");
+        if (enableTraining)
+        {
+            var generatorUpdate = AddOptimizer(network.GetGeneratorWeights(), genLoss, generatorOptimizer);
+            trainGeneratorFunction = K.function(generatorTrainInputs, new List<Tensor> { genLoss }, generatorUpdate, "GeneratorUpdateFunction");
 
-        var discriminatorUpdate = AddOptimizer(network.GetDiscriminatorWeights(), discLoss, discriminatorOptimizer);
-        trainDiscriminatorFunction = K.function(discriminatorTrainInputs, new List<Tensor> { discLoss }, discriminatorUpdate, "DiscriminatorUpdateFunction");
-
+            var discriminatorUpdate = AddOptimizer(network.GetDiscriminatorWeights(), discLoss, discriminatorOptimizer);
+            trainDiscriminatorFunction = K.function(discriminatorTrainInputs, new List<Tensor> { discLoss }, discriminatorUpdate, "DiscriminatorUpdateFunction");
+        }
         generateFunction = K.function(generateInputs, new List<Tensor> { generatorOutput }, null, "GenerateFunction");
 
         //create functoin for training with prediction method
         CreateTrainWithPredictionFunctions();
 
         Initialized = true;
+        TrainingEnabled = enableTraining;
     }
 
 
@@ -225,6 +232,40 @@ public class GANModel : LearningModelBase
         return (float)result[0].eval();
     }
 
+
+    /// <summary>
+    /// Train the discriminator with correct data. And then generate the same amount of fake data use the same conditions to train the discrminator.
+    /// </summary>
+    /// <param name="inputTargetsToJudge"></param>
+    /// <param name="inputConditions"></param>
+    /// <returns></returns>
+    public float TrainDiscriminatorBatch(Array inputTargetsReal,  Array inputConditions)
+    {
+        int batchSize = inputTargetsReal.GetLength(0);
+        //generate noise
+        Array noise = null;
+        if (HasNoiseInput)
+        {
+            noise = MathUtils.GenerateWhiteNoise(batchSize, -1, 1, inputNoiseShape);
+        }
+        //genrate fake data
+        Array generatedFake = GenerateBatch(inputConditions, noise);
+
+        //genreate labels
+        float[,] fakeLabels = new float[batchSize, 1];
+        float[,] realLabels = new float[batchSize, 1];
+        for (int i = 0; i < batchSize; ++i)
+        {
+            fakeLabels[i, 0] = 0;
+            realLabels[i, 0] = 1;
+        }
+
+        //train with fake labels
+        float l1 = TrainDiscriminatorBatch(generatedFake, fakeLabels, inputConditions);
+        float l2 = TrainDiscriminatorBatch(inputTargetsReal, realLabels, inputConditions);
+        return (l1 + l2) / 2;
+    }
+
     public void PredictWeights()
     {
         predictFunction.Call(new List<Array>());
@@ -275,19 +316,90 @@ public class GANModel : LearningModelBase
         restoreFromPredictFunction = K.function(null, null, restoreWeightsUpdate, "RestoreFromPredictFunction");
     }
 
-    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
-    {
-        throw new NotImplementedException();
-    }
-    public override void Initialize(BrainParameters brainParameters, bool enableTraining, TrainerParams trainerParams)
-    {
-        Debug.LogError("GAN Model can not be use for ML agent yet");
-    }
+
+
+
     public override List<Tensor> GetAllModelWeights()
     {
         List<Tensor> weights = new List<Tensor>();
         weights.AddRange(network.GetGeneratorWeights());
         weights.AddRange(network.GetDiscriminatorWeights());
         return weights;
+    }
+
+
+
+    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, TrainerParams trainerParams)
+    {
+        if (brainParameters.cameraResolutions != null && brainParameters.cameraResolutions.Length != 0)
+        {
+            Debug.LogError("GAN for ML agent does not support visual input yet");
+        }
+        Debug.Assert(brainParameters.vectorActionSpaceType == SpaceType.continuous, "GAN for ML agent does not support discrete action space.");
+
+        TrainerParams = trainerParams as TrainerParamsGAN;
+        if (trainerParams != null && TrainerParams == null)
+        {
+            Debug.LogError("Trainer params for GAN needs to be a TrainerParamsGAN type");
+        }
+
+        outputShape = new int[] { ActionSize };
+        inputConditionShape = new int[] { StateSize };
+
+        Initialize(trainerParams != null);
+    }
+
+
+
+    /// <summary>
+    /// use for ML agent TrainerMimic
+    /// </summary>
+    /// <param name="vectorObservation"></param>
+    /// <param name="visualObservation"></param>
+    /// <returns></returns>
+    public float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    {
+        return (float[,])GenerateBatch(vectorObservation, MathUtils.GenerateWhiteNoise(vectorObservation.GetLength(0), -1, 1,inputNoiseShape));
+    }
+
+    /// <summary>
+    /// use for ML agent TrainerMimic
+    /// </summary>
+    /// <param name="vectorObservations"></param>
+    /// <param name="visualObservations"></param>
+    /// <param name="actions"></param>
+    /// <returns></returns>
+    public float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions)
+    {
+        float disLoss = 0, genLoss = 0;
+        int batchSize = vectorObservations.GetLength(0);
+        for (int i = 0; i < TrainerParams.discriminatorTrainCount; ++i)
+        {
+            disLoss += TrainDiscriminatorBatch(actions, vectorObservations);
+        }
+
+        if(TrainerParams.usePrediction)
+            PredictWeights();
+
+        Array noise = null;
+        if (HasNoiseInput)
+        {
+            noise = MathUtils.GenerateWhiteNoise(batchSize, -1, 1, inputNoiseShape);
+        }
+        for (int i = 0; i < TrainerParams.generatorTrainCount; ++i)
+        {
+            genLoss += TrainGeneratorBatch(vectorObservations, noise, actions);
+        }
+
+        if (TrainerParams.usePrediction)
+            RestoreFromPredictedWeights();
+
+        return (disLoss / TrainerParams.discriminatorTrainCount +  genLoss / TrainerParams.generatorTrainCount)/2;
+    }
+
+    public override void SetLearningRate(float lr)
+    {
+        SetLearningRate(lr,0);
+        SetLearningRate(lr, 1);
     }
 }

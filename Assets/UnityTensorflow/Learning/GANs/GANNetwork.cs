@@ -2,9 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAgents;
+using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
 
 public abstract class GANNetwork : UnityNetwork
 {
@@ -21,4 +24,5 @@ public abstract class GANNetwork : UnityNetwork
     public abstract void BuildNetwork(Tensor inputCondition, Tensor inputNoise, Tensor inputTargetToJudge, int[] outputShape, out Tensor generatorOutput, out Tensor discriminatorOutputExternal, out Tensor discriminatorOutputFromGenerators);
     public abstract List<Tensor> GetGeneratorWeights();
     public abstract List<Tensor> GetDiscriminatorWeights();
+
 }

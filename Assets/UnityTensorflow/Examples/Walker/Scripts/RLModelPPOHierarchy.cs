@@ -36,7 +36,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
     /// Initialize the model without training parts
     /// </summary>
     /// <param name="brainParameters"></param>
-    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, TrainerParams trainerParams)
     {
 
         Debug.Assert(visualTensors == null, "RLModelPPOHierarchy does not support visual input yet");
@@ -59,7 +59,15 @@ public class RLModelPPOHierarchy : RLModelPPO {
 
 
 
-
+        List<Tensor> allobservationInputs = new List<Tensor>();
+        if (HasVectorObservation)
+        {
+            allobservationInputs.Add(stateTensor);
+        }
+        if (HasVisualObservation)
+        {
+            allobservationInputs.AddRange(visualTensors);
+        }
         ValueFunction = K.function(allobservationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
         if (ActionSpace == SpaceType.continuous)
         {

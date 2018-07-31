@@ -6,7 +6,7 @@ using UnityEngine;
 public class DataPlane2DTrainHelper : MonoBehaviour {
 
 
-    public GANTrainer trainerRef;
+    public GANTrainHelper trainHelperRef;
     public GANModel modelRef;
     public DataPlane2D dataPlane;
     //public float lrGenerator = 0.001f;
@@ -25,18 +25,19 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
     {
         if (training)
         {
+            modelRef.DiscriminatorLR = discriminatorLR;
+            modelRef.GeneratorLR = generatorLR;
             TrainOnce(10);
         }
 
-        modelRef.DiscriminatorLR = discriminatorLR;
-        modelRef.GeneratorLR = generatorLR;
+
     }
 
 
     public void LoadTrainingData()
     {
-        trainerRef.ClearData();
-        trainerRef.AddData(null, dataPlane.GetDataPositions());
+        trainHelperRef.ClearData();
+        trainHelperRef.AddData(null, dataPlane.GetDataPositions());
     }
 
 
@@ -45,7 +46,7 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
         float gloss = 0, dloss = 0;
         for (int i = 0; i < episodes; ++i)
         {
-            var losses = trainerRef.TrainBothBatch(32,usePrediction:usePredictionInTraining);
+            var losses = trainHelperRef.TrainBothBatch(32,usePrediction:usePredictionInTraining);
             dloss += losses.Item1;
             gloss += losses.Item2;
 

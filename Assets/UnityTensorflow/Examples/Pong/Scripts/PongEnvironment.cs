@@ -100,8 +100,12 @@ public class PongEnvironment : MonoBehaviour
 
     public void MoveRacket(PongAgent agent, float action)
     {
-        int actionInt = Mathf.RoundToInt(action);
-
+        if (agent.brain.brainParameters.vectorActionSpaceType == MLAgents.SpaceType.continuous)
+        {
+            action = action + 1;    //input action will be -1,0,1 for continuous action space
+        }
+        float actionInt = Mathf.Clamp(action, ActionDown, ActionUp);
+        
         Debug.Assert(actionInt >= ActionDown && actionInt < ActionUp + 1);
 
         if (agent == leftAgent)

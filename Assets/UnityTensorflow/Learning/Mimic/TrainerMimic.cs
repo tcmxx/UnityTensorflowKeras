@@ -10,9 +10,11 @@ using System.Linq;
 
 public class TrainerMimic : Trainer
 {
-    [ShowAllPropertyAttr]
-    protected TrainerParamsMimic parametersMimic;
+    
+    
 
+    [Tooltip("Whether collect data from Decision for supervised learning?")]
+    public bool isCollectingData = true;
 
     StatsLogger stats;
 
@@ -23,13 +25,13 @@ public class TrainerMimic : Trainer
     protected int dataBufferCount;
 
 
-    protected SupervisedLearningModel modelSL;
-
+    protected ISupervisedLearningModel modelSL;
+    protected TrainerParamsMimic parametersMimic;
 
     public override void Initialize()
     {
-        modelSL = modelRef as SupervisedLearningModel;
-        Debug.Assert(modelSL != null, "Please assign a SupervisedLearningModel to modelRef");
+        modelSL = modelRef as ISupervisedLearningModel;
+        Debug.Assert(modelSL != null, "Please assign a ISupervisedLearningModel to modelRef");
 
         parametersMimic = parameters as TrainerParamsMimic;
         Debug.Assert(parametersMimic != null, "Please Specify PPO Trainer Parameters");
@@ -74,7 +76,7 @@ public class TrainerMimic : Trainer
         {
             var agentDecision = agent.GetComponent<AgentDependentDecision>();
             //only add the data to databuffer if this agent uses decision
-            if (agentDecision != null && agentDecision.useDecision)
+            if (agentDecision != null && agentDecision.useDecision && isCollectingData)
             {
                 var agentNewInfo = newInfo[agent];
 

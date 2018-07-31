@@ -28,9 +28,9 @@ public class TrainerPPO : Trainer
     public StatsLogger stats { get; protected set; }
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
-    
-    
 
+
+    //casted modelRef from the base class for convenience
     protected RLModelPPO modelPPO;
 
     public override void Initialize()

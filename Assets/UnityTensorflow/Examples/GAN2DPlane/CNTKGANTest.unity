@@ -1612,7 +1612,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3f47325a712be34a859a6701be89c91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trainerRef: {fileID: 2127189634}
+  trainHelperRef: {fileID: 2127189634}
   modelRef: {fileID: 2127189635}
   dataPlane: {fileID: 2127189630}
   training: 0
@@ -1647,7 +1647,12 @@ MonoBehaviour:
   checkpointTOLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: a6eb24f26c3faed43a2e1332cabb4107, type: 2}
-  testOpt:
+  generatorL2LossWeight: 0.1
+  outputShape: 02000000
+  inputNoiseShape: 02000000
+  inputConditionShape: 
+  hasGeneratorL2Loss: 0
+  generatorOptimizer:
     optimizerType: 0
     parameterList:
     - 0.001
@@ -1655,9 +1660,12 @@ MonoBehaviour:
     - 0.999
     - 0.00000001
     - 0
-  generatorL2LossWeight: 0.1
-  outputShape: 02000000
-  inputNoiseShape: 02000000
-  inputConditionShape: 
-  hasGeneratorL2Loss: 0
+  discriminatorOptimizer:
+    optimizerType: 0
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
   initializeOnAwake: 1

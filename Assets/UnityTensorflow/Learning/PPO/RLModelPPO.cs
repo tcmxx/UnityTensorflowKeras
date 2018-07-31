@@ -51,7 +51,7 @@ public class RLModelPPO : LearningModelBase
     /// Initialize the model without training parts
     /// </summary>
     /// <param name="brainParameters"></param>
-    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, List<Tensor> allobservationInputs, TrainerParams trainerParams)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors,  TrainerParams trainerParams)
     {
 
         Tensor inputStateTensor = stateTensor;
@@ -68,6 +68,15 @@ public class RLModelPPO : LearningModelBase
             outputVariance = K.exp(logSigmaSq);
         }
 
+        List<Tensor> allobservationInputs = new List<Tensor>();
+        if (HasVectorObservation)
+        {
+            allobservationInputs.Add(inputStateTensor);
+        }
+        if (HasVisualObservation)
+        {
+            allobservationInputs.AddRange(inputVisualTensors);
+        }
 
         ValueFunction = K.function(allobservationInputs, new List<Tensor> { outputValue }, null, "ValueFunction");
         if (ActionSpace == SpaceType.continuous)
