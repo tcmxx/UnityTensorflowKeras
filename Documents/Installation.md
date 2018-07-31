@@ -55,6 +55,9 @@ Add one line'InternalTrainable' to the BrainType enum:
     }
 ```
 
+## ValueTuple.dll
+Delete the System.ValueTuple.dll in Unity MLAgent's /Assets/ML-Agents/Plugins folder if it is still there and you have updated Unity with .net 4.71 support. 
+
 ## Test installation
 Go to UnityTensorflow/Examples/3DBall/3DBall scene, and run it in editor. If no error message, then it is probably install correctly.
 
