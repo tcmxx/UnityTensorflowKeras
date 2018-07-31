@@ -1,12 +1,16 @@
 # Documentation
+This repo is mostly designed based on Unity ML-Agents. Please first make sure you at least already know how to make a learning environment in ML-Agens. 
+
+For ML-Agents or related machine learning knowledge, see ML-Agents [documentation](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Readme.md). 
+
+
 
 ## Installation & Set-up
  * [Installation](Installation.md)
  
 ## Getting Started
- * [Overview](Overview.md)
-   * [KerasSharp]
  * [Getting Started with the 3D Balance Ball Environment](Getting-Started-with-Balance-Ball.md)
+ * [Basic Concepts]
  * [Example Environments](Learning-Environment-Examples.md)
 
 ## Reinforcement Learning
