@@ -9,9 +9,10 @@
 - Note: This project is still in development. Don't use this unless you know that you have time to check the sourcecodes!
 
 ## Features:
-* Use your already made Unity ML-Agent, but enable learning in Unity editor/build without python.
+* Use your already made Unity ML-Agent, but enable learning in Unity editor/build without python or extra coding.
 * Reinforcement learning(using PPO) and supervised learning.
 * Evolution Strategy (using Matrix Adaption Evolution Strategy(MEAS))
+* Examples provided.
 
 ## Documentation
 For more information including installation and usage instructions, go to [Document](Documents/Readme.md).
