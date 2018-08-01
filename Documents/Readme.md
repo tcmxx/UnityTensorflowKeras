@@ -11,7 +11,7 @@ For ML-Agents or related machine learning knowledge, see ML-Agents [documentatio
 ## Getting Started
  * [Getting Started with the 3D Balance Ball Environment](Getting-Started-with-Balance-Ball.md)
  * [Features and Basic Concepts](BasicConcepts.md)
- * [Example Environments](Learning-Environment-Examples.md)
+ * [Example Environments](ExamplesList.md)
 
 ## Reinforcement Learning
  * [Training with Proximal Policy Optimization(PPO)](Training-PPO.md) 
