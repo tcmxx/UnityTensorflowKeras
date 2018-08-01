@@ -25,3 +25,6 @@ Android does not support any type of gradient/training. IOS is not tested a all.
 
 ## Future Plan:
 We plan to keep this repo updated with latest game related machine learning technologies for the course every year.
+
+## License
+[MIT](LICENSE)
