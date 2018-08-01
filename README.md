@@ -18,7 +18,7 @@ For more information including installation and usage instructions, go to [Docum
 
 
 ## Platforms:
-Windows is almost fully supported. If you want to use GPU, CUDA and cuDNN are needed(See above). Mac should be fully supported if I have a Mac to build, but now it does not have Concat Gradient. Mac does not support GPU. Linux is not tested at all.
+Windows is almost fully supported. If you want to use GPU, CUDA and cuDNN are needed(Please google CUDA v9.0 and cudnn v7 and install them). Mac should be fully supported if I have a Mac to build, but now it does not have Concat Gradient. Mac does not support GPU. Linux is not tested at all.
 
 Android does not support any type of gradient/training. IOS is not tested a all.
 
