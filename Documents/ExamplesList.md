@@ -30,7 +30,7 @@ This is just a copy of the Unity ML-Agents' [3DBall environment](https://github.
 ## Pong
 <p align="center">
     <img src="Images/ExampleList/Pong.png" 
-        alt="3DBall" 
+        alt="Pong" 
         width="600" border="10" />
 </p>
 
@@ -55,7 +55,7 @@ Classic Pong game. Two agents play with each other in this game.
 ## Pole
 <p align="center">
     <img src="Images/ExampleList/Pole.png" 
-        alt="3DBall" 
+        alt="Pole" 
         width="600" border="10" />
 </p>
 A 2D physcis based game where the agent need to give a torque to the pole to keep it up.
@@ -70,7 +70,7 @@ A 2D physcis based game where the agent need to give a torque to the pole to kee
 ## Maze
 <p align="center">
     <img src="Images/ExampleList/Maze.png" 
-        alt="3DBall" 
+        alt="Maze" 
         width="600" border="10" />
 </p>
 
@@ -85,20 +85,20 @@ A game where the agent(yellow) has to reach to the destination(green) and avoid 
 ## GAN2DPlane
 <p align="center">
     <img src="Images/ExampleList/GAN2DPlane.png" 
-        alt="3DBall" 
+        alt="GAN2DPlane" 
         width="600" border="10" />
 </p>
 
 A simple demo of how to use GAN directly. 
 
-You first generate the trainig data(red) by clicking `GenDataCircle`. Then go to the inspector of Plane, DataPlane2DTrainHelper, check the Training field it will start the training.
+Click StartTraining to generate training data and start training.
 
 Click UseGAN to generate data from GAN(blue).
 
 ## Walker
 <p align="center">
     <img src="Images/ExampleList/Walker.png" 
-        alt="3DBall" 
+        alt="Walker" 
         width="600" border="10" />
 </p>
 
