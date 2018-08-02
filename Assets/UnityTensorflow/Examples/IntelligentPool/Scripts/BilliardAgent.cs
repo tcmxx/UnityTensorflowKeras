@@ -6,7 +6,7 @@ using UnityEngine;
 public class BilliardAgent : AgentES
 {
     
-    public BilliardGameSystem gameSystem;
+    protected BilliardGameSystem gameSystem;
     public int shootSequence = 1;
     public bool resetAfterOneShot = false;
     public bool resetOnStart = false;
@@ -14,6 +14,7 @@ public class BilliardAgent : AgentES
 
     public bool randomizeBalls = true;
     public bool autoRequestDecision = false;
+    public bool AutoRequestDicision { get { return autoRequestDecision; } set{ autoRequestDecision = value; } }
 
     private bool hasShot = false;
 
@@ -65,6 +66,7 @@ public class BilliardAgent : AgentES
         if(autoRequestDecision && gameSystem.AllShotsComplete() && !doReset)
         {
             AddReward(gameSystem.defaultArena.ActualScore);
+            gameSystem.bestScore = Mathf.NegativeInfinity;
             RequestDecision();
             hasShot = true;
         }

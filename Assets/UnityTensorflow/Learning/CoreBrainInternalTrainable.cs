@@ -14,8 +14,9 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 {
     /// Reference to the brain that uses this CoreBrainInternal
     public Brain brain;
-    public Trainer trainer;
+    public GameObject trainer;
 
+    protected ITrainer trainerInterface;
     private Dictionary<Agent, AgentInfo> currentInfo;
     private Dictionary<Agent, TakeActionOutput> prevActionOutput;
 
@@ -29,13 +30,18 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     {
         brain = b;
         if (trainer)
-            trainer.SetBrain(b);
+        {
+            trainerInterface = trainer.GetComponent<ITrainer>();
+            Debug.Assert(trainerInterface != null, "Please make sure your trainer has a monobehaviour that implement ITrainer interface attached!");
+            trainerInterface?.SetBrain(b);
+        }
     }
 
 
     public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
     {
-        trainer.Initialize();
+        Debug.Assert(trainer != null && trainerInterface != null, "Please specify a trainer in the Trainer field of your Brain!");
+        trainerInterface.Initialize();
     }
 
 
@@ -59,23 +65,23 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         var prevActionActions = GetValueForAgents(prevActionOutput, recordableAgentList);
         var newInfo = GetValueForAgents(newAgentInfos, recordableAgentList);
 
-        if (recordableAgentList.Count > 0 && trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
+        if (recordableAgentList.Count > 0 && trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
         {
-            trainer.AddExperience(prevInfo, newInfo, prevActionActions);
-            trainer.ProcessExperience(prevInfo, newInfo);
+            trainerInterface.AddExperience(prevInfo, newInfo, prevActionActions);
+            trainerInterface.ProcessExperience(prevInfo, newInfo);
         }
 
 
 
-        if (trainer.isTraining && trainer.GetStep() <= trainer.GetMaxStep())
+        if (trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
         {
-            trainer.IncrementStep();
+            trainerInterface.IncrementStep();
         }
 
         //update the info
         UpdateInfos(ref currentInfo, newAgentInfos);
 
-        var actionOutputs = trainer.TakeAction(GetValueForAgents(currentInfo, newAgentList));
+        var actionOutputs = trainerInterface.TakeAction(GetValueForAgents(currentInfo, newAgentList));
         UpdateActionOutputs(ref prevActionOutput, actionOutputs);
 
         //TODO Update the agent's other info if there is

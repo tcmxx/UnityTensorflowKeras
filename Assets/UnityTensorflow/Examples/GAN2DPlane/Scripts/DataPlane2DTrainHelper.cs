@@ -33,6 +33,10 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
 
     }
 
+    public void SetIfTraining(bool training)
+    {
+        this.training = training;
+    }
 
     public void LoadTrainingData()
     {

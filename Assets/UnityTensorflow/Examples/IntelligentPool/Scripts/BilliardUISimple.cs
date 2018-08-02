@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class BilliardUISimple : MonoBehaviour {
     public Text predictedScoreTextRef;
+    public Text predictedActionTextRef;
     public Text populationSizeTextRef;
     public Text maxItrTextRef;
 
@@ -34,7 +35,9 @@ public class BilliardUISimple : MonoBehaviour {
         maxItrSliderRef.value = optimizerRef.maxIteration;
         rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
 
-        predictedScoreTextRef.text = "Predicted score: " + gameSystemRef.predictedShotScore;
+        predictedScoreTextRef.text = "Best score: " + gameSystemRef.bestScore;
+        if(gameSystemRef.bestActions != null && gameSystemRef.bestActions.Count > 0)
+            predictedActionTextRef.text = "Best action: " + gameSystemRef.bestActions[0].x + ", " + gameSystemRef.bestActions[0].z;
     }
 
     public void OnPopulationSliderChanged(float value)
@@ -52,6 +55,8 @@ public class BilliardUISimple : MonoBehaviour {
 
     public void OnOptimizationButtonClicked()
     {
+        gameSystemRef.bestScore = Mathf.NegativeInfinity;
+
         optimizerRef.StartOptimizingAsync(agentRef,agentRef.OnReady);
         Physics.autoSimulation = false;
     }
@@ -69,6 +74,7 @@ public class BilliardUISimple : MonoBehaviour {
 
     public void GenerateHeatMap()
     {
+        gameSystemRef.bestScore = Mathf.NegativeInfinity;
         //heatmapRef.StartSampling(SamplingFunc,5,1);
         Physics.autoSimulation = false;
         heatmapRef.StartSampling(SamplingFuncBatch, 8, 2, 2, ()=> { Physics.autoSimulation = true; });

@@ -24,9 +24,28 @@ public struct TakeActionOutput
 }
 
 
+public interface ITrainer
+{
+    void SetBrain(Brain brain);
+    void Initialize();
 
+    int GetMaxStep();
 
-public abstract class Trainer : MonoBehaviour
+    int GetStep();
+    void IncrementStep();
+
+    void ResetTrainer();
+
+    Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
+    void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
+    void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
+    bool IsReadyUpdate();
+    void UpdateModel();
+
+    bool IsTraining();
+}
+
+public abstract class Trainer : MonoBehaviour, ITrainer
 {
 
     protected Academy academyRef;
@@ -213,6 +232,8 @@ public abstract class Trainer : MonoBehaviour
         return result;
     }
 
-
- 
+    public bool IsTraining()
+    {
+        return isTraining;
+    }
 }

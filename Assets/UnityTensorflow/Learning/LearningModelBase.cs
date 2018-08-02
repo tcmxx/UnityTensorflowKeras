@@ -230,11 +230,19 @@ public abstract class LearningModelBase : MonoBehaviour {
         List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
         var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
         var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
-        SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
 
-        if (arrayData.Count >= modelWeigthLength + optimizerWeightLength && optimizerWeightLength > 0)
+        if (arrayData.Count == modelWeigthLength || arrayData.Count == modelWeigthLength + optimizerWeightLength)
         {
-            SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+
+            SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
+            if (arrayData.Count == modelWeigthLength + optimizerWeightLength)
+            {
+                SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+            }
+        }
+        else
+        {
+            Debug.LogError("Saved data to load not match the model!");
         }
     }
 

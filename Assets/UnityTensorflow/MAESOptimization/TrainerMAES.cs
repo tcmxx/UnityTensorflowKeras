@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using MLAgents;
 
-public class TrainerMAES : Trainer
+public class TrainerMAES : MonoBehaviour, ITrainer
 {
 
     /// Reference to the brain that uses this CoreBrainInternal
@@ -46,12 +46,12 @@ public class TrainerMAES : Trainer
 
 
 
-    protected override void FixedUpdate()
+    protected void FixedUpdate()
     {
         ContinueOptimization();
     }
     /// Create the reference to the brain
-    public override void Initialize()
+    public void Initialize()
     {
         currentOptimizingAgents = new Dictionary<AgentES, OptimizationData>();
     }
@@ -146,17 +146,17 @@ public class TrainerMAES : Trainer
     }
 
 
-    public override int GetStep()
+    public int GetStep()
     {
         return 0;
     }
 
-    public override int GetMaxStep()
+    public int GetMaxStep()
     {
         return int.MaxValue;
     }
 
-    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
         var agentList = agentInfos.Keys;
         List<AgentES> agentsToOptimize = new List<AgentES>();
@@ -183,33 +183,43 @@ public class TrainerMAES : Trainer
         return new Dictionary<Agent, TakeActionOutput>();
     }
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
+    public void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         return;
     }
 
-    public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
+    public void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
     {
         return;
     }
 
-    public override bool IsReadyUpdate()
+    public bool IsReadyUpdate()
     {
         return false;
     }
 
-    public override void UpdateModel()
+    public void UpdateModel()
     {
         return;
     }
 
-    public override void IncrementStep()
+    public void IncrementStep()
     {
         return;
     }
 
-    public override void SetBrain(Brain brain)
+    public void SetBrain(Brain brain)
     {
         this.brain = brain; ;
+    }
+
+    public void ResetTrainer()
+    {
+        return;
+    }
+
+    public bool IsTraining()
+    {
+        return false;
     }
 }

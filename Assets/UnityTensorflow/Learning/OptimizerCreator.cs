@@ -25,10 +25,11 @@ public class OptimizerCreator  {
         var paramInfos = ctor.GetParameters();
         List<object> parameters = new List<object>();
 
+        var paraminfors = ctor.GetParameters();
         int i = 0;
-        foreach (var param in ctor.GetParameters())
+        foreach (var param in paraminfors)
         {
-            if (parameterList.Count >=i && (param.ParameterType == typeof(float) || 
+            if (parameterList.Count > i && (param.ParameterType == typeof(float) || 
                 param.ParameterType == typeof(double) || 
                 param.ParameterType == typeof(int) || 
                 param.ParameterType == typeof(bool)))
@@ -39,6 +40,7 @@ public class OptimizerCreator  {
                 }
                 else if (param.ParameterType == typeof(double))
                 {
+                    //Debug.Log(i +  "/" + parameterList.Count);
                     parameters.Add((double)parameterList[i]);
                 }
                 else if (param.ParameterType == typeof(int))

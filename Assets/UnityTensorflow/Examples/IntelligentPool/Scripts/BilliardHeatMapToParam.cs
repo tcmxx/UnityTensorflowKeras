@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class BilliardHeatMapToParam : MonoBehaviour {
 
@@ -9,6 +10,9 @@ public class BilliardHeatMapToParam : MonoBehaviour {
     public BilliardAgent agentRef;
     public BilliardSimple agentSimplRef;
     public LayerMask heatmapLayer;
+
+    public Text heatmapInfo;
+
     public bool IsSampling { get {
             return isSampling;
         } set {
@@ -39,7 +43,9 @@ public class BilliardHeatMapToParam : MonoBehaviour {
                     {
                         sampledForce = agentSimplRef.SamplePointToForceVectorXY(relatedPoint.x + 0.5f, relatedPoint.y + 0.5f);
                     }
-                    gameSystemRef.EvaluateShot(sampledForce, Color.green);
+                    float score = gameSystemRef.EvaluateShot(sampledForce, Color.green);
+
+                    heatmapInfo.text = sampledForce.x + ", " + sampledForce.z + ": " + score;
                 }
             }
         }

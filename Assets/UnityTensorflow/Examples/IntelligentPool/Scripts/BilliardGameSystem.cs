@@ -5,7 +5,9 @@ using AaltoGames;
 
 public class BilliardGameSystem : MonoBehaviour {
     [HideInInspector]
-    public float predictedShotScore = 0;
+    public float bestScore = 0;
+    [HideInInspector]
+    public List<Vector3> bestActions = null;
 
     public BilliardArena defaultArena;
 
@@ -147,12 +149,21 @@ public class BilliardGameSystem : MonoBehaviour {
 
         float maxScore = Mathf.NegativeInfinity;
         List<float> resultScores = new List<float>();
+
+        int count = 0;
         foreach (var a in allArenas)
         {
             var s = a.EndEvaluation();
             resultScores.Add(s);
-            maxScore = Mathf.Max(maxScore, s);
 
+            if(s > bestScore)
+            {
+                bestScore = s;
+                bestActions = forces[count];
+                bestScore = s;
+            }
+
+            count++;
         }
 
         foreach (var a in allArenas)
@@ -162,7 +173,8 @@ public class BilliardGameSystem : MonoBehaviour {
         }
 
         Physics.autoSimulation = oldAutoSimulation;
-        predictedShotScore = maxScore;
+        
+        
         return resultScores;
     }
 }

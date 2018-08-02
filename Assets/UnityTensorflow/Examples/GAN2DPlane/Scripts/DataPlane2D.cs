@@ -39,7 +39,9 @@ public class DataPlane2D : MonoBehaviour {
             var points = dataset[i];
             foreach(var p in points)
             {
-                Matrix4x4 mat = transform.localToWorldMatrix*Matrix4x4.TRS(new Vector3(p.x, p.y, -0.01f), Quaternion.identity, Vector3.one*drawScale*transform.lossyScale.magnitude);
+                var matP = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+
+                Matrix4x4 mat = matP * Matrix4x4.TRS(new Vector3(p.x, p.y, -0.01f), Quaternion.identity, Vector3.one * drawScale);
                 Graphics.DrawMesh(dataPointMesh, mat, mats[i], drawLayer);
             }
         }

@@ -154,11 +154,11 @@ public class GANTrainHelper : MonoBehaviour
 
     public void SetGeneratorLR()
     {
-
+        throw new NotImplementedException();
     }
 
     public void SetDiscriminatorLR()
     {
-
+        throw new NotImplementedException();
     }
 }
