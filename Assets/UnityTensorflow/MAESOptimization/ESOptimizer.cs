@@ -127,7 +127,7 @@ public class ESOptimizer : MonoBehaviour
         this.onReady = onReady;
     }
 
-    public double[] Optimize(IESOptimizable optimizeTarget, Action<double[]> onReady = null, double[] initialMean = null )
+    public double[] Optimize(IESOptimizable optimizeTarget, Action<double[]> onReady = null, double[] initialMean = null)
     {
 
         var tempOptimizer = (optimizerType == ESOptimizerType.LMMAES ? (IMAES)new LMMAES() : (IMAES)new MAES());

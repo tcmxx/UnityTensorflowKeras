@@ -15,7 +15,7 @@ MonoBehaviour:
   maxTotalSteps: 100000000
   lossLogInterval: 100
   saveModelInterval: 20
-  batchSize: 64
+  batchSize: 256
   numIterationPerTrain: 10
   requiredDataBeforeTraining: 20000
   maxBufferSize: 20000

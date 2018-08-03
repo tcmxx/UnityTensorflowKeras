@@ -130,7 +130,9 @@ public class TrainerMimic : Trainer
         var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
         float[,] actions = null;
-        actions = modelSL.EvaluateAction(vectorObsAll, visualObsAll);
+        var evalOutput = modelSL.EvaluateAction(vectorObsAll, visualObsAll);
+        actions = evalOutput.Item1;
+        var vars = evalOutput.Item2;
 
         int i = 0;
         int agentNumWithDecision = 0;
@@ -144,7 +146,11 @@ public class TrainerMimic : Trainer
             if (agentDecision != null && agentDecision.useDecision)
             {
                 //if this agent will use the decision, use it
-                var action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
+                float[] action = null;
+                if(vars != null)
+                    action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)), new List<float>(vars.GetRow(i)));
+                else
+                    action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
                 var tempAction = new TakeActionOutput();
                 tempAction.outputAction = action;
                 result[agent] = tempAction;

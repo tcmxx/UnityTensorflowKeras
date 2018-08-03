@@ -357,9 +357,11 @@ public class GANModel : LearningModelBase, ISupervisedLearningModel
     /// <param name="vectorObservation"></param>
     /// <param name="visualObservation"></param>
     /// <returns></returns>
-    public float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    public ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
     {
-        return (float[,])GenerateBatch(vectorObservation, MathUtils.GenerateWhiteNoise(vectorObservation.GetLength(0), -1, 1,inputNoiseShape));
+        return ValueTuple.Create<float[,],float[,]>(
+            (float[,])GenerateBatch(vectorObservation, MathUtils.GenerateWhiteNoise(vectorObservation.GetLength(0), -1, 1,inputNoiseShape)),
+            null);
     }
 
     /// <summary>
@@ -401,5 +403,10 @@ public class GANModel : LearningModelBase, ISupervisedLearningModel
     {
         SetLearningRate(lr,0);
         SetLearningRate(lr, 1);
+    }
+
+    public bool HasVariance()
+    {
+        return false;
     }
 }

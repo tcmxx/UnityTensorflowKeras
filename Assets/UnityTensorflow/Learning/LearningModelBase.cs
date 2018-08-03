@@ -77,7 +77,7 @@ public abstract class LearningModelBase : MonoBehaviour {
         InitializeInner(brainParameters, inputStateTensor, inputVisualTensors,  enableTraining? trainerParams:null);
 
         //test
-        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/PPOTest.pb");
+        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/"+name+".pb");
         //((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/"+name+".pb");
 
         Current.K.try_initialize_variables();
@@ -231,7 +231,7 @@ public abstract class LearningModelBase : MonoBehaviour {
         var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
         var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
 
-        if (arrayData.Count == modelWeigthLength || arrayData.Count == modelWeigthLength + optimizerWeightLength)
+        if ((arrayData.Count >= modelWeigthLength && optimizerWeightLength == 0) || arrayData.Count == modelWeigthLength + optimizerWeightLength)
         {
 
             SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));

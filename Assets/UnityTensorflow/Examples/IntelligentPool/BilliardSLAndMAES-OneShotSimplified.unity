@@ -469,7 +469,7 @@ MonoBehaviour:
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\SLsimplified.bytes
   steps: 0
-  isCollectingData: 1
+  isCollectingData: 0
   dataBufferCount: 0
 --- !u!4 &949524765
 Transform:
@@ -755,7 +755,7 @@ Prefab:
     - target: {fileID: 114609543265186452, guid: 516fb5a9405a3b141b40831dd2ba3441,
         type: 2}
       propertyPath: useDecision
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
         type: 2}

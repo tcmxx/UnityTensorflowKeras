@@ -7,6 +7,7 @@ using KerasSharp.Backends;
 using KerasSharp;
 using KerasSharp.Initializers;
 using KerasSharp.Activations;
+using System;
 
 [CreateAssetMenu()]
 public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
@@ -16,11 +17,13 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
     public int width = 64;
     public float hiddenWeightsInitialScale = 1;
     public float outputWeightsInitialScale = 0.01f;
+    public bool useVarianceForContinuousAction = false;
+    public float minStd = 0.1f;
 
     protected List<Tensor> weights;
 
 
-    public override Tensor BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, int outActionSize, SpaceType actionSpace)
+    public override ValueTuple<Tensor, Tensor> BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, int outActionSize, SpaceType actionSpace)
     {
 
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by SupervisedLearningNetworkSimple");
@@ -88,7 +91,15 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
 
         weights.AddRange(actorOutput.weights);
 
-        return outAction;
+        Tensor outVar = null;
+        if(useVarianceForContinuousAction && actionSpace == SpaceType.continuous)
+        {
+            var logSigmaSq = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
+            outVar = Current.K.exp(actorOutput.Call(encodedAllActor)[0]) +minStd*minStd;
+            weights.AddRange(logSigmaSq.weights);
+        }
+
+        return ValueTuple.Create(outAction,outVar);
     }
 
 

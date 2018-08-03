@@ -21,6 +21,7 @@ public abstract class AgentDependentDecision : MonoBehaviour
     /// <param name="visualObs"></param>
     /// <param name="heuristicAction"></param>
     /// <param name="isTraining"></param>
+    /// /// <param name="otherInfomation"></param>
     /// <returns></returns>
-    public  abstract float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction);
+    public abstract float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null);
 }

@@ -59,7 +59,7 @@ public class PlayerDecision : AgentDependentDecision
         }
     }
 
-    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction)
+    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
         if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
         {

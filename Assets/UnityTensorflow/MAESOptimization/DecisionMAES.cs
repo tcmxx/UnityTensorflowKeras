@@ -15,7 +15,7 @@ public class DecisionMAES : AgentDependentDecision
         optimizer = GetComponent<ESOptimizer>();
     }
 
-    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction )
+    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
 
         Debug.Assert(agent is AgentES, "DesicionMAES required the agent to implement AgentES.");
@@ -28,6 +28,9 @@ public class DecisionMAES : AgentDependentDecision
             optimizer.maxIteration = agentES.maxIteration;
             optimizer.initialStepSize = agentES.initialStepSize;
         }
+
+        if (heuristicVariance != null)
+            optimizer.initialStepSize = heuristicVariance[0];
         double[] best = optimizer.Optimize(agentES, null, heuristicAction.Select(t=>(double)t).ToArray());
 
         var result = Array.ConvertAll(best, t => (float)t);
