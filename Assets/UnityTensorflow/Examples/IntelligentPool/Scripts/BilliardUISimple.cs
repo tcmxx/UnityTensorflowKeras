@@ -18,7 +18,8 @@ public class BilliardUISimple : MonoBehaviour {
     public ESOptimizer optimizerRef;
     public BilliardGameSystem gameSystemRef;
     public HeatMap heatmapRef;
-
+    public GameObject startOptButtonRef;
+    public GameObject endOptButtonRef;
     private void Start()
     {
         populationSizeSliderRef.value = optimizerRef.populationSize;
@@ -57,14 +58,18 @@ public class BilliardUISimple : MonoBehaviour {
     {
         gameSystemRef.bestScore = Mathf.NegativeInfinity;
 
-        optimizerRef.StartOptimizingAsync(agentRef,agentRef.OnReady);
+        optimizerRef.StartOptimizingAsync(agentRef,(t)=> { agentRef.OnReady(t); OnEndOptimizationButtonClicked(); });
         Physics.autoSimulation = false;
+        startOptButtonRef.SetActive(false);
+        endOptButtonRef.SetActive(true);
     }
 
     public void OnEndOptimizationButtonClicked()
     {
         optimizerRef.StopOptimizing(agentRef.OnReady);
         Physics.autoSimulation = true;
+        startOptButtonRef.SetActive(true);
+        endOptButtonRef.SetActive(false);
     }
 
     public void OnRewardShapingToggled(bool value)

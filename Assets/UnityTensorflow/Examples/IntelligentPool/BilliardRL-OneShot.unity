@@ -768,7 +768,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80885700eae055d47977cc84fd00de74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  checkpointTOLoad: {fileID: 0}
+  trainingEnabled: 0
   network: {fileID: 11400000, guid: 0d4457cfcce2a624d9e661e4e79a870b, type: 2}
+  optimizer:
+    optimizerType: 0
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
 --- !u!1 &824392021
 GameObject:
   m_ObjectHideFlags: 0
@@ -2099,13 +2109,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d491f9276717f244b7c13d65e0cb335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  academyRef: {fileID: 1415431052}
-  isTraining: 1
   modelRef: {fileID: 791075477}
+  isTraining: 1
   parameters: {fileID: 11400000, guid: 063d746d40cfc3f4fa8e859ecf679eda, type: 2}
-  steps: 0
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\PPOOneshotCheckpoint.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardRL-OneShot.bytes
+  steps: 0
 --- !u!114 &1567260242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2237,7 +2246,7 @@ MonoBehaviour:
   m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   brain: {fileID: 1327012119}
-  trainer: {fileID: 1485033538}
+  trainer: {fileID: 0}
 --- !u!1001 &1766243107
 Prefab:
   m_ObjectHideFlags: 0

@@ -258,7 +258,7 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 100
-          m_FloatArgument: 0.3
+          m_FloatArgument: 0.05
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
@@ -1194,7 +1194,7 @@ MonoBehaviour:
   dataPointShader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   dataPointTexture: {fileID: 10912, guid: 0000000000000000f000000000000000, type: 0}
   dataPointMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  drawScale: 0.2
+  drawScale: 0.03
   shaderColorVarName: _Color
   shaderTextureVarName: _MainTex
   drawLayer:

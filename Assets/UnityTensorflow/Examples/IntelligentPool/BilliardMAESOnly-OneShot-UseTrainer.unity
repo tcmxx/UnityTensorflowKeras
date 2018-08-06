@@ -562,6 +562,14 @@ Prefab:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1986365504759340, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1202550805354182, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
   m_IsPrefabParent: 0
@@ -697,6 +705,16 @@ Prefab:
       propertyPath: brain
       value: 
       objectReference: {fileID: 1327012119}
+    - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
+        type: 2}
+      propertyPath: targetValue
+      value: 1.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
+        type: 2}
+      propertyPath: maxIteration
+      value: 50
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
   m_IsPrefabParent: 0

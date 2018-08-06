@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114619084869634156}
   - component: {fileID: 114988921453423414}
   - component: {fileID: 114185723549392986}
-  - component: {fileID: 114609543265186452}
+  - component: {fileID: 114440804119060818}
   m_Layer: 0
   m_Name: PlayerMLAgentWithDecision
   m_TagString: Untagged
@@ -63,7 +63,7 @@ MonoBehaviour:
   targetValue: 8
   evaluationBatchSize: 8
   iteration: 0
---- !u!114 &114609543265186452
+--- !u!114 &114440804119060818
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -71,11 +71,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1858348246234822}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c67feb94ae2e414d949fac368cf694f, type: 3}
+  m_Script: {fileID: 11500000, guid: 068414f5ba11207458e3b41e7f60b7f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   useDecision: 1
   useMAESParamsFromAgent: 1
+  useHeuristic: 1
+  log: 1
+  logInterval: 20
 --- !u!114 &114619084869634156
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -111,11 +114,11 @@ MonoBehaviour:
     numberOfActionsBetweenDecisions: 1
   callOnReadyInAgentAction: 1
   maxIteration: 15
-  targetValue: 10
-  populationSize: 16
-  initialStepSize: 0.3
-  gameSystem: {fileID: 0}
+  targetValue: 0.85
+  populationSize: 10
+  initialStepSize: 1
   shootSequence: 1
-  resetAfterOneShot: 0
-  randomizeRedballs: 1
-  autoRequestDecision: 1
+  resetAfterOneShot: 1
+  resetOnStart: 1
+  randomizeBalls: 1
+  autoRequestDecision: 0

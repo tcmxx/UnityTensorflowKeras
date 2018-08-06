@@ -13,12 +13,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   learningRate: 0.0001
   maxTotalSteps: 100000000
-  lossLogInterval: 100
+  lossLogInterval: 500
   saveModelInterval: 20
-  batchSize: 64
-  numIterationPerTrain: 10
-  requiredDataBeforeTraining: 5000
-  maxBufferSize: 5000
+  batchSize: 256
+  numIterationPerTrain: 1
+  requiredDataBeforeTraining: 20000
+  maxBufferSize: 20000
   actionDiffLogInterval: 100
   discriminatorTrainCount: 1
   generatorTrainCount: 1

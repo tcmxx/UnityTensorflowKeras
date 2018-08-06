@@ -113,11 +113,21 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &89133528 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1191541447028974, guid: 938e363109f3bd143903f0b192439d85,
+    type: 2}
+  m_PrefabInternal: {fileID: 713657354}
 --- !u!20 &132445805 stripped
 Camera:
   m_PrefabParentObject: {fileID: 20162049599415638, guid: 61c28c3b413277a48bd7a8243798695a,
     type: 2}
   m_PrefabInternal: {fileID: 644482134}
+--- !u!1 &557095905 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1331902089308288, guid: 938e363109f3bd143903f0b192439d85,
+    type: 2}
+  m_PrefabInternal: {fileID: 713657354}
 --- !u!1001 &644482134
 Prefab:
   m_ObjectHideFlags: 0
@@ -332,6 +342,16 @@ Prefab:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114263354044584962, guid: 938e363109f3bd143903f0b192439d85,
+        type: 2}
+      propertyPath: startOptButtonRef
+      value: 
+      objectReference: {fileID: 557095905}
+    - target: {fileID: 114263354044584962, guid: 938e363109f3bd143903f0b192439d85,
+        type: 2}
+      propertyPath: endOptButtonRef
+      value: 
+      objectReference: {fileID: 89133528}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 938e363109f3bd143903f0b192439d85, type: 2}
   m_IsPrefabParent: 0
@@ -491,7 +511,7 @@ MonoBehaviour:
   initialStepSize: 1
   mode: 1
   maxIteration: 100
-  targetValue: 2
+  targetValue: 1.9
   evaluationBatchSize: 8
   iteration: 0
 --- !u!1001 &1363941755

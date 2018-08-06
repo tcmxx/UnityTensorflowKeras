@@ -63,7 +63,7 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
 
     public void UseGAN(int generatedNumber)
     {
-        float[,] generated = (float[,])modelRef.GenerateBatch(null, MathUtils.GenerateWhiteNoise(generatedNumber, -1, 1, modelRef.inputNoiseShape));
+        float[,] generated = (float[,])modelRef.GenerateBatch(null, MathUtils.GenerateWhiteNoise(generatedNumber, -1f, 1f, modelRef.inputNoiseShape));
 
         dataPlane.RemovePointsOfType(1);
         for (int i = 0; i < generatedNumber; ++i)

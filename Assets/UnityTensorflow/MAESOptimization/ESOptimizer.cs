@@ -22,6 +22,8 @@ public class ESOptimizer : MonoBehaviour
     [ReadOnly]
     [SerializeField]
     protected int iteration;
+    public int Iteration { get { return iteration; } }
+
     protected OptimizationSample[] samples;
     protected IMAES optimizer;
     protected Action<double[]> onReady = null;
@@ -30,8 +32,6 @@ public class ESOptimizer : MonoBehaviour
     public double BestScore { get; private set; }
     public double[] BestParams { get; private set; }
     public bool IsOptimizing { get; private set; } = false;
-
-
 
     public enum ESOptimizerType
     {
@@ -71,6 +71,8 @@ public class ESOptimizer : MonoBehaviour
                     }
 
                 }
+
+                iteration++;
                 /*foreach (OptimizationSample s in samples)
                 {
                     float value = optimizable.Evaluate(new List<double[]>() { s.x })[0];
@@ -80,9 +82,7 @@ public class ESOptimizer : MonoBehaviour
                 BestScore = optimizer.getBestObjectiveFuncValue();
 
                 BestParams = optimizer.getBest();
-
-                iteration++;
-
+                
                 if ((iteration >= maxIteration && maxIteration > 0) ||
                     (BestScore <= targetValue && mode == OptimizationModes.minimize) ||
                     (BestScore >= targetValue && mode == OptimizationModes.maximize))
@@ -154,6 +154,7 @@ public class ESOptimizer : MonoBehaviour
         double[] bestParams = null;
 
         bool hasInvokeReady = false;
+        iteration = 0;
         for (int it = 0; it < maxIteration; ++it)
         {
             tempOptimizer.generateSamples(tempSamples);
@@ -185,6 +186,7 @@ public class ESOptimizer : MonoBehaviour
             tempOptimizer.update(tempSamples);
             BestScore = tempOptimizer.getBestObjectiveFuncValue();
 
+            iteration++;
             bestParams = tempOptimizer.getBest();
             
             if ((BestScore <= targetValue && mode == OptimizationModes.minimize) ||
@@ -211,6 +213,8 @@ public class ESOptimizer : MonoBehaviour
     
     public void StopOptimizing(Action<double[]> onReady = null)
     {
+        if (IsOptimizing == false)
+            return;
         IsOptimizing = false;
         if (onReady != null)
         {

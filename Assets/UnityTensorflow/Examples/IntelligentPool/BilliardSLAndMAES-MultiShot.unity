@@ -511,7 +511,7 @@ MonoBehaviour:
   isTraining: 1
   parameters: {fileID: 11400000, guid: 2891adc9117296a4faec323f41fa9afb, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\supervisedLMultishotCheckpoint.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardSLAndMAES-MultiShot.bytes
   steps: 0
   isCollectingData: 1
   dataBufferCount: 0
@@ -677,6 +677,10 @@ Prefab:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1151558439856468, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
   m_IsPrefabParent: 0
@@ -698,7 +702,7 @@ MonoBehaviour:
   m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   brain: {fileID: 1327012119}
-  trainer: {fileID: 949524764}
+  trainer: {fileID: 0}
 --- !u!1 &1327012118
 GameObject:
   m_ObjectHideFlags: 0

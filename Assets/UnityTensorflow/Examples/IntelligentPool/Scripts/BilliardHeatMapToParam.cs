@@ -6,9 +6,9 @@ using UnityEngine.UI;
 
 public class BilliardHeatMapToParam : MonoBehaviour {
 
-    public BilliardGameSystem gameSystemRef;
-    public BilliardAgent agentRef;
-    public BilliardSimple agentSimplRef;
+    protected BilliardGameSystem gameSystemRef;
+    protected BilliardAgent agentRef;
+    protected BilliardSimple agentSimplRef;
     public LayerMask heatmapLayer;
 
     public Text heatmapInfo;
@@ -23,13 +23,17 @@ public class BilliardHeatMapToParam : MonoBehaviour {
         } }
     protected bool isSampling;
     protected Vector3 sampledForce;
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
+
+
+    private void Awake()
+    {
+        gameSystemRef = FindObjectOfType<BilliardGameSystem>();
+        agentRef = FindObjectOfType<BilliardAgent>();
+        agentSimplRef = FindObjectOfType<BilliardSimple>();
+    }
+
+    // Update is called once per frame
+    void Update () {
         if (isSampling) {
             RaycastHit hit;
             if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit, heatmapLayer))

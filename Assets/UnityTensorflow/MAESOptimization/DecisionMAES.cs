@@ -10,6 +10,9 @@ public class DecisionMAES : AgentDependentDecision
     protected ESOptimizer optimizer;
     
     public bool useMAESParamsFromAgent = true;
+
+    public bool useHeuristic = true;
+
     private void Awake()
     {
         optimizer = GetComponent<ESOptimizer>();
@@ -29,10 +32,10 @@ public class DecisionMAES : AgentDependentDecision
             optimizer.initialStepSize = agentES.initialStepSize;
         }
 
-        if (heuristicVariance != null)
+        if (heuristicVariance != null && useHeuristic)
             optimizer.initialStepSize = heuristicVariance[0];
-        double[] best = optimizer.Optimize(agentES, null, heuristicAction.Select(t=>(double)t).ToArray());
-
+        double[] best = optimizer.Optimize(agentES, null, useHeuristic?heuristicAction.Select(t=>(double)t).ToArray(): new double[heuristicAction.Count]);
+        
         var result = Array.ConvertAll(best, t => (float)t);
         return result;
     }

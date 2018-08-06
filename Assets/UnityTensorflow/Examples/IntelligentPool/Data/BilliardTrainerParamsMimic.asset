@@ -16,7 +16,7 @@ MonoBehaviour:
   lossLogInterval: 100
   saveModelInterval: 20
   batchSize: 256
-  numIterationPerTrain: 10
+  numIterationPerTrain: 1
   requiredDataBeforeTraining: 20000
   maxBufferSize: 20000
   actionDiffLogInterval: 100

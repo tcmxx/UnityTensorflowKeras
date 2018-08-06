@@ -13,10 +13,22 @@ public class BilliardUIMLAgent : MonoBehaviour {
     public Slider maxItrSliderRef;
 
     public Toggle rewardShapingToggleRef;
+    public Toggle autoRequestToggleRef;
+    public Dropdown playModeRef;
 
-    public BilliardAgent agentRef;
-    public BilliardGameSystem gameSystemRef;
-    public HeatMap heatmapRef;
+    protected BilliardAgent agentRef;
+    protected BilliardGameSystem gameSystemRef;
+    protected HeatMap heatmapRef;
+    protected TrainerMimic trainerRef;
+    protected DecisionMAES agentDecisionRef;
+    private void Awake()
+    {
+        agentRef = FindObjectOfType<BilliardAgent>();
+        gameSystemRef = FindObjectOfType<BilliardGameSystem>();
+        heatmapRef = FindObjectOfType<HeatMap>();
+        trainerRef = FindObjectOfType<TrainerMimic>();
+        agentDecisionRef = agentRef.GetComponent<DecisionMAES>();
+    }
 
     private void Start()
     {
@@ -26,6 +38,9 @@ public class BilliardUIMLAgent : MonoBehaviour {
         maxItrTextRef.text = "Max Iter: " + agentRef.maxIteration;
 
         rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
+        autoRequestToggleRef.isOn = agentRef.autoRequestDecision;
+
+        OnPlayModeChanged(playModeRef.value);
     }
 
     private void Update()
@@ -68,6 +83,37 @@ public class BilliardUIMLAgent : MonoBehaviour {
     public void OnRewardShapingToggled(bool value)
     {
         gameSystemRef.defaultArena.rewardShaping = value;
+    }
+
+    public void OnAutoRequestToggled(bool value)
+    {
+        agentRef.autoRequestDecision = value;
+    }
+
+    public void OnResetClicked()
+    {
+        gameSystemRef.Reset();
+    }
+
+    public void OnPlayModeChanged(int mode)
+    {
+        if (agentDecisionRef == null)
+            return;
+        if(mode == 0)
+        {
+            agentDecisionRef.useHeuristic = false;
+            agentDecisionRef.useDecision = true;
+            trainerRef.isTraining = false;
+        }else if(mode == 1)
+        {
+            trainerRef.isTraining = true;
+            agentDecisionRef.useDecision = false;
+        }else if(mode == 2)
+        {
+            agentDecisionRef.useHeuristic = true;
+            agentDecisionRef.useDecision = true;
+            trainerRef.isTraining = true;
+        }
     }
 
     public void GenerateHeatMap()

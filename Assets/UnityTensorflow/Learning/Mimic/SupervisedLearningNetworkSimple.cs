@@ -95,7 +95,7 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
         if(useVarianceForContinuousAction && actionSpace == SpaceType.continuous)
         {
             var logSigmaSq = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
-            outVar = Current.K.exp(actorOutput.Call(encodedAllActor)[0]) +minStd*minStd;
+            outVar = Current.K.exp(logSigmaSq.Call(encodedAllActor)[0]) +minStd*minStd;
             weights.AddRange(logSigmaSq.weights);
         }
 

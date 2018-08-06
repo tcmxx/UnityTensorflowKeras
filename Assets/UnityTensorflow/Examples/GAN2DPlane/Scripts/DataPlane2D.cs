@@ -39,7 +39,7 @@ public class DataPlane2D : MonoBehaviour {
             var points = dataset[i];
             foreach(var p in points)
             {
-                var matP = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+                var matP = Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale);
 
                 Matrix4x4 mat = matP * Matrix4x4.TRS(new Vector3(p.x, p.y, -0.01f), Quaternion.identity, Vector3.one * drawScale);
                 Graphics.DrawMesh(dataPointMesh, mat, mats[i], drawLayer);
@@ -161,22 +161,22 @@ public class DataPlane2D : MonoBehaviour {
         for (int i = 0; i < 1000; ++i)
         {
             Vector2 pos = new Vector2(MathUtils.NextGaussianFloat()* s, MathUtils.NextGaussianFloat() * s);
-            AddDatapoint(pos +  new Vector2(-2,-2), 0);
+            AddDatapoint(pos +  new Vector2(-0.25f,-0.25f), 0);
         }
         for (int i = 0; i < 1000; ++i)
         {
             Vector2 pos = new Vector2(MathUtils.NextGaussianFloat() * s, MathUtils.NextGaussianFloat() * s);
-            AddDatapoint(pos + new Vector2(2, -2), 0);
+            AddDatapoint(pos + new Vector2(0.25f, -0.25f), 0);
         }
         for (int i = 0; i < 1000; ++i)
         {
             Vector2 pos = new Vector2(MathUtils.NextGaussianFloat() * s, MathUtils.NextGaussianFloat() * s);
-            AddDatapoint(pos + new Vector2(2, 2), 0);
+            AddDatapoint(pos + new Vector2(0.25f, 0.25f), 0);
         }
         for (int i = 0; i < 1000; ++i)
         {
             Vector2 pos = new Vector2(MathUtils.NextGaussianFloat() * s, MathUtils.NextGaussianFloat() * s);
-            AddDatapoint(pos + new Vector2(-2, 2), 0);
+            AddDatapoint(pos + new Vector2(-0.25f, 0.25f), 0);
         }
     }
 }

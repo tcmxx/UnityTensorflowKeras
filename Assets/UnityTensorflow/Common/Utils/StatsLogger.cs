@@ -38,8 +38,12 @@ public class StatsLogger
             averageCounter[name] = new AutoAverage(logAverageFrequency);
         }
 
-        data[name].Add(datapoint);
+        
         averageCounter[name].AddValue(datapoint);
+        if (averageCounter[name].JustUpdated)
+        {
+            data[name].Add(averageCounter[name].Average);
+        }
         if (LogToGrapher && averageCounter[name].JustUpdated)
         {
 #if UNITY_EDITOR

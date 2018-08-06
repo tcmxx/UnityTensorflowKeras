@@ -630,6 +630,10 @@ Prefab:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1202550805354182, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: db0f163ff1982d64985f44d81eaf13d1, type: 2}
   m_IsPrefabParent: 0
@@ -739,6 +743,21 @@ Prefab:
       propertyPath: agentParameters.resetOnDone
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
+        type: 2}
+      propertyPath: autoRequestDecision
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
+        type: 2}
+      propertyPath: resetAfterOneShot
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114988921453423414, guid: 516fb5a9405a3b141b40831dd2ba3441,
+        type: 2}
+      propertyPath: targetValue
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}
   m_IsPrefabParent: 0
@@ -802,7 +821,7 @@ MonoBehaviour:
     width: 1280
     height: 720
     qualityLevel: 5
-    timeScale: 1
+    timeScale: 10
     targetFrameRate: 60
   resetParameters:
     resetParameters: []

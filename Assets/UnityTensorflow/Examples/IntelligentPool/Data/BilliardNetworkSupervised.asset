@@ -16,4 +16,4 @@ MonoBehaviour:
   hiddenWeightsInitialScale: 1
   outputWeightsInitialScale: 0.01
   useVarianceForContinuousAction: 1
-  minStd: 0.1
+  minStd: 0.2
