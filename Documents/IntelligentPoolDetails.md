@@ -45,6 +45,7 @@ Here is the list of what we have tried and their results:
 6. Same as 5 but with GAN(TBD).
 
 Next those cases will be discussed one by one in details.
+
 ### Case 1 - 2 red balls, 6 pockets, one shot, MAES
 *	Scenes: BilliardMAESOnly-OneShot-UseMAESDirectly and BilliardMAESOnly-OneShot-UseTrainer
 *	If the reward function is not shaped, that is, one point for each red ball that ends up in pockets after one shot, the MAES is very like to not be able to find the best solution. The reason is simple: initial random samples are likely to all have 0 point, therefore the algorithm is not able to find next generation of better children.
@@ -56,10 +57,12 @@ Next those cases will be discussed one by one in details.
         width="600" border="10" />
   <figcaption>MAES Optimization</figcaption>
 </p>
+
 ### Case 2 - 2 red balls, 6 pockets, two shot, MAES
 * Scenes: BilliardSLAndMAES-MultiShot(Select MAES only in the scene)
 * Instead of trying to find one best shot, in this case, the optimizer tries to find two consecutive shots that might have best result.
 * Result: As the Case 1, works with reward shaping. It is able to find a good action to take, but the optimization takes more time because it needs to evaluate two shots and the action space dimension is 4 instead of 2, which is larger for the optimizer to search.
+
 ### Case 3 - 2 red balls, 6 pockets, one shot, MAES and Supervised Learning
 * Scenes: BilliardSLAndMAES-OneShot
 * Result: the neural network does not learn anything meaningful to help MAES.
