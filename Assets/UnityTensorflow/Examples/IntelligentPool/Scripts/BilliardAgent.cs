@@ -29,7 +29,7 @@ public class BilliardAgent : AgentES
     public override void InitializeAgent()
     {
         if(gameSystem == null)
-            gameSystem = FindObjectOfType(typeof(BilliardGameSystem)) as BilliardGameSystem;
+            gameSystem = GetComponentInChildren<BilliardGameSystem>() as BilliardGameSystem;
         //gameSystem.Reset(randomizeRedballs);
     }
 
@@ -105,7 +105,7 @@ public class BilliardAgent : AgentES
             result.Add(ParamsToForceVector(act));
         }
 
-        print("Shoot with params:" + string.Join(",",vectorAction));
+        //print("Shoot with params:" + string.Join(",",vectorAction));
 
         //gameSystem.Shoot(ParamsToForceVector(vectorAction));
         gameSystem.ShootSequence(result);

@@ -11,16 +11,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
   m_Name: BilliardTrainerParamsPPO
   m_EditorClassIdentifier: 
+  learningRate: 0.00001
   maxTotalSteps: 100000000
+  lossLogInterval: 1
+  saveModelInterval: 1000
   rewardDiscountFactor: 0.9
   rewardGAEFactor: 0.8
   valueLossWeight: 10
-  entroyLossWeight: 0
+  timeHorizon: 10
+  entropyLossWeight: 0
   clipEpsilon: 0.2
   batchSize: 32
   bufferSizeForTrain: 128
   numEpochPerTrain: 100
-  learningRate: 0.00001
-  lossLogInterval: 1
+  heuristicBufferSize: 0
+  extraBatchTFromHeuristicBuffer: 0
   rewardLogInterval: 50
-  saveModelInterval: 100

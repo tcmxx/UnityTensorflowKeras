@@ -103,16 +103,16 @@ public class BilliardUIMLAgent : MonoBehaviour {
         {
             agentDecisionRef.useHeuristic = false;
             agentDecisionRef.useDecision = true;
-            trainerRef.isTraining = false;
+           // trainerRef.isTraining = false;
         }else if(mode == 1)
         {
-            trainerRef.isTraining = true;
+            //trainerRef.isTraining = true;
             agentDecisionRef.useDecision = false;
         }else if(mode == 2)
         {
             agentDecisionRef.useHeuristic = true;
             agentDecisionRef.useDecision = true;
-            trainerRef.isTraining = true;
+            //trainerRef.isTraining = true;
         }
     }
 
