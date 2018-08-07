@@ -18,7 +18,9 @@ During the development of the materials for the Computational Intelligence in Ga
         alt="SimpleCase" 
         width="600" border="10" />
 </p>
-
+<p align="center">
+  <em>Simple case scene</em>
+</p>
 In the end, at least until now, PPO is not working at all. We ended up make a even simpler case than the simple case in the beginning, with only one red ball and 4 pockets, and the game restarts after every shot.  
 
 <p align="center"  id="simpler-case-image">
@@ -26,7 +28,9 @@ In the end, at least until now, PPO is not working at all. We ended up make a ev
         alt="SimplerCase" 
         width="600" border="10" />
 </p>
-
+<p align="center">
+  <em>Even simpler case scene</em>
+</p>
 Here I will go through the development process, describe each example scenes, tell how to play with them, and explain why I think the billiard game does not work directly with pure PPO or supervised learning.
 
 ## What we have tried
@@ -120,7 +124,10 @@ This case, the same method is used as in case 3, but with much simpler scenario.
 <p align="center">
     <img src="Images/IntelligentPool/HeatMapSimpler.png" 
         alt="HeatMapSimpler" 
-        width="600" border="10" />
+        width="400" border="10" />
+</p>
+<p align="center">
+  <em>Heapmap</em>
 </p>
 
 According to the heatmap, now the "better solutions" are not that scatterd as in case 3 anymore. That means it is easier for MAES to find the optimal solutions and the average solutions learned by neural network make more sense.
@@ -135,15 +142,17 @@ After collecting 20000 samples and training the neural network as in case 2 for 
 </p>
 
 <p align="center">
-  <em>With neural network only</em>
+  <em>Simpler case played by neural network only</em>
 </p>
 
-If we use the output from neural network as the initial guess of the optimizer, the iteration count is about reduced from 10 to 5 in our case. Nice!
+If we use the output from neural network as the initial guess of the optimizer, the average iteration count to find a satisfied solution is about reduced from 10 to 5 in our case. Nice!
 <p align="center">
     <img src="Images/IntelligentPool/ReducedMAESIteration.png" 
         alt="ReducedMAESIteration" 
         width="600" border="10" />
-
+</p>
+<p align="center">
+  <em>MAES iteration comparison when changingfrom MAES only to MAES with neural network- blue line: average iteration count. purple line: average score. </em>
 </p>
 
 ### Case 6 - 1 red ball, 4 pockets, one shot, MAES and Supervised Learning using GAN
