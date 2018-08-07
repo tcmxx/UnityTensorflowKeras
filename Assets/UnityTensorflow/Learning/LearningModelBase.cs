@@ -156,7 +156,8 @@ public abstract class LearningModelBase : MonoBehaviour {
     //the default set learning rate method.
     public virtual void SetLearningRate(float lr)
     {
-        SetLearningRate(lr, 0);
+        if(optimiers != null && optimiers.Count > 0)
+            SetLearningRate(lr, 0);
     }
 
 

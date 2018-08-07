@@ -37,7 +37,7 @@ public interface ISupervisedLearningModel
 /// <summary>
 /// actor critic network abstract class
 /// </summary>
-public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningModel
+public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningModel, INeuralEvolutionModel
 {
     [ShowAllPropertyAttr]
     public SupervisedLearningNetwork network;
@@ -213,4 +213,13 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         return parameters;
     }
 
+    float[,] INeuralEvolutionModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    {
+        return EvaluateAction(vectorObservation, visualObservation).Item1;
+    }
+
+    public List<Tensor> GetWeightsToOptimize()
+    {
+        return network.GetWeights();
+    }
 }

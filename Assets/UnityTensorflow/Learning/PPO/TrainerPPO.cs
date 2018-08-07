@@ -31,12 +31,12 @@ public class TrainerPPO : Trainer
 
 
     //casted modelRef from the base class for convenience
-    protected RLModelPPO modelPPO;
+    protected IRLModelPPO iModelPPO;
 
     public override void Initialize()
     {
-        modelPPO = modelRef as RLModelPPO;
-        Debug.Assert(modelPPO != null, "Please assign a RLModelPPO to modelRef");
+        iModelPPO = modelRef as IRLModelPPO;
+        Debug.Assert(iModelPPO != null, "Please assign a model that implement interface IRLModelPPO to modelRef");
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
 
@@ -84,8 +84,8 @@ public class TrainerPPO : Trainer
             dataBufferHeuristic = new DataBuffer(parametersPPO.heuristicBufferSize, allBufferData.ToArray());
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
-        
-        
+
+
         modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);
         if (continueFromCheckpoint)
         {
@@ -96,9 +96,9 @@ public class TrainerPPO : Trainer
 
     protected override void FixedUpdate()
     {
-        modelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
-        modelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
-        modelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
+        iModelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
+        iModelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
+        iModelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
 
         base.FixedUpdate();
     }
@@ -188,7 +188,7 @@ public class TrainerPPO : Trainer
             if (agentNewInfo.done || agentNewInfo.maxStepReached || actionsEpisodeHistory[agent].Count > parametersPPO.timeHorizon)
             {
                 //update process the episode data for PPO.
-                float nextValue = modelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
+                float nextValue = iModelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
                     CreateVisualIInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
                 var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
                     valuesEpisodeHistory[agent].ToArray(), parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
@@ -253,8 +253,8 @@ public class TrainerPPO : Trainer
 
 
         float[,] actionProbs = null;
-        var actions = modelPPO.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
-        var values = modelPPO.EvaluateValue(vectorObsAll, visualObsAll);
+        var actions = iModelPPO.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
+        var values = iModelPPO.EvaluateValue(vectorObsAll, visualObsAll);
 
 
         int i = 0;
@@ -269,7 +269,7 @@ public class TrainerPPO : Trainer
                 var action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
                 float[,] vectorOb = CreateVectorIInputBatch(agentInfos, new List<Agent>() { agent});
                 var visualOb = CreateVisualIInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
-                var probs = modelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);
+                var probs = iModelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);
 
                 var temp = new TakeActionOutput();
                 temp.allProbabilities = probs.GetRow(0);
@@ -339,7 +339,7 @@ public class TrainerPPO : Trainer
             for (int j = 0; j < batchCount; ++j)
             {
                 
-                float[] losses = modelPPO.TrainBatch(SubRows(vectorObservations, j * parametersPPO.batchSize , parametersPPO.batchSize ),
+                float[] losses = iModelPPO.TrainBatch(SubRows(vectorObservations, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(visualObservations, j * parametersPPO.batchSize, parametersPPO.batchSize),
                     SubRows(actions, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(actionProbs, j * parametersPPO.batchSize , parametersPPO.batchSize ),
@@ -376,7 +376,7 @@ public class TrainerPPO : Trainer
                 for (int j = 0; j < batchCountHeuristic; ++j)
                 {
 
-                    float[] losses = modelPPO.TrainBatch(SubRows(vectorObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
+                    float[] losses = iModelPPO.TrainBatch(SubRows(vectorObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
                         SubRows(visualObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
                         SubRows(actionsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
                         SubRows(actionProbsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),

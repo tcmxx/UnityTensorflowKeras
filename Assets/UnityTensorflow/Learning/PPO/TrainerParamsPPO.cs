@@ -6,7 +6,6 @@ using UnityEngine;
 [CreateAssetMenu()]
 public class TrainerParamsPPO : TrainerParams
 {
-
     [Header("Learning related")]
 
     public float rewardDiscountFactor = 0.99f;

@@ -24,7 +24,21 @@ using KerasSharp.Initializers;
 using KerasSharp;
 using KerasSharp.Losses;
 
-public class RLModelPPO : LearningModelBase
+
+public interface IRLModelPPO
+{
+    float EntropyLossWeight { get; set; }
+    float ValueLossWeight { get; set; }
+    float ClipEpsilon { get; set; }
+
+    float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation);
+    float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true);
+    float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation);
+    float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages);
+}
+
+
+public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 {
 
 
@@ -355,4 +369,14 @@ public class RLModelPPO : LearningModelBase
         return updateParameters;
     }
 
+    public float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    {
+        float[,] outActionProbs;
+        return EvaluateAction(vectorObservation, out outActionProbs, visualObservation, true);
+    }
+
+    public List<Tensor> GetWeightsToOptimize()
+    {
+        return network.GetWeights();
+    }
 }

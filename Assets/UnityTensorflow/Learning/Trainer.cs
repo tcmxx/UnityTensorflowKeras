@@ -63,7 +63,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     private int steps = 0;
 
 
-    public Brain BrainToTrain { get; private set; }
+    public Brain BrainToTrain { get; protected set; }
 
     private void Start()
     {
