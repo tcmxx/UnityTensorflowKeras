@@ -21,7 +21,7 @@ During the development of the materials for the Computational Intelligence in Ga
 
 In the end, at least until now, PPO is not working at all. We ended up make a even simpler case than the simple case in the beginning, with only one red ball and 4 pockets, and the game restarts after every shot.  
 
-<p align="center">
+<p align="center"  id="simpler-case-image">
     <img src="Images/IntelligentPool/SimplerCase.png" 
         alt="SimplerCase" 
         width="600" border="10" />
@@ -55,7 +55,11 @@ Next those cases will be discussed one by one in details.
     <img src="Images/IntelligentPool/MAESDemo.gif" 
         alt="MAESDemo" 
         width="600" border="10" />
-  <figcaption>MAES Optimization</figcaption>
+
+</p>
+
+<p align="center">
+  <em>MAES Demo</em>
 </p>
 
 ### Case 2 - 2 red balls, 6 pockets, two shot, MAES
@@ -80,7 +84,9 @@ The first problem comes from the discontinuous distribution of optimzal solution
     <img src="Images/IntelligentPool/HeatMap.png" 
         alt="HeatMap" 
         width="600" border="10" />
-  <figcaption>Heat Map of all possible shots</figcaption>
+</p>
+<p align="center">
+  <em>Heat Map of all possible shots</em>
 </p>
 
 In the heat map at the right side of the above image, the whiter a pixel is, the higher score it is to shoot at with correcponding parameters. In the middle of the map, it shoot with zero force, and angle/distance from center means the shoot direction/force magnitude respectively.
@@ -102,9 +108,44 @@ Another minor reason why it is hard to train the neural network for our case is 
 
 In the end, I made a even simple enough case that does not have the problems above, before which I tried PPO, which did not work as expected.
 
+### Case 4 - 2 red balls, 6 pockets, one shot, PPO
+* Scenes: BilliardRL-OneShot
+* Result: I have not been able to produce good result with short time training yet.
 
+### Case 5 - 1 red ball, 4 pockets, one shot, MAES and Supervised Learning
+* Scenes: BilliardSLAndMAES-OneShotSimplified
 
+This case, the same method is used as in case 3, but with much simpler scenario. Here is the screenshot of the scene and the heatmap.
 
+<p align="center">
+    <img src="Images/IntelligentPool/HeatMapSimpler.png" 
+        alt="HeatMapSimpler" 
+        width="600" border="10" />
+</p>
 
+According to the heatmap, now the "better solutions" are not that scatterd as in case 3 anymore. That means it is easier for MAES to find the optimal solutions and the average solutions learned by neural network make more sense.
 
+After collecting 20000 samples and training the neural network as in case 2 for a little while, the neural network is at least able to shoot at the red ball and sometimes pocket it.
+
+<p align="center">
+    <img src="Images/IntelligentPool/SimplerNeuralOnly.gif" 
+        alt="SimplerNeuralOnly" 
+        width="600" border="10" />
+
+</p>
+
+<p align="center">
+  <em>With neural network only</em>
+</p>
+
+If we use the output from neural network as the initial guess of the optimizer, the iteration count is about reduced from 10 to 5 in our case. Nice!
+<p align="center">
+    <img src="Images/IntelligentPool/ReducedMAESIteration.gif" 
+        alt="ReducedMAESIteration" 
+        width="600" border="10" />
+
+</p>
+
+### Case 6 - 1 red ball, 4 pockets, one shot, MAES and Supervised Learning using GAN
+Scenes: BilliardSLAndMAES-OneShotSimplified-GAN
 
