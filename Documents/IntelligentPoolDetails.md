@@ -11,7 +11,7 @@ The general name of those types of those games is cue sport(See [Wikipedia](http
         width="600" border="10" />
 </p>
 
-During the development of the materials for the Computational Intelligence in Games course, we decided to develop a whole set of examples with the billiard game, using different technologies, to showcase the concepts and power of each. The start of the examples is a simple case where the AI only need to hit the white ball once and try to make both of the red balls on desk into pockets, using [MAES-need link](something) algorithm. The final goal is to develop a AI that can play a whole game with itself, where it should plan not just one shot but multiple shots and prevent the opponents from getting advantages, using [PPO-need link](something). 
+During the development of the materials for the Computational Intelligence in Games course, we decided to develop a whole set of examples with the billiard game, using different technologies, to showcase the concepts and power of each. The start of the examples is a simple case where the AI only need to hit the white ball once and try to make both of the red balls on desk into pockets, using [MAES(CMAES)](https://en.wikipedia.org/wiki/CMA-ES) algorithm. The final goal is to develop a AI that can play a whole game with itself, where it should plan not just one shot but multiple shots and prevent the opponents from getting advantages, using [PPO](https://arxiv.org/abs/1707.06347). 
 
 <p align="center">
     <img src="Images/IntelligentPool/SimpleCase.png" 
@@ -46,7 +46,8 @@ Here is the list of what we have tried and their results:
 	- Not work, and it won't work.
 5. Even simpler cacse with 1 red ball and 4 pocket on a square table. Use `Supervised Learning` together with `MAES` for `one shot`. Reward function is reshaped heavily.
 	- The supervised learning can learn to hit red balls now. Sometimes it can shot well without MAES.
-6. Same as 5 but with GAN(TBD).
+6. Same as 5 but with GAN.
+	- A demo to show how GAN works.
 
 Next those cases will be discussed one by one in details.
 
@@ -106,7 +107,7 @@ For supervised learning, it usually tries to reduce the error between its own ou
  
 In our case, the supervised learning neural network learns to output the average between some of the whiter-pixel positions. If you randomly pick some white pixels and spot their average position, it is likely to be just a grey or black pixle on the heat map! This is one of the reason why our neural network can not learn anything helpful!
  
-You might as is there a way to solve the problem and let the neural network learn generate multiple outputs? Some people might think of [GAN-need link](something). However, considering neural network does not really represent disconinuous functions(you can still approximate, but that is hard. See [Reference](https://www.quora.com/How-can-we-use-artificial-neural-networks-to-approximate-a-piecewise-continuous-function)),and GAN is stremely hard to train, I don't think it is worth trying it on this case. 
+You might as is there a way to solve the problem and let the neural network learn generate multiple outputs? Some people might think of [GAN](https://en.wikipedia.org/wiki/Generative_adversarial_network). However, considering neural network does not really represent disconinuous functions(you can still approximate, but that is hard. See [Reference](https://www.quora.com/How-can-we-use-artificial-neural-networks-to-approximate-a-piecewise-continuous-function)),and GAN is stremely hard to train, I don't think it is worth trying it on this case. 
 
 Another minor reason why it is hard to train the neural network for our case is that, the optimal outputs might change a lot with only small change of input states. This makes the it requires more training data and larger neural network to be able to remember all different situations. I did not try to collect more data or use larger network, becaue the first problem is already hindering me  and I don't have enough time to collecting the data.
 
