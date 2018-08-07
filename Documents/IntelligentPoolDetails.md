@@ -128,7 +128,7 @@ According to the heatmap, now the "better solutions" are not that scatterd as in
 After collecting 20000 samples and training the neural network as in case 2 for a little while, the neural network is at least able to shoot at the red ball and sometimes pocket it.
 
 <p align="center">
-    <img src="Images/IntelligentPool/SimplerNeuralOnly.gif" 
+    <img src="Images/IntelligentPool/SimplerDemo.gif" 
         alt="SimplerNeuralOnly" 
         width="600" border="10" />
 
@@ -140,7 +140,7 @@ After collecting 20000 samples and training the neural network as in case 2 for 
 
 If we use the output from neural network as the initial guess of the optimizer, the iteration count is about reduced from 10 to 5 in our case. Nice!
 <p align="center">
-    <img src="Images/IntelligentPool/ReducedMAESIteration.gif" 
+    <img src="Images/IntelligentPool/ReducedMAESIteration.png" 
         alt="ReducedMAESIteration" 
         width="600" border="10" />
 
