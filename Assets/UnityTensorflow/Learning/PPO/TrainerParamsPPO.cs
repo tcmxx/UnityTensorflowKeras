@@ -21,8 +21,8 @@ public class TrainerParamsPPO : TrainerParams
     public int bufferSizeForTrain = 2048;
     public int numEpochPerTrain = 10;
 
-    public int heuristicBufferSize = 0;
-    public int extraBatchTFromHeuristicBuffer = 0;
+
+    public float useHeuristicChance = 0.4f;
     
     [Header("Log related")]
     

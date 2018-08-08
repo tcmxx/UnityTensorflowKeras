@@ -9,10 +9,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
-  m_Name: PongPPOTrainerParams
+  m_Name: PongPPOHeuristicTrainerParams
   m_EditorClassIdentifier: 
   learningRate: 0.004
-  maxTotalSteps: 1000000
+  maxTotalSteps: 2000000
   lossLogInterval: 1
   saveModelInterval: 50000
   rewardDiscountFactor: 0.99

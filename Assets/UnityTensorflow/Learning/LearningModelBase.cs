@@ -148,7 +148,7 @@ public abstract class LearningModelBase : MonoBehaviour {
     /// <returns>all weights used by optimizers</returns>
     public virtual List<Array> GetAllOptimizerWeights()
     {
-        if (!TrainingEnabled)
+        if (!TrainingEnabled || optimiers == null)
             return new List<Array>();
         List<Array> allWeights = new List<Array>();
         foreach(var o in optimiers)

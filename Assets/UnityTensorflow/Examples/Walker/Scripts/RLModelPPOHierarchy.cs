@@ -26,8 +26,6 @@ public class RLModelPPOHierarchy : RLModelPPO {
     public int lowLevelObservationSize;
     public int highLevelObservationSize;
 
-    public OptimizerCreator optimizer;
-
     //some holders for tensors
     protected Tensor inputLowLevelTensor = null;
     protected Tensor inputHighLevelTensor = null;
@@ -161,7 +159,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
     /// <param name="vectorObservation">current vector observation. The first dimension of the array is the batch dimension.</param>
     /// <param name="visualObservation">current visual observation. The first dimension of the array is the batch dimension.</param>
     /// <returns>values of current states</returns>
-    public virtual float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    public override float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)

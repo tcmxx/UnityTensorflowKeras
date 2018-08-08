@@ -15,7 +15,6 @@ public class TrainerPPO : Trainer
     protected TrainerParamsPPO parametersPPO;
     
     protected DataBuffer dataBuffer;
-    protected DataBuffer dataBufferHeuristic;
     public int DataCountStored { get { return dataBuffer.CurrentCount; } }
     
     protected Dictionary<Agent, List<float>> statesEpisodeHistory = null;
@@ -78,10 +77,8 @@ public class TrainerPPO : Trainer
         }
 
 
-        dataBuffer = new DataBuffer(parametersPPO.bufferSizeForTrain * 2, allBufferData.ToArray());
-        //a seperate buffer if the agent uses heuristic decision instead of directly from the model
-        if(parametersPPO.heuristicBufferSize > 0)
-            dataBufferHeuristic = new DataBuffer(parametersPPO.heuristicBufferSize, allBufferData.ToArray());
+        dataBuffer = new DataBuffer(allBufferData.ToArray());
+
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
 
@@ -90,7 +87,6 @@ public class TrainerPPO : Trainer
         if (continueFromCheckpoint)
         {
             LoadModel();
-            LoadHeuristicData();
         }
     }
 
@@ -165,15 +161,6 @@ public class TrainerPPO : Trainer
 
 
 
-    public override void IncrementStep()
-    {
-        base.IncrementStep();
-        if(GetStep() % parametersPPO.saveModelInterval == 0)
-        {
-            SaveHeuristicData();
-        }
-    }
-
     public override bool IsReadyUpdate()
     {
         return dataBuffer.CurrentCount >= parametersPPO.bufferSizeForTrain;
@@ -221,20 +208,12 @@ public class TrainerPPO : Trainer
                 actionsEpisodeHistory[agent].Clear();
                 actionprobsEpisodeHistory[agent].Clear();
                 valuesEpisodeHistory[agent].Clear();
-
-                var agentDecision = agent.GetComponent<AgentDependentDecision>();
-                if (agentDecision != null && agentDecision.useDecision && dataBufferHeuristic != null)
-                {
-                    //use a seperate buffer if the agent uses heuristic decision instead of directly from the model
-                    dataBufferHeuristic.AddData(dataToAdd.ToArray());
-                }
-                else
-                {
-                    dataBuffer.AddData(dataToAdd.ToArray());
-                    //update stats if the agent is not using heuristic
-                    stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
-                    stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
-                }
+                
+                dataBuffer.AddData(dataToAdd.ToArray());
+                //update stats if the agent is not using heuristic
+                stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
+                stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
+                
                 
                 accumulatedRewards[agent] = 0;
                 episodeSteps[agent] = 0;
@@ -262,7 +241,7 @@ public class TrainerPPO : Trainer
         {
             var agentDecision = agent.GetComponent<AgentDependentDecision>();
 
-            if (isTraining && agentDecision != null && agentDecision.useDecision && dataBufferHeuristic != null)
+            if (isTraining && agentDecision != null && agentDecision.useDecision && UnityEngine.Random.Range(0,1.0f) <= parametersPPO.useHeuristicChance)
             {
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];
@@ -351,46 +330,9 @@ public class TrainerPPO : Trainer
                 tempPolicyLoss += losses[2];
             }
 
-            //training from the heuristic data buffer
-            int batchCountHeuristic = 0;
-            if (dataBufferHeuristic != null)
-            {
-                var samplesHeuristic = dataBufferHeuristic.SampleBatchesReordered(parametersPPO.batchSize, parametersPPO.extraBatchTFromHeuristicBuffer, fetches.ToArray());
-                var vectorObsArrayHeuristic = samplesHeuristic.TryGetOr("VectorObservation", null);
-                float[,] vectorObservationsHeuristic = vectorObsArrayHeuristic == null ? null : vectorObsArrayHeuristic as float[,];
-                float[,] actionsHeuristic = (float[,])samplesHeuristic["Action"];
-                float[,] actionProbsHeuristic = (float[,])samplesHeuristic["ActionProb"];
-                float[,] targetValuesHeuristic = (float[,])samplesHeuristic["TargetValue"];
-                float[,] advantagesHeuristic = (float[,])samplesHeuristic["Advantage"];
-
-
-                List<float[,,,]> visualObservationsHeuristic = null;
-                for (int j = 0; j < BrainToTrain.brainParameters.cameraResolutions.Length; ++j)
-                {
-                    if (j == 0)
-                        visualObservationsHeuristic = new List<float[,,,]>();
-                    visualObservationsHeuristic.Add((float[,,,])samples["VisualObservation" + j]);
-                }
-
-                batchCountHeuristic = Mathf.Min(parametersPPO.extraBatchTFromHeuristicBuffer, targetValuesHeuristic.Length / parametersPPO.batchSize);
-                for (int j = 0; j < batchCountHeuristic; ++j)
-                {
-
-                    float[] losses = iModelPPO.TrainBatch(SubRows(vectorObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
-                        SubRows(visualObservationsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
-                        SubRows(actionsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
-                        SubRows(actionProbsHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize),
-                        SubRows(targetValuesHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
-                        SubRows(advantagesHeuristic, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten()
-                        );
-                    tempLoss += losses[0];
-                    tempValueLoss += losses[1];
-                    tempPolicyLoss += losses[2];
-                }
-            }
-            loss += tempLoss / (batchCount+ batchCountHeuristic);
-            policyLoss += tempPolicyLoss / (batchCount + batchCountHeuristic);
-            valueLoss += tempValueLoss / (batchCount + batchCountHeuristic);
+            loss += tempLoss / (batchCount);
+            policyLoss += tempPolicyLoss / (batchCount );
+            valueLoss += tempValueLoss / (batchCount );
         }
         
         //log the stats
@@ -434,55 +376,5 @@ public class TrainerPPO : Trainer
 
         return result;
     }
-
-
-
-    public void SaveHeuristicData()
-    {
-        if(dataBufferHeuristic == null)
-            return;
-        var binFormatter = new BinaryFormatter();
-        var mStream = new MemoryStream();
-
-        binFormatter.Serialize(mStream, dataBufferHeuristic);
-        var data = mStream.ToArray();
-
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_heuristicdata.bytes"));
-        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-
-        File.WriteAllBytes(fullPath, data);
-        Debug.Log("Saved heuristic data to " + fullPath);
-
-
-    }
-    public void LoadHeuristicData()
-    {
-        if (dataBufferHeuristic == null)
-            return;
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string savepath = Path.Combine(dir, file + "_heuristicdata.bytes");
-
-        string fullPath = Path.GetFullPath(savepath);
-
-        fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
-        fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-
-        if (!File.Exists(fullPath))
-        {
-            Debug.Log("Training data not exist at: " + fullPath);
-            return;
-        }
-        var bytes = File.ReadAllBytes(fullPath);
-
-        //deserialize the data
-        var mStream = new MemoryStream(bytes);
-        var binFormatter = new BinaryFormatter();
-        dataBufferHeuristic = (DataBuffer)binFormatter.Deserialize(mStream);
-
-        Debug.Log("Loaded heuristic data from " + fullPath);
-    }
+    
 }

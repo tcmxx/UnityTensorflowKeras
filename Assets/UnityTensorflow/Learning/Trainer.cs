@@ -60,7 +60,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
     [ReadOnly]
     [SerializeField]
-    private int steps = 0;
+    protected int steps = 0;
 
 
     public Brain BrainToTrain { get; protected set; }
