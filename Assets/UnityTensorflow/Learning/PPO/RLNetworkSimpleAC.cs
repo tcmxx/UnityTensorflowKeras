@@ -12,12 +12,24 @@ using KerasSharp.Activations;
 public class RLNetworkSimpleAC : RLNetworkAC
 {
 
-    public int actorNNHidden = 1;
-    public int actorNNWidth = 128;
-    public int criticNNHidden = 1;
-    public int criticNNWidth = 128;
-    public float hiddenWeightsInitialScale = 1;
-    public float outputWeightsInitialScale = 0.01f;
+    public List<SimpleDenseLayerDef> actorHiddenLayers;
+    public List<SimpleDenseLayerDef> criticHiddenLayers;
+
+    public float actorOutputLayerInitialScale = 0.1f;
+    public bool actorOutputLayerBias = true;
+
+    public float criticOutputLayerInitialScale = 0.1f;
+    public bool criticOutputLayerBias = true;
+
+    public float visualEncoderInitialScale = 0.1f;
+    public bool visualEncoderBias = true;
+
+    //public int actorNNHidden = 1;
+    //public int actorNNWidth = 128;
+    //public int criticNNHidden = 1;
+    //public int criticNNWidth = 128;
+    //public float hiddenWeightsInitialScale = 1;
+    //public float outputWeightsInitialScale = 0.01f;
 
     protected List<Tensor> weights;
 
@@ -41,8 +53,8 @@ public class RLNetworkSimpleAC : RLNetworkAC
             List<Tensor> visualEncodedCritic = new List<Tensor>();
             foreach (var v in inVisualState)
             {
-                var ha = CreateVisualEncoder(v, actorNNWidth, actorNNHidden, "ActorVisualEncoder");
-                var hc = CreateVisualEncoder(v, criticNNWidth, criticNNHidden, "CriticVisualEncoder");
+                var ha = CreateVisualEncoder(v, actorHiddenLayers, "ActorVisualEncoder");
+                var hc = CreateVisualEncoder(v, criticHiddenLayers, "CriticVisualEncoder");
                 visualEncodedActor.Add(ha);
                 visualEncodedCritic.Add(hc);
             }
@@ -70,8 +82,12 @@ public class RLNetworkSimpleAC : RLNetworkAC
         Tensor encodedVectorStateCritic = null;
         if (inVectorstate != null)
         {
-            encodedVectorStateActor = CreateContinuousStateEncoder(inVectorstate, actorNNWidth, actorNNHidden, "ActorStateEncoder");
-            encodedVectorStateCritic = CreateContinuousStateEncoder(inVectorstate, criticNNWidth, criticNNHidden, "CriticStateEncoder");
+            var output = BuildSequentialLayers(actorHiddenLayers, inVectorstate, "ActorStateEncoder");
+            encodedVectorStateActor = output.Item1;
+            weights.AddRange(output.Item2);
+            output = BuildSequentialLayers(criticHiddenLayers, inVectorstate, "CriticStateEncoder");
+            encodedVectorStateCritic = output.Item1;
+            weights.AddRange(output.Item2);
         }
 
         //concat all inputs
@@ -97,7 +113,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
 
         //outputs
-        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
+        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new GlorotUniform(scale: actorOutputLayerInitialScale));
         outAction = actorOutput.Call(encodedAllActor)[0];
         if (actionSpace == SpaceType.discrete)
         {
@@ -106,20 +122,20 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
         weights.AddRange(actorOutput.weights);
 
-        var criticOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
+        var criticOutput = new Dense(units: 1, activation: null, use_bias: criticOutputLayerBias, kernel_initializer: new GlorotUniform(scale: criticOutputLayerInitialScale));
         outValue = criticOutput.Call(encodedAllCritic)[0];
         weights.AddRange(criticOutput.weights);
     }
 
 
-    protected Tensor CreateVisualEncoder(Tensor visualInput, int hiddenSize, int numLayers, string scope)
+    protected Tensor CreateVisualEncoder(Tensor visualInput, List<SimpleDenseLayerDef> denseLayers, string scope)
     {
         //use the same encoder as in UnityML's python codes
         Tensor temp;
         using (Current.K.name_scope(scope))
         {
-            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 },kernel_initializer: new GlorotUniform(scale: hiddenWeightsInitialScale), activation: new ELU());
-            var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 },kernel_initializer: new GlorotUniform(scale: hiddenWeightsInitialScale), activation: new ELU());
+            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 },use_bias:visualEncoderBias ,kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
+            var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 }, use_bias: visualEncoderBias, kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
 
             temp = conv1.Call(visualInput)[0];
             temp = conv2.Call(temp)[0];
@@ -130,26 +146,15 @@ public class RLNetworkSimpleAC : RLNetworkAC
             weights.AddRange(conv1.weights);
             weights.AddRange(conv2.weights);
         }
+        
+        var output = BuildSequentialLayers(denseLayers, temp, scope);
+        var hiddenFlat = output.Item1;
+        weights.AddRange(output.Item2);
 
-        var hiddenFlat = CreateContinuousStateEncoder(temp, hiddenSize, numLayers, scope);
+
         return hiddenFlat;
     }
 
-    protected Tensor CreateContinuousStateEncoder(Tensor state, int hiddenSize, int numLayers, string scope)
-    {
-        var hidden = state;
-        using (Current.K.name_scope(scope))
-        {
-            for (int i = 0; i < numLayers; ++i)
-            {
-                var layer = new Dense(hiddenSize, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: hiddenWeightsInitialScale));
-                hidden = layer.Call(hidden)[0];
-                weights.AddRange(layer.weights);
-            }
-        }
-
-        return hidden;
-    }
 
 
     public override List<Tensor> GetWeights()

@@ -213,10 +213,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   checkpointTOLoad: {fileID: 0}
   trainingEnabled: 0
-  network: {fileID: 11400000, guid: 5bc335624be75ec4a9a8a532b93b9b27, type: 2}
+  network: {fileID: 11400000, guid: e19e85c08f40ad84c96ffadacbda3be1, type: 2}
   optimizer:
     optimizerType: 0
-    parameterList: []
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
 --- !u!1001 &673088050
 Prefab:
   m_ObjectHideFlags: 0
@@ -650,7 +655,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 383050329}
-  isTraining: 1
+  isTraining: 0
   parameters: {fileID: 11400000, guid: 486ad0c904e2a8e41b7d38a5597f4f75, type: 2}
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\Maze\Data\MazeCheckpointVectorObsPPO.bytes

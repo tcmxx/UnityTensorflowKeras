@@ -13,10 +13,19 @@ using System;
 public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
 {
 
-    public int numHidden = 2;
-    public int width = 64;
-    public float hiddenWeightsInitialScale = 1;
-    public float outputWeightsInitialScale = 0.01f;
+    public List<SimpleDenseLayerDef> hiddenLayers;
+
+
+    public float outputLayerInitialScale = 0.1f;
+    public bool outputLayerBias = true;
+    public float visualEncoderInitialScale = 0.1f;
+    public bool visualEncoderBias = true;
+
+
+    //public int numHidden = 2;
+    //public int width = 64;
+    //public float hiddenWeightsInitialScale = 1;
+    //public float outputWeightsInitialScale = 0.01f;
     public bool useVarianceForContinuousAction = false;
     public float minStd = 0.1f;
 
@@ -39,7 +48,7 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
             List<Tensor> visualEncodedActor = new List<Tensor>();
             foreach (var v in inVisualState)
             {
-                var ha = CreateVisualEncoder(v, width, numHidden, "ActorVisualEncoder");
+                var ha = CreateVisualEncoder(v, hiddenLayers, "ActorVisualEncoder");
                 visualEncodedActor.Add(ha);
             }
             if (inVisualState.Count > 1)
@@ -60,7 +69,9 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
         Tensor encodedVectorStateActor = null;
         if (inVectorstate != null)
         {
-            encodedVectorStateActor = CreateContinuousStateEncoder(inVectorstate, width, numHidden, "ActorStateEncoder");
+            var hiddens = BuildSequentialLayers(hiddenLayers, inVectorstate, "ActorStateEncoder");
+            encodedVectorStateActor = hiddens.Item1;
+            weights.AddRange(hiddens.Item2);
         }
 
         //concat all inputs
@@ -82,7 +93,7 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
 
 
         //outputs
-        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
+        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: outputLayerBias, kernel_initializer: new GlorotUniform(scale: outputLayerInitialScale));
         var outAction = actorOutput.Call(encodedAllActor)[0];
         if (actionSpace == SpaceType.discrete)
         {
@@ -94,7 +105,7 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
         Tensor outVar = null;
         if(useVarianceForContinuousAction && actionSpace == SpaceType.continuous)
         {
-            var logSigmaSq = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: outputWeightsInitialScale));
+            var logSigmaSq = new Dense(units: 1, activation: null, use_bias: outputLayerBias, kernel_initializer: new GlorotUniform(scale: outputLayerInitialScale));
             outVar = Current.K.exp(logSigmaSq.Call(encodedAllActor)[0]) +minStd*minStd;
             weights.AddRange(logSigmaSq.weights);
         }
@@ -103,14 +114,14 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
     }
 
 
-    protected Tensor CreateVisualEncoder(Tensor visualInput, int hiddenSize, int numLayers, string scope)
+    protected Tensor CreateVisualEncoder(Tensor visualInput, List<SimpleDenseLayerDef> denseLayers, string scope)
     {
         //use the same encoder as in UnityML's python codes
         Tensor temp;
         using (Current.K.name_scope(scope))
         {
-            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 }, activation: new ELU());
-            var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 }, activation: new ELU());
+            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 }, use_bias: visualEncoderBias, kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
+            var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 }, use_bias: visualEncoderBias, kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
 
             temp = conv1.Call(visualInput)[0];
             temp = conv2.Call(temp)[0];
@@ -122,25 +133,13 @@ public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
             weights.AddRange(conv2.weights);
         }
 
-        var hiddenFlat = CreateContinuousStateEncoder(temp, hiddenSize, numLayers, scope);
+        //var hiddenFlat = CreateContinuousStateEncoder(temp, hiddenSize, numLayers, scope);
+        var output = BuildSequentialLayers(denseLayers, temp, scope);
+        var hiddenFlat = output.Item1;
+        weights.AddRange(output.Item2);
         return hiddenFlat;
     }
 
-    protected Tensor CreateContinuousStateEncoder(Tensor state, int hiddenSize, int numLayers, string scope)
-    {
-        var hidden = state;
-        using (Current.K.name_scope(scope))
-        {
-            for (int i = 0; i < numLayers; ++i)
-            {
-                var layer = new Dense(hiddenSize, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: hiddenWeightsInitialScale));
-                hidden = layer.Call(hidden)[0];
-                weights.AddRange(layer.weights);
-            }
-        }
-
-        return hidden;
-    }
 
 
     public override List<Tensor> GetWeights()

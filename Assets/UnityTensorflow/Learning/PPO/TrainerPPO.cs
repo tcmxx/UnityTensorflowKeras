@@ -262,7 +262,7 @@ public class TrainerPPO : Trainer
         {
             var agentDecision = agent.GetComponent<AgentDependentDecision>();
 
-            if (agentDecision != null && agentDecision.useDecision && dataBufferHeuristic != null)
+            if (isTraining && agentDecision != null && agentDecision.useDecision && dataBufferHeuristic != null)
             {
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];

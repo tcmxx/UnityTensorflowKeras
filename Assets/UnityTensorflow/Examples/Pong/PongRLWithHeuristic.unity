@@ -280,7 +280,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 1604954274}
-  isTraining: 1
+  isTraining: 0
   parameters: {fileID: 11400000, guid: ceae9610b797404448805d039594796b, type: 2}
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\Pong\Data\PongRLHeurcheckpoint.bytes
@@ -682,7 +682,12 @@ MonoBehaviour:
   network: {fileID: 11400000, guid: e618062dea0e5d4469dd1ac7bebf274e, type: 2}
   optimizer:
     optimizerType: 0
-    parameterList: []
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
 --- !u!1 &1924834452
 GameObject:
   m_ObjectHideFlags: 0

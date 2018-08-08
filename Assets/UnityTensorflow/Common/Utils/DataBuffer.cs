@@ -30,13 +30,43 @@ public class DataBuffer : ISerializable
     [Serializable]
     protected struct DataContainer
     {
-        public DataContainer(DataInfo info, int maxDataCount)
-        {
-            this.info = info;
-            dataList = Array.CreateInstance(info.type, (new int[] { maxDataCount }).Concat(info.dimension).ToArray());
-        }
+
         public DataInfo info;
         public Array dataList;
+
+        public DataContainer(DataInfo info):this(info,8)
+        {
+        }
+
+        public DataContainer(DataInfo info, int reservedSize)
+        {
+            Debug.Assert(reservedSize > 0, "reservedSize needs to be larger than 0");
+            reservedSize = Mathf.Max(1, reservedSize);
+            this.info = info;
+            dataList = Array.CreateInstance(info.type, (new int[] { reservedSize }).Concat(info.dimension).ToArray());
+        }
+
+
+
+
+
+        public void IncreaseArraySize(int sizeToAdd)
+        {
+            Debug.Assert(sizeToAdd > 0, "Size to add needs to be larger than 0");
+            sizeToAdd = Mathf.Max(1, sizeToAdd);
+
+            var newArray = Array.CreateInstance(info.type, (new int[] { dataList.GetLength(0) + sizeToAdd }).Concat(info.dimension).ToArray());
+            int typeSize = Marshal.SizeOf(info.type);
+            Buffer.BlockCopy(dataList, 0, newArray, 0, dataList.Length * info.unitLength * typeSize);
+            dataList = newArray;
+
+        }
+
+        public int CurrentSize()
+        {
+            return dataList.GetLength(0);
+        }
+
     }
 
 
@@ -105,15 +135,27 @@ public class DataBuffer : ISerializable
 
         //feed the data.
 
-        //add the episode to the buffer
+        //calucate numbers for adding the episode to the buffer
         int numToAdd = size;
         int spaceLeft = MaxCount - nextBufferPointer;
+        if (MaxCount <= 0)
+            spaceLeft = Int32.MaxValue;
 
         int appendSize = Mathf.Min(spaceLeft, numToAdd);
         int fromStartSize = Mathf.Max(0, numToAdd - spaceLeft);
 
+        CurrentCount += numToAdd;
+        if (MaxCount > 0)
+            CurrentCount = Mathf.Clamp(CurrentCount, 0, MaxCount);
+
         foreach (var k in data)
         {
+            //resize the data container if needed
+            while(CurrentCount > dataset[k.Item1].CurrentSize())
+            {
+                dataset[k.Item1].IncreaseArraySize(dataset[k.Item1].CurrentSize());
+            }
+
             DataContainer dd = dataset[k.Item1];
             int typeSize = Marshal.SizeOf(dd.info.type);
             //Debug.Log(k.Item1);
@@ -121,9 +163,10 @@ public class DataBuffer : ISerializable
             //Array.Copy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength, appendSize * dd.info.unitLength);
             Buffer.BlockCopy(k.Item2, 0, dd.dataList, nextBufferPointer * dd.info.unitLength * typeSize, appendSize * dd.info.unitLength * typeSize);
         }
+
+
         nextBufferPointer += appendSize;
-        CurrentCount += numToAdd;
-        CurrentCount = Mathf.Clamp(CurrentCount, 0, MaxCount);
+
         if (fromStartSize > 0)
         {
             foreach (var k in data)

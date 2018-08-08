@@ -17,21 +17,40 @@ using UnityEditor;
 
 public abstract class LearningModelBase : MonoBehaviour {
 
-    protected bool HasVisualObservation { get;  set; }
-    protected bool HasVectorObservation { get;  set; }
-    protected bool HasRecurrent { get;  set; } = false;
+    /// <summary>
+    /// Whether this model has visual observation input. 
+    /// </summary>
+    protected bool HasVisualObservation { get; private set; }
+    /// <summary>
+    /// Whether this model has vector observation input. 
+    /// </summary>
+    protected bool HasVectorObservation { get; private set; }
+    /// <summary>
+    /// Whether the model uses recurrent network. Currently recurrent network is not supported.
+    /// </summary>
+    protected bool HasRecurrent { get; private set; } = false;
 
+    [Tooltip("checkpoint to load if you are not using the trainer to load checkpoint")]
     public TextAsset checkpointTOLoad = null;
 
-    protected int StateSize { get;  set; }
-    protected int ActionSize { get;  set; }
-    protected SpaceType ActionSpace { get;  set; }
-
+    /// <summary>
+    /// Total vector observation size, considering the stacked vector observations
+    /// </summary>
+    protected int StateSize { get;  private set; }
+    protected int ActionSize { get; private set; }
+    protected SpaceType ActionSpace { get; private set; }
+    /// <summary>
+    /// Whether training is enabled in this model.
+    /// </summary>
     public bool TrainingEnabled { get { return trainingEnabled; } protected set { trainingEnabled = value; } }
+
     [SerializeField]
     [ReadOnly]
     public bool trainingEnabled = false;
 
+    /// <summary>
+    /// Whether the model is initialized
+    /// </summary>
     public bool Initialized { get; protected set; } = false;
 
     protected List<OptimizerBase> optimiers;

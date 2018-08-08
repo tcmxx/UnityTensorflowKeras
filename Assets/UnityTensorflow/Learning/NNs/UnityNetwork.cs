@@ -6,7 +6,7 @@ using KerasSharp.Activations;
 using System;
 using KerasSharp.Engine.Topology;
 using KerasSharp.Initializers;
-
+using KerasSharp.Backends;
 
 public abstract class UnityNetwork : ScriptableObject
 {
@@ -41,9 +41,19 @@ public abstract class UnityNetwork : ScriptableObject
 
 
 
-
-    public static ValueTuple<Tensor, List<Tensor>> BuildSequentialLayers(List<SimpleDenseLayerDef> layerDefs, Tensor input)
+    /// <summary>
+    /// Build neural network based on the lsit of layer defs.
+    /// </summary>
+    /// <param name="layerDefs">layer definitions</param>
+    /// <param name="input">input tensor</param>
+    /// <param name="scope">name scope</param>
+    /// <returns>value tuple of (output tensor, list of weights)</returns>
+    public static ValueTuple<Tensor, List<Tensor>> BuildSequentialLayers(List<SimpleDenseLayerDef> layerDefs, Tensor input, string scope = null)
     {
+        NameScope nameScppe = null;
+        if(!string.IsNullOrEmpty(scope))
+            nameScppe = Current.K.name_scope(scope);
+
         List<Tensor> weights = new List<Tensor>();
         Tensor temp = input;
         foreach(var l in layerDefs)
@@ -52,6 +62,9 @@ public abstract class UnityNetwork : ScriptableObject
             temp = result.Item1;
             weights.AddRange(result.Item2);
         }
+
+        if (nameScppe != null)
+            nameScppe.Dispose();
         return ValueTuple.Create(temp, weights);
     }
 

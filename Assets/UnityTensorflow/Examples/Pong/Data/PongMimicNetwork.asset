@@ -11,7 +11,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea6da6933d0c0c46b43d38292b47983, type: 3}
   m_Name: PongMimicNetwork
   m_EditorClassIdentifier: 
+  hiddenLayers:
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
+  outputLayerInitialScale: 0.01
+  outputLayerBias: 1
+  visualEncoderInitialScale: 1
+  visualEncoderBias: 1
   numHidden: 2
   width: 64
   hiddenWeightsInitialScale: 1
   outputWeightsInitialScale: 0.01
+  useVarianceForContinuousAction: 0
+  minStd: 0.1
