@@ -18,7 +18,6 @@ This repo provides or plans to provide following tools for game AI and machine l
 
 4. Neural Evolution(work in progess)
 	* Evolve the neural network's weights using MAES instead of gradien descent.
-
 ### Other tools
 1. GAN(Generative adversarial network)
 	* Including [Traning with Prediction to Stableize](https://www.semanticscholar.org/paper/Stabilizing-Adversarial-Nets-With-Prediction-Yadav-Shah/ec25504486d8751e00e613ca6fa64b256e3581c8).
@@ -32,11 +31,22 @@ You can fisrt go through the [vverview of Unity ML-Agents](https://github.com/Un
 
 Assume that you are somehow familiar with Unity ML-Agents, then following will be some brief explanation of concepts/key conponents that are used in this repo.
 (To be added)
-* Trainer
-* Model
-* MEAS Optimizer
-* UnityNetwork
-* Agent Dependent Decision
+### Trainer
+The Brain in ML-Agent will communiate the with a Trainer to train the Model. We added a `CoreBrainInternalTrainable` on top of the existing core brains in ML-Agent which can communicate with our Trainers. The CoreBrainInternalTrainable works with any Monobehaviour that implement the `ITrainer` interface. 
+
+We made some Trainers for you already for specific algorithm including PPO, SupervisedLearning and Evolution Strategy.
+
+### Model
+Models are the core of our AI. You can query information including the actions giving it the observations. Also, it provides interface to train the neural network.
+
+Trainers will ask for actions and other training related data from Models during the training, and also ask to train the neural network when enough data can be provided.
+
+### UnityNetwork
+
+We defined some UnityNetwork scriptable objects, where you can easily define a neural network architecture for different Models, and use them as plugin modules(thanks to Unity's Scriptable Object). 
+
+The models implemented by us usually need a network scriptable object that implement certain interface. We have already made the simple version of those network for you. However, you can also easily make your own customized network.
+
 
 ## Features Not Gonna Have
 1. Curriculum Training
