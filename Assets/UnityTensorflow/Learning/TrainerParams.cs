@@ -7,9 +7,9 @@ using UnityEditor;
 
 public class TrainerParams : ScriptableObject
 {
+    [Header("Basic Parameters")]
     public float learningRate = 0.001f;
     public int maxTotalSteps = 100000000;
-    public int lossLogInterval = 1;
     public int saveModelInterval = 10000;
 
 }

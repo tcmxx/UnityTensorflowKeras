@@ -116,28 +116,22 @@ public class TrainerNeuralEvolution : Trainer
         optimizer.init(paramDimension, parametersNE.populationSize, new double[paramDimension], parametersNE.initialStepSize, parametersNE.mode);
 
         if (continueFromCheckpoint)
-            LoadFromFile();
+        {
+            if (!LoadNEDataFromFile())
+            {
+                optimizer.generateSamples(samples);
+            }
+        }
         else
             optimizer.generateSamples(samples);
         if(isTraining)
             SetWeights(samples[currentEvaluationIndex]);
-        else
+        else if(bestSample != null)
             SetWeights(bestSample);
 
         stats = new StatsLogger();
     }
 
-
-
-    public override int GetStep()
-    {
-        return 0;
-    }
-
-    public override int GetMaxStep()
-    {
-        return int.MaxValue;
-    }
 
     public override Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
     {
@@ -221,17 +215,19 @@ public class TrainerNeuralEvolution : Trainer
 
         samples[currentEvaluationIndex].objectiveFuncVal = aveRewards;
 
-        //reset stuff
+        
         currentEvaluationIndex++;
 
+        //reset stuff
         if (currentEvaluationIndex < parametersNE.populationSize)
         {
-            SaveToFile();
             SetWeights(samples[currentEvaluationIndex]);
         }
         
         if (currentEvaluationIndex >= parametersNE.populationSize)
         {
+
+
             optimizer.update(samples);//update the optimizer
 
             currentGeneration++;
@@ -241,9 +237,7 @@ public class TrainerNeuralEvolution : Trainer
             bestSample = new OptimizationSample();
             bestSample.x = optimizer.getBest();
             bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
-
-            SaveToFile();
-
+            
             SetWeights(samples[currentEvaluationIndex]);//set weight for the first sample
         }
 
@@ -257,16 +251,15 @@ public class TrainerNeuralEvolution : Trainer
 
         
     }
-
-
-
-
     public override void IncrementStep()
     {
-        return;
+        steps++;
+        if (steps % parameters.saveModelInterval == 0)
+        {
+            SaveModel();
+            SaveNEDataToFile();
+        }
     }
-
-
 
     public override void ResetTrainer()
     {
@@ -319,10 +312,10 @@ public class TrainerNeuralEvolution : Trainer
     }
 
     /// <summary>
-    /// Restore the training checkpoint from byte array. . Use <see cref="SaveCheckpoint()"/> to restore from it.
+    /// Restore the training checkpoint from byte array. . Use <see cref="SaveNECheckpoint()"/> to restore from it.
     /// </summary>
     /// <param name="data"></param>
-    public virtual void RestoreCheckpoint(byte[] data)
+    public virtual void RestoreNECheckpoint(byte[] data)
     {
         //deserialize the data
         var mStream = new MemoryStream(data);
@@ -339,7 +332,7 @@ public class TrainerNeuralEvolution : Trainer
     /// save the current training data to a byte array
     /// </summary>
     /// <returns>the byte array that represend the curren training data. Use <see cref="RestoreCheckpoint(byte[] data)"/> to restore from it.</returns>
-    public virtual byte[] SaveCheckpoint()
+    public virtual byte[] SaveNECheckpoint()
     {
         EvolutionData data = new EvolutionData();
 
@@ -357,31 +350,37 @@ public class TrainerNeuralEvolution : Trainer
     /// <summary>
     /// save the checkpoint data to the path specified by checkpointPath field.
     /// </summary>
-    public void SaveToFile()
+    public void SaveNEDataToFile()
     {
-        var data = this.SaveCheckpoint();
-        var fullPath = Path.GetFullPath(checkpointPath);
+        var data = this.SaveNECheckpoint();
+        string dir = Path.GetDirectoryName(checkpointPath);
+        string file = Path.GetFileNameWithoutExtension(checkpointPath);
+        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_NEData.bytes"));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         File.WriteAllBytes(fullPath, data);
-        Debug.Log("Saved evolution childrens to " + fullPath);
+        Debug.Log("Saved Neural Evolution data to " + fullPath);
     }
 
     /// <summary>
     /// load the checkpoint data to the path specified by checkpointPath field .
     /// </summary>
-    public void LoadFromFile()
+    /// /// <returns>Whether loaded successfully</returns>
+    public bool LoadNEDataFromFile()
     {
-        string fullPath = Path.GetFullPath(checkpointPath);
+        string dir = Path.GetDirectoryName(checkpointPath);
+        string file = Path.GetFileNameWithoutExtension(checkpointPath);
+        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_NEData.bytes"));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))
         {
-            Debug.Log("evolution childrens checkpoint not exist at: " + fullPath);
-            return;
+            Debug.Log("Neural Evolution data checkpoint not exist at: " + fullPath);
+            return false;
         }
         var bytes = File.ReadAllBytes(fullPath);
-        this.RestoreCheckpoint(bytes);
-        Debug.Log("evolution childrens loaded  from " + fullPath);
+        this.RestoreNECheckpoint(bytes);
+        Debug.Log("Neural Evolution data loaded  from " + fullPath);
+        return true;
     }
 }

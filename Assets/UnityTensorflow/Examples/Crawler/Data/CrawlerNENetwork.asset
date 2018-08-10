@@ -9,21 +9,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d99c8458226607a4bb1b2196d603c1b6, type: 3}
-  m_Name: PoleVisualNetwork
+  m_Name: CrawlerNENetwork
   m_EditorClassIdentifier: 
   actorHiddenLayers:
-  - size: 64
-    initialScale: 0.7
+  - size: 32
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
+  - size: 32
+    initialScale: 1
     useBias: 1
     activationFunction: 0
   criticHiddenLayers:
-  - size: 64
-    initialScale: 0.7
+  - size: 128
+    initialScale: 1
     useBias: 1
     activationFunction: 0
-  actorOutputLayerInitialScale: 0.01
+  actorOutputLayerInitialScale: 0.02
   actorOutputLayerBias: 1
-  criticOutputLayerInitialScale: 0.01
+  criticOutputLayerInitialScale: 0.02
   criticOutputLayerBias: 1
   visualEncoderInitialScale: 0.01
   visualEncoderBias: 1

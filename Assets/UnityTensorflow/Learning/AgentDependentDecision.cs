@@ -7,21 +7,20 @@ public abstract class AgentDependentDecision : MonoBehaviour
 {
 
     public bool useDecision = true;
-
-    private void Awake()
+    protected Agent agent;
+    protected virtual void Awake()
     {
-        var agent = GetComponent<Agent>();
+        agent = GetComponent<Agent>();
         Debug.Assert(agent != null, "Please attach the decision to the Agent you want to make decision on!");
     }
     /// <summary>
-    /// 
+    /// Implement this method for your own ai decision.
     /// </summary>
-    /// <param name="agent"></param>
-    /// <param name="vectorObs"></param>
-    /// <param name="visualObs"></param>
-    /// <param name="heuristicAction"></param>
-    /// <param name="isTraining"></param>
-    /// /// <param name="otherInfomation"></param>
-    /// <returns></returns>
-    public abstract float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null);
+    /// <param name="vectorObs">vector observations</param>
+    /// <param name="visualObs">visual observations</param>
+    /// <param name="heuristicAction">The default action from brain if you are not using the decision</param>
+    /// <param name="heuristicVariance">The default action variance from brain if you are not using the decision. 
+    /// It might be null if discrete aciton space is used or the Model does not support variance.</param>
+    /// <returns>the actions</returns>
+    public abstract float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null);
 }

@@ -10,7 +10,7 @@ using UnityEditor;
 [CreateAssetMenu()]
 public class TrainerParamsNeuralEvolution : TrainerParams
 {
-
+    [Header("Optimization")]
     public ESOptimizer.ESOptimizerType optimizerType;
     
     public int sampleCountForEachChild = 10;
@@ -18,4 +18,7 @@ public class TrainerParamsNeuralEvolution : TrainerParams
     public OptimizationModes mode;
     public float initialStepSize = 1;
     public int timeHorizon = 500;
+
+    [Header("Log")]
+    public int lossLogInterval = 1;
 }

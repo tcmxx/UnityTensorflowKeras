@@ -11,18 +11,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
   m_Name: PongPPOTrainerParams
   m_EditorClassIdentifier: 
-  maxTotalSteps: 100000000
+  learningRate: 0.004
+  maxTotalSteps: 1000000
+  lossLogInterval: 1
+  saveModelInterval: 50000
   rewardDiscountFactor: 0.99
-  rewardGAEFactor: 0.99
+  rewardGAEFactor: 0.98
   valueLossWeight: 1
-  entroyLossWeight: 0
+  timeHorizon: 1000
+  entropyLossWeight: 0
   clipEpsilon: 0.2
   batchSize: 256
   bufferSizeForTrain: 8192
   numEpochPerTrain: 10
-  heuristicBufferSize: 100000
-  extraBatchTFromHeuristicBuffer: 5
-  learningRate: 0.01
-  lossLogInterval: 1
+  useHeuristicChance: 1
   rewardLogInterval: 50
-  saveModelInterval: 50000

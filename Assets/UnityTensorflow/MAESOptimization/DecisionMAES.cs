@@ -13,16 +13,19 @@ public class DecisionMAES : AgentDependentDecision
 
     public bool useHeuristic = true;
 
-    private void Awake()
+    protected AgentES agentES = null;
+
+    protected override void Awake()
     {
         optimizer = GetComponent<ESOptimizer>();
+        agentES = GetComponent<AgentES>();
+        Debug.Assert(agentES != null, "DesicionMAES need to attach to a gameobjec with an agent that implements AgentES.");
+
     }
 
-    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
+    public override float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
-
-        Debug.Assert(agent is AgentES, "DesicionMAES required the agent to implement AgentES.");
-        var agentES = agent as AgentES;
+        
 
         if (useMAESParamsFromAgent)
         {

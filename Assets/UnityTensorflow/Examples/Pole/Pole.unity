@@ -911,6 +911,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1389237091}
   - component: {fileID: 1389237092}
+  - component: {fileID: 1389237093}
   m_Layer: 0
   m_Name: Trainer
   m_TagString: Untagged
@@ -948,6 +949,52 @@ MonoBehaviour:
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\\Examples\Pole\Data\PolePPOCheckpoint.bytes
   steps: 0
+--- !u!114 &1389237093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1389237090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20d7a4d101811ac428e6ca8ec503cfcc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  overrides:
+  - name: entropyLossWeight
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75685894
+        value: 0
+        inSlope: 0.009056167
+        outSlope: 0.009056167
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.4274824
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
 --- !u!1 &1397918840
 GameObject:
   m_ObjectHideFlags: 0

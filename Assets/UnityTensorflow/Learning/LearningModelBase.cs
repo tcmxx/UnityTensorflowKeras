@@ -31,7 +31,7 @@ public abstract class LearningModelBase : MonoBehaviour {
     protected bool HasRecurrent { get; private set; } = false;
 
     [Tooltip("checkpoint to load if you are not using the trainer to load checkpoint")]
-    public TextAsset checkpointTOLoad = null;
+    public TextAsset checkpointToLoad = null;
 
     /// <summary>
     /// Total vector observation size, considering the stacked vector observations
@@ -100,9 +100,9 @@ public abstract class LearningModelBase : MonoBehaviour {
         //((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/"+name+".pb");
 
         Current.K.try_initialize_variables();
-        if (checkpointTOLoad != null)
+        if (checkpointToLoad != null)
         {
-            RestoreCheckpoint(checkpointTOLoad.bytes);
+            RestoreCheckpoint(checkpointToLoad.bytes);
         }
         Initialized = true;
         TrainingEnabled = enableTraining;
@@ -148,7 +148,7 @@ public abstract class LearningModelBase : MonoBehaviour {
     /// <returns>all weights used by optimizers</returns>
     public virtual List<Array> GetAllOptimizerWeights()
     {
-        if (!TrainingEnabled)
+        if (!TrainingEnabled || optimiers == null)
             return new List<Array>();
         List<Array> allWeights = new List<Array>();
         foreach(var o in optimiers)

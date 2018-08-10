@@ -60,7 +60,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
     [ReadOnly]
     [SerializeField]
-    private int steps = 0;
+    protected int steps = 0;
 
 
     public Brain BrainToTrain { get; protected set; }
@@ -84,6 +84,10 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
     protected virtual void FixedUpdate()
     {
+        if(BrainToTrain == null)
+        {
+            Debug.LogError("Please assign this trainer to a Brain with CoreBrainInternalTrainable!");
+        }
         if (isTraining)
             modelRef.SetLearningRate(parameters.learningRate);
 

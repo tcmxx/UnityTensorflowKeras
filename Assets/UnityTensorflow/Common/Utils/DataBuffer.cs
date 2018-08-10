@@ -28,7 +28,7 @@ public class DataBuffer : ISerializable
     }
 
     [Serializable]
-    protected struct DataContainer
+    protected class DataContainer
     {
 
         public DataInfo info;
@@ -45,10 +45,7 @@ public class DataBuffer : ISerializable
             this.info = info;
             dataList = Array.CreateInstance(info.type, (new int[] { reservedSize }).Concat(info.dimension).ToArray());
         }
-
-
-
-
+        
 
         public void IncreaseArraySize(int sizeToAdd)
         {
@@ -57,7 +54,7 @@ public class DataBuffer : ISerializable
 
             var newArray = Array.CreateInstance(info.type, (new int[] { dataList.GetLength(0) + sizeToAdd }).Concat(info.dimension).ToArray());
             int typeSize = Marshal.SizeOf(info.type);
-            Buffer.BlockCopy(dataList, 0, newArray, 0, dataList.Length * info.unitLength * typeSize);
+            Buffer.BlockCopy(dataList, 0, newArray, 0, dataList.Length  * typeSize);
             dataList = newArray;
 
         }
@@ -77,6 +74,19 @@ public class DataBuffer : ISerializable
     public int CurrentCount { get; private set; } = 0;
 
 
+    public DataBuffer(params DataInfo[] dataInfos)
+    {
+
+        MaxCount = 0;
+        dataset = new Dictionary<string, DataContainer>();
+
+
+        foreach (var i in dataInfos)
+        {
+            Debug.Assert(!dataset.ContainsKey(i.name));
+            dataset[i.name] = new DataContainer(i);
+        }
+    }
 
     public DataBuffer(int maxSize, params DataInfo[] dataInfos)
     {
@@ -88,7 +98,10 @@ public class DataBuffer : ISerializable
         foreach (var i in dataInfos)
         {
             Debug.Assert(!dataset.ContainsKey(i.name));
-            dataset[i.name] = new DataContainer(i, maxSize);
+            if(MaxCount > 0)
+                dataset[i.name] = new DataContainer(i, maxSize);
+            else
+                dataset[i.name] = new DataContainer(i);
         }
     }
 
@@ -151,10 +164,12 @@ public class DataBuffer : ISerializable
         foreach (var k in data)
         {
             //resize the data container if needed
-            while(CurrentCount > dataset[k.Item1].CurrentSize())
-            {
-                dataset[k.Item1].IncreaseArraySize(dataset[k.Item1].CurrentSize());
-            }
+            int currentSize = dataset[k.Item1].CurrentSize();
+            if(CurrentCount > currentSize * 2)
+                dataset[k.Item1].IncreaseArraySize(CurrentCount - currentSize);
+            else if(CurrentCount > currentSize)
+                dataset[k.Item1].IncreaseArraySize(currentSize);
+            
 
             DataContainer dd = dataset[k.Item1];
             int typeSize = Marshal.SizeOf(dd.info.type);

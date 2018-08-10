@@ -50,7 +50,6 @@ public class PlayerDecision : AgentDependentDecision
     private int defaultAction = 0;
 
 
-
     private void Update()
     {
         if (Input.GetKeyDown(toggleDecisionUsageKey))
@@ -59,7 +58,7 @@ public class PlayerDecision : AgentDependentDecision
         }
     }
 
-    public override float[] Decide(Agent agent, List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
+    public override float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
         if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
         {
