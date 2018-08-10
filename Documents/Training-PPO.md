@@ -63,9 +63,9 @@ This is a simple implementation of RLNetworkAC that you can create a plug it in 
 ## Training with Heuristics
 If you already know some policy that is better than random policy, you might give it as a hint to PPO to increase the training a bit. 
 
-1. Implement the [AgentDependentDeicision- needs link](dfsdf) for your policy and attach it to the agents that you want them to occasionally use this policy.
+1. Implement the [AgentDependentDeicision](AgentDependentDeicision.md) for your policy and attach it to the agents that you want them to occasionally use this policy.
 2. In your trainer parameters, set `useHeuristicChance` to larger than 0.
-3. Use [TrainerParamOverride - needs link](asdfs) to decrease the `useHeuristicChance` over time during the training.
+3. Use [TrainerParamOverride](TrainerParamOverride.md) to decrease the `useHeuristicChance` over time during the training.
 
 
 
