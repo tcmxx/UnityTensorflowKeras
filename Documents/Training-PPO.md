@@ -67,6 +67,7 @@ If you already know some policy that is better than random policy, you might giv
 2. In your trainer parameters, set `useHeuristicChance` to larger than 0.
 3. Use [TrainerParamOverride](TrainerParamOverride.md) to decrease the `useHeuristicChance` over time during the training.
 
+Note that your AgentDependentDeicision is only used in training mode. The chance of using it in each step for agent with the script attached depends on `useHeuristicChance`.
 
 
 
