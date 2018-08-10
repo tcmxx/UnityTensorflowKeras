@@ -26,5 +26,11 @@ Android does not support any type of gradient/training. IOS is not tested a all.
 ## Future Plan:
 We plan to keep this repo updated with latest game related machine learning technologies for the course every year.
 
+Possible future plans/contributions:
+* More benchmark environments.
+* More algorithms including: Deep Q Learning, Deep Mimic, Evolved Policy Gradient, Genetic Algorithms and so on.
+* Improving the logging tool or using Tensorboard in c#.
+* Graphic editor for neural network architecture
+
 ## License
-[MIT](LICENSE)
+[MIT](LICENSE).
