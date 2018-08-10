@@ -13,21 +13,14 @@ For ML-Agents or related machine learning knowledge, see ML-Agents [documentatio
  * [Features and Basic Concepts](BasicConcepts.md)
  * [Example Environments](ExamplesList.md)
 
-## Reinforcement Learning
+## Learning
  * [Training with Proximal Policy Optimization(PPO)](Training-PPO.md) 
- * [PPO with Heuristic]
- 
-## Supervised Learning
- * [Training with Imitation]
- * [GAN]
+ * [Training with Imitation(Supervised Learning)](Training-SL.md) 
+ * [Use Neural Evolution to optimize Neural Network](Neural-Evolution.md)
  
 ## MAES Optimization
  * [Use MAES Optimization to Find the Best Solution]
- * [Use MAES for Reinforcement Learning or Supervised Learning]
- 
-## Neural Evolution and Hybrid Learning
- * [Use Neural Evolution to optimizer Neural Network]
- * [Hybrid Learning with PPO and Neural Evolution]
+ * [Use MAES and Supervised Learning]
  
 ## Customization
  * [Define Your Own Training Process for ML-Agent]
