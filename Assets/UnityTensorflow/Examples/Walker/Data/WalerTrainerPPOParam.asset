@@ -11,19 +11,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
   m_Name: WalerTrainerPPOParam
   m_EditorClassIdentifier: 
-  learningRate: 0.0004
+  learningRate: 0.006
   maxTotalSteps: 100000000
   lossLogInterval: 1
   saveModelInterval: 1000000
   rewardDiscountFactor: 0.995
-  rewardGAEFactor: 0.95
+  rewardGAEFactor: 0.96
   valueLossWeight: 1
   timeHorizon: 1000
   entropyLossWeight: 0
   clipEpsilon: 0.2
   batchSize: 256
-  bufferSizeForTrain: 5102
-  numEpochPerTrain: 10
-  heuristicBufferSize: 0
-  extraBatchTFromHeuristicBuffer: 0
-  rewardLogInterval: 100
+  bufferSizeForTrain: 5124
+  numEpochPerTrain: 8
+  useHeuristicChance: 0
+  rewardLogInterval: 200

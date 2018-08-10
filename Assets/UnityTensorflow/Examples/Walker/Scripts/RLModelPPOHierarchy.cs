@@ -20,7 +20,7 @@ using UnityEditor;
 
 public class RLModelPPOHierarchy : RLModelPPO {
 
-
+    [ShowAllPropertyAttr()]
     public RLNetowrkACHierarchy networkHierarchy;
     
     public int lowLevelObservationSize;

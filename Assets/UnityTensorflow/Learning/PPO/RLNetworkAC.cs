@@ -24,10 +24,12 @@ public abstract class RLNetworkAC : UnityNetwork
     /// <param name="actionSpace"></param>
     /// <param name="outAction">Output action. If action space is continuous, it is the mean; if aciton space is discrete, it is the probability of each action</param>
     /// <param name="outValue"></param>
+    /// <param name="outVariance">output variance. Only needed if the action space is continuous. It can either have batch dimension or not for RLModelPPO</param>
     /// <param name="discreteActionProbabilitiesFor"></param>
     public abstract void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize, SpaceType actionSpace,
-        out Tensor outAction, out Tensor outValue);
+        out Tensor outAction, out Tensor outValue, out Tensor outVariance);
 
     public abstract List<Tensor> GetWeights();
-
+    public abstract List<Tensor> GetActorWeights();
+    public abstract List<Tensor> GetCriticWeights();
 }

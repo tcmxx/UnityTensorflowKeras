@@ -84,6 +84,10 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
     protected virtual void FixedUpdate()
     {
+        if(BrainToTrain == null)
+        {
+            Debug.LogError("Please assign this trainer to a Brain with CoreBrainInternalTrainable!");
+        }
         if (isTraining)
             modelRef.SetLearningRate(parameters.learningRate);
 

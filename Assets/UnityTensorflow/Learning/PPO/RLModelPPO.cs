@@ -55,7 +55,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
     public float ClipEpsilon { get; set; }
 
     //the variable for variance
-    protected Tensor logSigmaSq = null;
+    //protected Tensor logSigmaSq = null;
     
     //protected  inputStateTensor = null;
     //protected List<Tensor> inputVisualTensors = null;
@@ -73,14 +73,14 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
         //build the network
         Tensor outputValue = null; Tensor outputAction = null; Tensor outputVariance = null;
-        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue);
+        network.BuildNetwork(inputStateTensor, inputVisualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue,out outputVariance);
 
         //actor network output variance
-        if (ActionSpace == SpaceType.continuous)
+        /*if (ActionSpace == SpaceType.continuous)
         {
             logSigmaSq = K.variable((new Constant(0)).Call(new int[] { ActionSize }, DataType.Float), name: "PPO.log_sigma_square");
             outputVariance = K.exp(logSigmaSq);
-        }
+        }*/
 
         List<Tensor> allobservationInputs = new List<Tensor>();
         if (HasVectorObservation)
@@ -128,7 +128,15 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
                 {
                     var temp = K.mul(outputVariance, 2 * Mathf.PI * 2.7182818285);
                     temp = K.mul(K.log(temp), 0.5);
-                    outputEntropy = K.mean(temp, 0, false, name: "OutputEntropy");
+                    if(outputVariance.shape.Length == 2)
+                    {
+                        outputEntropy = K.mean(K.mean(temp, 0, false), name: "OutputEntropy");
+                    }
+                    else
+                    {
+                        outputEntropy = K.mean(temp, 0, false, name: "OutputEntropy");
+                    }
+
                     actionProb = K.normal_probability(inputAction, outputAction, outputVariance);
                 }
                 else
@@ -253,6 +261,8 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
                         actions[j, i] = (float)dis.Generate();
                     else
                         actions[j, i] = outputAction[j, i];
+                    /*if (actions[j, i] <= -100000000 || actions[j, i] >= 100000000)
+                        continue;*/
                     actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
                 }
             }
@@ -362,11 +372,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
     
     public override List<Tensor> GetAllModelWeights()
     {
-        List<Tensor> updateParameters = new List<Tensor>();
-        updateParameters.AddRange(network.GetWeights());
-        if(logSigmaSq != null)
-            updateParameters.Add(logSigmaSq);
-        return updateParameters;
+        return network.GetWeights();
     }
 
     public float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
@@ -377,6 +383,6 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
     public List<Tensor> GetWeightsToOptimize()
     {
-        return network.GetWeights();
+        return network.GetActorWeights();
     }
 }

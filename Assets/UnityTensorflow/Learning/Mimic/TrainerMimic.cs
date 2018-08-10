@@ -148,9 +148,9 @@ public class TrainerMimic : Trainer
                 //if this agent will use the decision, use it
                 float[] action = null;
                 if(vars != null)
-                    action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)), new List<float>(vars.GetRow(i)));
+                    action = agentDecision.Decide(info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)), new List<float>(vars.GetRow(i)));
                 else
-                    action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
+                    action = agentDecision.Decide(info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
                 var tempAction = new TakeActionOutput();
                 tempAction.outputAction = action;
                 result[agent] = tempAction;

@@ -281,9 +281,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 1604954274}
-  isTraining: 0
+  isTraining: 1
   parameters: {fileID: 11400000, guid: 3be28ba086b90924788fcc4402f96c88, type: 2}
-  continueFromCheckpoint: 1
+  continueFromCheckpoint: 0
   checkpointPath: Assets\UnityTensorflow\Examples\Pong\Data\PongRLHeurcheckpoint.bytes
   steps: 0
 --- !u!114 &508170725

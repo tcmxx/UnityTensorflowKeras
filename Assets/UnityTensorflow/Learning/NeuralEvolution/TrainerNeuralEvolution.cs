@@ -116,7 +116,12 @@ public class TrainerNeuralEvolution : Trainer
         optimizer.init(paramDimension, parametersNE.populationSize, new double[paramDimension], parametersNE.initialStepSize, parametersNE.mode);
 
         if (continueFromCheckpoint)
-            LoadNEDataFromFile();
+        {
+            if (!LoadNEDataFromFile())
+            {
+                optimizer.generateSamples(samples);
+            }
+        }
         else
             optimizer.generateSamples(samples);
         if(isTraining)
@@ -360,7 +365,8 @@ public class TrainerNeuralEvolution : Trainer
     /// <summary>
     /// load the checkpoint data to the path specified by checkpointPath field .
     /// </summary>
-    public void LoadNEDataFromFile()
+    /// /// <returns>Whether loaded successfully</returns>
+    public bool LoadNEDataFromFile()
     {
         string dir = Path.GetDirectoryName(checkpointPath);
         string file = Path.GetFileNameWithoutExtension(checkpointPath);
@@ -370,10 +376,11 @@ public class TrainerNeuralEvolution : Trainer
         if (!File.Exists(fullPath))
         {
             Debug.Log("Neural Evolution data checkpoint not exist at: " + fullPath);
-            return;
+            return false;
         }
         var bytes = File.ReadAllBytes(fullPath);
         this.RestoreNECheckpoint(bytes);
         Debug.Log("Neural Evolution data loaded  from " + fullPath);
+        return true;
     }
 }

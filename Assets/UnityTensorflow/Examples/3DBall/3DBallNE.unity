@@ -609,7 +609,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 654033468}
-  isTraining: 0
+  isTraining: 1
   parameters: {fileID: 11400000, guid: 2386b5c0cac59514193ed38630e846a4, type: 2}
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\3DBall\3DBallNECheckpoint.bytes

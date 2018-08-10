@@ -19,7 +19,7 @@ MonoBehaviour:
   rewardGAEFactor: 0.98
   valueLossWeight: 1
   timeHorizon: 1000
-  entropyLossWeight: 0.1
+  entropyLossWeight: 0
   clipEpsilon: 0.2
   batchSize: 256
   bufferSizeForTrain: 8192

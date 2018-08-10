@@ -245,7 +245,7 @@ public class TrainerPPO : Trainer
             {
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];
-                var action = agentDecision.Decide(agent, info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
+                var action = agentDecision.Decide(info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
                 float[,] vectorOb = CreateVectorIInputBatch(agentInfos, new List<Agent>() { agent});
                 var visualOb = CreateVisualIInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
                 var probs = iModelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);

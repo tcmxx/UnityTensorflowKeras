@@ -7,8 +7,9 @@ using UnityEngine;
 public class TrainerParamsPPO : TrainerParams
 {
     [Header("Learning related")]
-
+    [Tooltip("gamma")]
     public float rewardDiscountFactor = 0.99f;
+    [Tooltip("lambda")]
     public float rewardGAEFactor = 0.95f;
     public float valueLossWeight = 1f;
     public int timeHorizon = 1000;
@@ -21,11 +22,11 @@ public class TrainerParamsPPO : TrainerParams
     public int bufferSizeForTrain = 2048;
     public int numEpochPerTrain = 10;
 
-
+    [Range(0,1)]
     public float useHeuristicChance = 0.4f;
     
     [Header("Log related")]
-    
+    public int lossLogInterval = 1;
     public int rewardLogInterval = 10;
 
 }

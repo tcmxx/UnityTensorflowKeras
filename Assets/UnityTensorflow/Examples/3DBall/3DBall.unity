@@ -621,12 +621,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80885700eae055d47977cc84fd00de74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 1170bea1dbc1f4a449583feba27c4536, type: 2}
   optimizer:
     optimizerType: 0
-    parameterList: []
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
 --- !u!114 &667765197
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1039,7 +1044,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 654033468}
-  isTraining: 0
+  isTraining: 1
   parameters: {fileID: 11400000, guid: 2739dacb167d7df489bcedea5510504d, type: 2}
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\3DBall\3DBallCheckpoint.bytes
@@ -1105,6 +1110,7 @@ MonoBehaviour:
     targetFrameRate: 60
   resetParameters:
     resetParameters: []
+  bounceTreshold: 2
 --- !u!1 &1746325439
 GameObject:
   m_ObjectHideFlags: 0

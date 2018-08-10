@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: PongPPOHeuristicTrainerParams
   m_EditorClassIdentifier: 
   learningRate: 0.004
-  maxTotalSteps: 2000000
+  maxTotalSteps: 500000
   lossLogInterval: 1
   saveModelInterval: 50000
   rewardDiscountFactor: 0.99
