@@ -47,10 +47,10 @@ public class ESOptimizer : MonoBehaviour
             for (int it = 0; it < iterationPerUpdate; ++it)
             {
                 optimizer.generateSamples(samples);
-                for(int s = 0; s <= samples.Length/evaluationBatchSize; ++s)
+                for (int s = 0; s <= samples.Length / evaluationBatchSize; ++s)
                 {
                     List<double[]> paramList = new List<double[]>();
-                    for(int b = 0; b < evaluationBatchSize; ++b)
+                    for (int b = 0; b < evaluationBatchSize; ++b)
                     {
                         int ind = s * evaluationBatchSize + b;
                         if (ind < samples.Length)
@@ -82,13 +82,13 @@ public class ESOptimizer : MonoBehaviour
                 BestScore = optimizer.getBestObjectiveFuncValue();
 
                 BestParams = optimizer.getBest();
-                
+
                 if ((iteration >= maxIteration && maxIteration > 0) ||
                     (BestScore <= targetValue && mode == OptimizationModes.minimize) ||
                     (BestScore >= targetValue && mode == OptimizationModes.maximize))
                 {
                     //optimizatoin is done
-                    if(onReady != null)
+                    if (onReady != null)
                         onReady.Invoke(BestParams);
                     IsOptimizing = false;
                 }
@@ -96,7 +96,13 @@ public class ESOptimizer : MonoBehaviour
         }
     }
 
-
+    /// <summary>
+    /// Start to optimize asynchronized. It is actaually not running in another thread, but running in Update() in each frame of your game.
+    /// This way the optimization will not block your game.
+    /// </summary>
+    /// <param name="optimizeTarget">Target to optimize</param>
+    /// <param name="onReady">Action to call when optmization is ready. THe input is the best solution found.</param>
+    /// <param name="initialMean">initial mean guess.</param>
     public void StartOptimizingAsync(IESOptimizable optimizeTarget, Action<double[]> onReady = null, double[] initialMean = null)
     {
         optimizable = optimizeTarget;
@@ -127,7 +133,14 @@ public class ESOptimizer : MonoBehaviour
         this.onReady = onReady;
     }
 
-    public double[] Optimize(IESOptimizable optimizeTarget, Action<double[]> onReady = null, double[] initialMean = null)
+
+    /// <summary>
+    /// Optimize and return the solution immediately.
+    /// </summary>
+    /// <param name="optimizeTarget">Target to optimize</param>
+    /// <param name="initialMean">initial mean guess.</param>
+    /// <returns>The best solution found</returns>
+    public double[] Optimize(IESOptimizable optimizeTarget,  double[] initialMean = null)
     {
 
         var tempOptimizer = (optimizerType == ESOptimizerType.LMMAES ? (IMAES)new LMMAES() : (IMAES)new MAES());
@@ -153,7 +166,7 @@ public class ESOptimizer : MonoBehaviour
         //iteration
         double[] bestParams = null;
 
-        bool hasInvokeReady = false;
+        //bool hasInvokeReady = false;
         iteration = 0;
         for (int it = 0; it < maxIteration; ++it)
         {
@@ -188,29 +201,29 @@ public class ESOptimizer : MonoBehaviour
 
             iteration++;
             bestParams = tempOptimizer.getBest();
-            
+
             if ((BestScore <= targetValue && mode == OptimizationModes.minimize) ||
                 (BestScore >= targetValue && mode == OptimizationModes.maximize))
             {
                 //optimizatoin is done
-                if (onReady != null)
+                /*if (onReady != null)
                 {
                     onReady.Invoke(bestParams);
                     hasInvokeReady = true;
-                }
+                }*/
                 break;
             }
         }
 
-        if (onReady != null && !hasInvokeReady)
+        /*if (onReady != null && !hasInvokeReady)
         {
             onReady.Invoke(bestParams);
-        }
+        }*/
         return bestParams;
-        
+
     }
 
-    
+
     public void StopOptimizing(Action<double[]> onReady = null)
     {
         if (IsOptimizing == false)
@@ -221,5 +234,5 @@ public class ESOptimizer : MonoBehaviour
             onReady.Invoke(BestParams);
         }
     }
-    
+
 }
