@@ -19,8 +19,8 @@ For ML-Agents or related machine learning knowledge, see ML-Agents [documentatio
  * [Use Neural Evolution to optimize Neural Network](Neural-Evolution.md)
  
 ## MAES Optimization
- * [Use MAES Optimization to Find the Best Solution]
- * [Use MAES and Supervised Learning]
+ * [Use MAES Optimization to Find the Best Solution](MAES.md)
+ * [Use MAES and Supervised Learning](MAES-And-SL.md)
  
 ## Customization
  * [Define Your Own Training Process for ML-Agent]
