@@ -32,10 +32,10 @@ public class BilliardUIMLAgent : MonoBehaviour {
 
     private void Start()
     {
-        populationSizeSliderRef.value = agentRef.populationSize;
-        maxItrSliderRef.value = agentRef.maxIteration;
-        populationSizeTextRef.text = "Population size: " + agentRef.populationSize.ToString();
-        maxItrTextRef.text = "Max Iter: " + agentRef.maxIteration;
+        populationSizeSliderRef.value = agentRef.Optimizer.populationSize;
+        maxItrSliderRef.value = agentRef.Optimizer.maxIteration;
+        populationSizeTextRef.text = "Population size: " + agentRef.Optimizer.populationSize.ToString();
+        maxItrTextRef.text = "Max Iter: " + agentRef.Optimizer.maxIteration;
 
         rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
         autoRequestToggleRef.isOn = agentRef.autoRequestDecision;
@@ -45,8 +45,8 @@ public class BilliardUIMLAgent : MonoBehaviour {
 
     private void Update()
     {
-        populationSizeSliderRef.value = agentRef.populationSize;
-        maxItrSliderRef.value = agentRef.maxIteration;
+        populationSizeSliderRef.value = agentRef.Optimizer.populationSize;
+        maxItrSliderRef.value = agentRef.Optimizer.maxIteration;
         rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
 
         predictedScoreTextRef.text = "Predicted score: " + gameSystemRef.bestScore;
@@ -56,14 +56,14 @@ public class BilliardUIMLAgent : MonoBehaviour {
 
     public void OnPopulationSliderChanged(float value)
     {
-        agentRef.populationSize = Mathf.RoundToInt(value);
-        populationSizeTextRef.text = "Population size: " + agentRef.populationSize.ToString();
+        agentRef.Optimizer.populationSize = Mathf.RoundToInt(value);
+        populationSizeTextRef.text = "Population size: " + agentRef.Optimizer.populationSize.ToString();
     }
 
     public void OnIterationSliderChanged(float value)
     {
-        agentRef.maxIteration = Mathf.RoundToInt(value);
-        maxItrTextRef.text = "Max Iter: " + agentRef.maxIteration;
+        agentRef.Optimizer.maxIteration = Mathf.RoundToInt(value);
+        maxItrTextRef.text = "Max Iter: " + agentRef.Optimizer.maxIteration;
 
     }
 

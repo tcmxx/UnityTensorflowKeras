@@ -6,15 +6,22 @@ using MLAgents;
 using System;
 using System.Linq;
 
+[RequireComponent(typeof(ESOptimizer))]
 public abstract class AgentES : Agent, IESOptimizable
 {
-    //for asynchronized decision, set this to false.
-    public bool callOnReadyInAgentAction = true;
-    public int maxIteration;
-    public float targetValue;
-    public int populationSize = 16;
-    public float initialStepSize = 1;
 
+
+    public ESOptimizer Optimizer { get; protected set; }
+
+    private void Awake()
+    {
+        Optimizer = GetComponent<ESOptimizer>();
+    }
+
+
+
+    //for asynchronized decision, set this to false.
+    public bool synchronizedDecision = true;
     public event System.Action<AgentES> OnEndOptimizationRequested;
     /// <summary>
     /// return the value of an action.
@@ -25,7 +32,7 @@ public abstract class AgentES : Agent, IESOptimizable
 
 
     /// <summary>
-    /// Implement this instead 
+    /// Implement this instead  of AgentAction()
     /// </summary>
     /// <param name="vectorAction"></param>
     public abstract void OnReady(double[] vectorAction);
@@ -37,24 +44,33 @@ public abstract class AgentES : Agent, IESOptimizable
         Best,
         None
     }
-    public abstract void SetVisualizationMode(VisualizationMode visMode);
+    public virtual void SetVisualizationMode(VisualizationMode visMode) { }
 
     /// <summary>
     /// Don't override this method, implement OnActionReady() instead.
-    /// Set callOnReadyInAgentAction if you want this agent to react when calling AgentAction
+    /// Set synchronizedDecision to true if you want this agent to react when calling AgentAction
     /// </summary>
     /// <param name="vectorAction"></param>
     /// <param name="textAction"></param>
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-        if (callOnReadyInAgentAction)
+        if (synchronizedDecision)
             OnReady(Array.ConvertAll(vectorAction, t => (double)t));
     }
     
+    public double[] Optimize(double[] initialMean = null)
+    {
+        return Optimizer.Optimize(this, initialMean);
+    }
+
+    public void OptimizeAsync(double[] initialMean = null)
+    {
+        Optimizer.StartOptimizingAsync(this, OnReady,initialMean);
+    }
 
     public void ForceEndOptimization()
     {
-        OnEndOptimizationRequested.Invoke(this);
+        Optimizer.StopOptimizing(OnReady);
     }
 
     public int GetParamDimension()

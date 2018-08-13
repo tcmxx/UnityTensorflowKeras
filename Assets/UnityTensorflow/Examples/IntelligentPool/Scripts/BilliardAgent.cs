@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MLAgents;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -162,4 +163,6 @@ public class BilliardAgent : AgentES
             visColor = new Color(0, 0, 0, 0);
         }
     }
+
+
 }

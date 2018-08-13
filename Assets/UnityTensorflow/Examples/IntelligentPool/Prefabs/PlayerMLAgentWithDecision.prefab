@@ -55,12 +55,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterationPerUpdate: 1
-  populationSize: 30
+  populationSize: 10
   optimizerType: 0
   initialStepSize: 0.7
   mode: 1
-  maxIteration: 20
-  targetValue: 8
+  maxIteration: 15
+  targetValue: 2
   evaluationBatchSize: 8
   iteration: 0
 --- !u!114 &114440804119060818
@@ -75,7 +75,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useDecision: 1
-  useMAESParamsFromAgent: 1
   useHeuristic: 1
   log: 1
   logInterval: 20
@@ -112,11 +111,7 @@ MonoBehaviour:
     resetOnDone: 0
     onDemandDecision: 1
     numberOfActionsBetweenDecisions: 1
-  callOnReadyInAgentAction: 1
-  maxIteration: 15
-  targetValue: 0.85
-  populationSize: 10
-  initialStepSize: 1
+  synchronizedDecision: 1
   shootSequence: 1
   resetAfterOneShot: 1
   resetOnStart: 1

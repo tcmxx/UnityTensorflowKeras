@@ -214,14 +214,22 @@ public class RLModelPPOHierarchy : RLModelPPO {
             {
                 for (int i = 0; i < outputAction.GetLength(1); ++i)
                 {
-                    var std = Mathf.Sqrt(vars[i]);
-                    var dis = new NormalDistribution(outputAction[j, i], std);
+                    try
+                    {
+                        var std = Mathf.Sqrt(vars[i]);
+                        var dis = new NormalDistribution(outputAction[j, i], std);
 
-                    if (useProbability)
-                        actions[j, i] = (float)dis.Generate();
-                    else
-                        actions[j, i] = outputAction[j, i];
-                    actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
+                        if (useProbability)
+                            actions[j, i] = (float)dis.Generate();
+                        else
+                            actions[j, i] = outputAction[j, i];
+                        actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
+                    }catch(Exception e)
+                    {
+                        Debug.LogWarning("NaN action from neural network detected. Force it to 0.");
+                        actions[j, i] = 0;
+                        actionProbs[j, i] = 1;
+                    }
                 }
             }
         }
@@ -276,8 +284,15 @@ public class RLModelPPOHierarchy : RLModelPPO {
                 for (int i = 0; i < outputAction.GetLength(1); ++i)
                 {
                     var std = Mathf.Sqrt(vars[i]);
-                    var dis = new NormalDistribution(outputAction[j, i], std);
+                    if (outputAction[j, i] == float.NaN || std == float.NaN || actions[j, i] == float.NaN)
+                    {
+                        actionProbs[j, i] = 0.5f;
+                        Debug.LogWarning("not valid output action mean:" + outputAction[j, i] + " or std:" + std +" or action to evaluate: " + actions[j, i]);
+                        continue;
+                    }
 
+                    var dis = new NormalDistribution(outputAction[j, i], std);
+                    
                     actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
                 }
             }
