@@ -81,3 +81,15 @@ The explanation of paramters that you can change in inspecotr of ESOptimizer.cs
 - `maxIteration`: The optimizer will automatically stop if reaches the max iteration.
 - `targetValue`: The optimizer will automatically stop if the best solution reaches the target value.
 - `evalutaionBatchSize`: What is the max batch size when evaluting. Might speed up the evaluation if your `IESOptimizable`'s `Evaluate(List<double[]> param)` method performs better for batch evalutation.
+
+## Use MAES and Supervised Learning
+
+[MAES](MAES.md) usually can gauarantee to find a pretty good action, but it might be very slow if you try to run the whole optimization everytime you are requesting an action. The time depends on how long it takes to evaluate each child, how many children are in each generation and how many generations are needed to get a satisfying result.
+
+On the other hand, usually neural network is fast enough during inference time to run in real time, but might fail to produce a good enough action for some cases.
+
+What if we combine those two methods? Remember that in MAES you can provide a initial guess of mean and variance of output action. If that guess is close to the otpimal solution, the time cost might be reduced a lot. 
+
+The idea here is to use data collected from MAES to train the neural network using supervised learning, while the output of the neural network is used as initial guess for MAES optimization. The scene `BilliardSLAndMAES-OneShotSimplified` in [IntelligentPool](IntelligentPoolDetails.md) is a good example.
+
+As long as you use `MAESDecision` for supervised learning model, and check the `useHeuristic` in its inspector, the output from neural network will be automatically used as initial guess of the MAES. As the neural network starts to learn something, the time cost of MEAS is likely to be reduced a lot.
