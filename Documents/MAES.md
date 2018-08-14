@@ -92,4 +92,4 @@ What if we combine those two methods? Remember that in MAES you can provide a in
 
 The idea here is to use data collected from MAES to train the neural network using supervised learning, while the output of the neural network is used as initial guess for MAES optimization. The scene `BilliardSLAndMAES-OneShotSimplified` in [IntelligentPool](IntelligentPoolDetails.md) is a good example.
 
-As long as you use `MAESDecision` for supervised learning model, and check the `useHeuristic` in its inspector, the output from neural network will be automatically used as initial guess of the MAES. As the neural network starts to learn something, the time cost of MEAS is likely to be reduced a lot.
+As long as you use [`MAESDecision`](#use-maesdecision-for-ml-agents) for supervised learning model, and check the `useHeuristic` in its inspector, the output from neural network will be automatically used as initial guess of the MAES. As the neural network starts to learn something, the time cost of MEAS is likely to be reduced a lot.
