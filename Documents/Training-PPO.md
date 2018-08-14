@@ -69,6 +69,7 @@ If you already know some policy that is better than random policy, you might giv
 
 Note that your AgentDependentDeicision is only used in training mode. The chance of using it in each step for agent with the script attached depends on `useHeuristicChance`.
 
-
+## Create your own neural network architecture
+If you want to have your own neural network architecture instead of the one provided by [`RLNetworkSimpleAC`](#rlnetworksimpleac), you can inherit `RLNetworkAC` class to build your own neural network. See the [sourcecode](https://github.com/tcmxx/UnityTensorflowKeras/blob/tcmxx/docs/Assets/UnityTensorflow/Learning/PPO/TrainerPPO.cs) of `RLNetworkAC.cs` for documentation.
 
 
