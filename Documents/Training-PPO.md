@@ -23,14 +23,14 @@ The example [Getting Started with the 3D Balance Ball Environment](Getting-Start
 ## Explanation of fields in the inspector
 We use similar parameters as in Unity ML-Agents. If something is confusing, read see their [document](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-PPO.md) for mode datails.
 
-### TrainerPPO.cs
+#### TrainerPPO.cs
 * `isTraining`: Toggle this to switch between training and inference mode. Note that if isTraining if false when the game starts, the training part of the PPO model will not be initialize and you won't be able to train it in this run. Also,
 * `parameters`: You need to assign this field with a TrainerParamsPPO scriptable object. 
 * `continueFromCheckpoint`: If true, when the game starts, the trainer will try to load the saved checkpoint file to resume previous training.
 * `checkpointPath`: the path of the checkpoint, including the file name. 
 * `steps`: Just to show you the current step of the training.
 
-### TrainerParamsPPO
+#### TrainerParamsPPO
 * `learningRate`: Learning rate used to train the neural network.
 * `maxTotalSteps`: Max steps the trainer will be training.
 * `saveModelInterval`: The trained model will be saved every this amount of steps.
@@ -45,12 +45,12 @@ We use similar parameters as in Unity ML-Agents. If something is confusing, read
 * `numEpochPerTrain`: For each training, the data in the buffer will be used repeatedly this amount of times.
 * `useHeuristicChance`: See [Training with Heuristics](#training-with-heuristics).
 
-### RLModelPPO.cs
+#### RLModelPPO.cs
 * `checkpointToLoad`: If you assign a model's saved checkpoint file to it, this will be loaded when model is initialized, regardless of the trainer's loading. Might be used when you are not using a trainer.
 * `Network`: You need to assign this field with a scriptable object that implements RLNetworkPPO.cs. 
 * `optimizer`: The time of optimizer to use for this model when training. You can also set its parameters here.
 
-### RLNetworkSimpleAC
+#### RLNetworkSimpleAC
 This is a simple implementation of RLNetworkAC that you can create a plug it in as a neural network definition for any RLModelPPO. PPO uses actor/critic structure(See PPO algorithm).
 - `actorHiddenLayers`/`criticHiddenLayers`: Hidden layers of the network. The array size if the number of hidden layers. In each element, there are for parameters that defines each layer. Those do not have default values, so you have to fill them.
 	- size: Size of this hidden layer. 
@@ -69,6 +69,7 @@ If you already know some policy that is better than random policy, you might giv
 
 Note that your AgentDependentDeicision is only used in training mode. The chance of using it in each step for agent with the script attached depends on `useHeuristicChance`.
 
-
+## Create your own neural network architecture
+If you want to have your own neural network architecture instead of the one provided by [`RLNetworkSimpleAC`](#rlnetworksimpleac), you can inherit `RLNetworkAC` class to build your own neural network. See the [sourcecode](https://github.com/tcmxx/UnityTensorflowKeras/blob/tcmxx/docs/Assets/UnityTensorflow/Learning/PPO/TrainerPPO.cs) of `RLNetworkAC.cs` for documentation.
 
 
