@@ -176,7 +176,7 @@ public class TrainerPPO : Trainer
             {
                 //update process the episode data for PPO.
                 float nextValue = iModelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
-                    CreateVisualIInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
+                    CreateVisualInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
                 var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
                     valuesEpisodeHistory[agent].ToArray(), parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
                 float[] targetValues = new float[advantages.Length];
@@ -227,8 +227,8 @@ public class TrainerPPO : Trainer
         var result = new Dictionary<Agent, TakeActionOutput>();
         var agentList = new List<Agent>(agentInfos.Keys);
 
-        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
-        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
+        float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
 
         float[,] actionProbs = null;
@@ -246,8 +246,8 @@ public class TrainerPPO : Trainer
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];
                 var action = agentDecision.Decide(info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
-                float[,] vectorOb = CreateVectorIInputBatch(agentInfos, new List<Agent>() { agent});
-                var visualOb = CreateVisualIInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
+                float[,] vectorOb = CreateVectorInputBatch(agentInfos, new List<Agent>() { agent});
+                var visualOb = CreateVisualInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
                 var probs = iModelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);
 
                 var temp = new TakeActionOutput();

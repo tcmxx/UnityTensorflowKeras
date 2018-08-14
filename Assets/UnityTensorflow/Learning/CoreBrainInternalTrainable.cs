@@ -91,6 +91,14 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
                 agent.UpdateVectorAction(actionOutputs[agent].outputAction);
         }
 
+
+
+        if (trainerInterface.IsReadyUpdate() && trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
+        {
+            trainerInterface.UpdateModel();
+        }
+
+
     }
 
     /// Displays the parameters of the CoreBrainInternal in the Inspector 

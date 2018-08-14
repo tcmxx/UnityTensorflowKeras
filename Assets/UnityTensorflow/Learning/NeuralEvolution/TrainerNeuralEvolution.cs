@@ -139,8 +139,8 @@ public class TrainerNeuralEvolution : Trainer
 
         var agentList = new List<Agent>(agentInfos.Keys);
 
-        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
-        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
+        float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
         float[,] actions = null;
         actions = modeNE.EvaluateAction(vectorObsAll, visualObsAll);
