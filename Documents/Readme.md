@@ -20,7 +20,6 @@ For ML-Agents or related machine learning knowledge, see ML-Agents [documentatio
  
 ## MAES Optimization
  * [Use MAES Optimization to Find the Best Solution](MAES.md)
- * [Use MAES and Supervised Learning](MAES-And-SL.md)
  
 ## Customization
  * [Define Your Own Training Process for ML-Agent]
