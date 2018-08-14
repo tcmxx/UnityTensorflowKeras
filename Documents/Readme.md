@@ -21,6 +21,5 @@ For ML-Agents or related machine learning knowledge, see ML-Agents [documentatio
 ## MAES Optimization
  * [Use MAES Optimization to Find the Best Solution](MAES.md)
  
-## Customization
- * [Define Your Own Training Process for ML-Agent]
- * [Define Your Own Neural Network Architecture]
+## Others
+ * Define Your Own Training Process for ML-Agent - See the source codes of [Trainer.cs](https://github.com/tcmxx/UnityTensorflowKeras/blob/tcmxx/docs/Assets/UnityTensorflow/Learning/Trainer.cs) for details.
