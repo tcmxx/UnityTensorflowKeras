@@ -12,20 +12,16 @@ using System;
 [CreateAssetMenu()]
 public class RLNetowrkACHierarchy : UnityNetwork
 {
-    public int inLowlevelLayers = 1;
-    public int inLowlevelWidth = 128;
+    public List<SimpleDenseLayerDef> inLowlevelLayers;
 
-    public int actorHighlevelLayers = 1;
-    public int actorHighlevelWidth = 128;
-    public int valueHighlevelOutLayers = 1;
-    public int valueHighlevelOutWidth = 128;
+    public List<SimpleDenseLayerDef> actorHighlevelLayers;
+    public List<SimpleDenseLayerDef> valueHighlevelLayers;
 
 
-    public int actorOutLowlevelLayers = 1;
-    public int actorOutLowlevelWidth = 128;
+    public List<SimpleDenseLayerDef> actorLowlevelLayers;
 
-    public float lowLevelWeightsInitialScale = 0.07f;
-    public float highLevelWeightsInitialScale = 0.07f;
+    public float outputLayerInitialScale = 0.1f;
+    public bool outputLayerUseBias = true;
 
     protected List<Tensor> weightsLowlevel;
     protected List<Tensor> weightsHighLevel;
@@ -43,9 +39,11 @@ public class RLNetowrkACHierarchy : UnityNetwork
         
 
         //lowlevel encoder
-        var lowlevelEncoder = CreateContinuousStateEncoder(inVectorstateLowlevel, inLowlevelWidth, inLowlevelLayers, "LowlevelEncoder", lowLevelWeightsInitialScale);
+        var lowlevelEncoder = BuildSequentialLayers(inLowlevelLayers, inVectorstateLowlevel, "LowlevelEncoder");
         Tensor  encodedLowlevel = lowlevelEncoder.Item1;
         weightsLowlevel.AddRange(lowlevelEncoder.Item2);
+
+
 
         //highlevel 
         Tensor concatedStates = null;
@@ -53,25 +51,25 @@ public class RLNetowrkACHierarchy : UnityNetwork
             concatedStates = Current.K.concat(new List<Tensor>() { encodedLowlevel, inVectorstateHighlevel }, 1);
         else
             concatedStates = encodedLowlevel;
-
-        var highlevelEncoder = CreateContinuousStateEncoder(concatedStates, actorHighlevelWidth, actorHighlevelLayers, "ActorHighevelEncoder", highLevelWeightsInitialScale);
+        
+        var highlevelEncoder = BuildSequentialLayers( actorHighlevelLayers, concatedStates, "ActorHighevelEncoder");
         Tensor outputHighlevel = highlevelEncoder.Item1;
         weightsHighLevel.AddRange(highlevelEncoder.Item2);
 
         //lowlevel actor output
-        var actorFinal = CreateContinuousStateEncoder(outputHighlevel, actorOutLowlevelWidth, actorOutLowlevelLayers, "ActorLowlevelOut", lowLevelWeightsInitialScale);
+        var actorFinal = BuildSequentialLayers(actorLowlevelLayers, outputHighlevel, "ActorLowlevelOut");
         Tensor encodedAllActor = actorFinal.Item1;
         weightsLowlevel.AddRange(actorFinal.Item2);
 
         //highlevel value output
-        var valueFinal = CreateContinuousStateEncoder(encodedLowlevel, valueHighlevelOutWidth, valueHighlevelOutLayers, "ValueHighlevelOut", highLevelWeightsInitialScale);
+        var valueFinal = BuildSequentialLayers(valueHighlevelLayers, concatedStates, "ValueHighlevelOut");
         Tensor encodedAllCritic = valueFinal.Item1;
         weightsHighLevel.AddRange(valueFinal.Item2);
 
         //outputs
         using (Current.K.name_scope("ActorOutput"))
         {
-            var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: lowLevelWeightsInitialScale));
+            var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: outputLayerUseBias, kernel_initializer: new GlorotUniform(scale: outputLayerInitialScale));
             outAction = actorOutput.Call(encodedAllActor)[0];
             if (actionSpace == SpaceType.discrete)
             {
@@ -83,7 +81,7 @@ public class RLNetowrkACHierarchy : UnityNetwork
 
         using (Current.K.name_scope("CriticOutput"))
         {
-            var criticOutput = new Dense(units: 1, activation: null, use_bias: true, kernel_initializer: new GlorotUniform(scale: highLevelWeightsInitialScale));
+            var criticOutput = new Dense(units: 1, activation: null, use_bias: outputLayerUseBias, kernel_initializer: new GlorotUniform(scale: outputLayerInitialScale));
             outValue = criticOutput.Call(encodedAllCritic)[0];
             weightsHighLevel.AddRange(criticOutput.weights);
         }
@@ -105,22 +103,6 @@ public class RLNetowrkACHierarchy : UnityNetwork
     }
 
 
-    protected static ValueTuple<Tensor,List<Tensor>> CreateContinuousStateEncoder(Tensor state, int hiddenSize, int numLayers, string scope, float initScale)
-    {
-        var hidden = state;
-        List<Tensor> tempWeights = new List<Tensor>();
-        using (Current.K.name_scope(scope))
-        {
-            for (int i = 0; i < numLayers; ++i)
-            {
-                var layer = new Dense(hiddenSize, new ReLU(), true, kernel_initializer: new GlorotUniform(scale: initScale));
-                hidden = layer.Call(hidden)[0];
-                tempWeights.AddRange(layer.weights);
-            }
-        }
-
-        return ValueTuple.Create(hidden,tempWeights);
-    }
 
 
     public List<Tensor> GetHighLevelWeights()

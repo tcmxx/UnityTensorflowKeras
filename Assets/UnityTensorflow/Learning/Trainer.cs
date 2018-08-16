@@ -113,6 +113,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     public bool isTraining;
     protected bool prevIsTraining;
 
+    public Action<bool> onIsTrainingChanged;
+
     [ShowAllPropertyAttr]
     public TrainerParams parameters;
     public bool continueFromCheckpoint = true;
@@ -136,6 +138,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     {
         if (prevIsTraining != isTraining)
         {
+            onIsTrainingChanged?.Invoke(isTraining);
             prevIsTraining = isTraining;
             academyRef.SetIsInference(!isTraining);
         }

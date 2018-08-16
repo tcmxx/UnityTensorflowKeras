@@ -234,10 +234,18 @@ public class TrainerNeuralEvolution : Trainer
             currentEvaluationIndex = 0;
             optimizer.generateSamples(samples);//generate new samples
 
-            bestSample = new OptimizationSample();
-            bestSample.x = optimizer.getBest();
-            bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
-            
+            if (bestSample == null)
+            {
+                bestSample = new OptimizationSample();
+                bestSample.x = optimizer.getBest();
+                bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
+            }
+            else if((parametersNE.mode == OptimizationModes.maximize && bestSample.objectiveFuncVal< optimizer.getBestObjectiveFuncValue()) ||
+                (parametersNE.mode == OptimizationModes.minimize && bestSample.objectiveFuncVal > optimizer.getBestObjectiveFuncValue()))
+            {
+                bestSample.x = optimizer.getBest();
+                bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
+            }
             SetWeights(samples[currentEvaluationIndex]);//set weight for the first sample
         }
 

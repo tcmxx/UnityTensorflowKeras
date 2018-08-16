@@ -226,7 +226,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
                         actionProbs[j, i] = (float)dis.ProbabilityDensityFunction(actions[j, i]);
                     }catch(Exception e)
                     {
-                        Debug.LogWarning("NaN action from neural network detected. Force it to 0.");
+                        //Debug.LogWarning("NaN action from neural network detected. Force it to 0.");
                         actions[j, i] = 0;
                         actionProbs[j, i] = 1;
                     }
