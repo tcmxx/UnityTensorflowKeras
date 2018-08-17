@@ -88,7 +88,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         foreach (Agent agent in newAgentList)
         {
             if (actionOutputs.ContainsKey(agent) && actionOutputs[agent].outputAction != null)
-                agent.UpdateVectorAction(actionOutputs[agent].outputAction);
+                agent.UpdateVectorAction(trainerInterface.PostprocessingAction(actionOutputs[agent].outputAction));
         }
 
 

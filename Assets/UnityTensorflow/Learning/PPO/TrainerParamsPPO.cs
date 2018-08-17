@@ -16,7 +16,6 @@ public class TrainerParamsPPO : TrainerParams
     [Tooltip("larger value means exploration is encouraged")]
     public float entropyLossWeight = 0.0f;
     public float clipEpsilon = 0.2f;
-
     
     public int batchSize = 128;
     public int bufferSizeForTrain = 2048;
@@ -24,7 +23,12 @@ public class TrainerParamsPPO : TrainerParams
 
     [Range(0,1)]
     public float useHeuristicChance = 0.4f;
-    
+
+    /// <summary>
+    /// Unity's impelemntation does clip the normalize the final acion: clip(action,-3,3)/3.
+    /// </summary>
+    public bool normalizeActionForAgent = false;
+
     [Header("Log related")]
     public int lossLogInterval = 1;
     public int rewardLogInterval = 10;

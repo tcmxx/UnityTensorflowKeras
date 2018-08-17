@@ -44,6 +44,8 @@ public class FieldOverrideDrawer : PropertyDrawer
         if (obj.GetType().IsArray || obj.GetType() == typeof(List<TrainerParamOverride.FieldOverride>))
         {
             var index = Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
+            if (((TrainerParamOverride.FieldOverride[])obj).Length <= index)
+                return;
             ov = ((TrainerParamOverride.FieldOverride[])obj)[index];
         }
 
@@ -86,6 +88,8 @@ public class FieldOverrideDrawer : PropertyDrawer
         if (obj.GetType().IsArray || obj.GetType() == typeof(List<TrainerParamOverride.FieldOverride>))
         {
             var index = Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
+            if (((TrainerParamOverride.FieldOverride[])obj).Length <= index)
+                return 0;
             ov = ((TrainerParamOverride.FieldOverride[])obj)[index];
         }
 

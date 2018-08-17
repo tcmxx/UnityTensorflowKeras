@@ -94,7 +94,7 @@ public class TrainerNeuralEvolution : Trainer
         rewardsOfCurrentChild = new List<float>();
 
 
-        tensorsToOptimize = modeNE.GetWeightsToOptimize();
+        tensorsToOptimize = modeNE.GetWeightsForNeuralEvolution();
         paramDimension = 0;
         foreach (var t in tensorsToOptimize)
         {

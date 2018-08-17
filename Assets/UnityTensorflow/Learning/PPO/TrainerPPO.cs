@@ -57,6 +57,7 @@ public class TrainerPPO : Trainer
             new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
             new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
             new DataBuffer.DataInfo("TargetValue", typeof(float), new int[] { 1 }),
+            new DataBuffer.DataInfo("OldValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("Advantage", typeof(float), new int[] { 1 })
         };
 
@@ -81,8 +82,7 @@ public class TrainerPPO : Trainer
 
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
-
-
+        
         modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);
         if (continueFromCheckpoint)
         {
@@ -172,16 +172,17 @@ public class TrainerPPO : Trainer
         foreach (var agent in agentList)
         {
             var agentNewInfo = newInfo[agent];
-            if (agentNewInfo.done || agentNewInfo.maxStepReached || actionsEpisodeHistory[agent].Count > parametersPPO.timeHorizon)
+            if (agentNewInfo.done || agentNewInfo.maxStepReached || rewardsEpisodeHistory[agent].Count > parametersPPO.timeHorizon)
             {
                 //update process the episode data for PPO.
                 float nextValue = iModelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
                     CreateVisualInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
+                var valueHistory = valuesEpisodeHistory[agent].ToArray();
                 var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
-                    valuesEpisodeHistory[agent].ToArray(), parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
+                    valueHistory, parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
                 float[] targetValues = new float[advantages.Length];
 
-                var valueHistory = valuesEpisodeHistory[agent];
+               
                 for (int i = 0; i < targetValues.Length; ++i)
                 {
                     targetValues[i] = advantages[i] + valueHistory[i];
@@ -193,6 +194,7 @@ public class TrainerPPO : Trainer
                 dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionsEpisodeHistory[agent].ToArray()));
                 dataToAdd.Add(ValueTuple.Create<string, Array>("ActionProb", actionprobsEpisodeHistory[agent].ToArray()));
                 dataToAdd.Add(ValueTuple.Create<string, Array>("TargetValue", targetValues));
+                dataToAdd.Add(ValueTuple.Create<string, Array>("OldValue", valueHistory));
                 dataToAdd.Add(ValueTuple.Create<string, Array>("Advantage", advantages));
                 if (statesEpisodeHistory[agent].Count > 0)
                     dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", statesEpisodeHistory[agent].ToArray()));
@@ -211,12 +213,15 @@ public class TrainerPPO : Trainer
                 
                 dataBuffer.AddData(dataToAdd.ToArray());
                 //update stats if the agent is not using heuristic
-                stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
-                stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
-                
-                
-                accumulatedRewards[agent] = 0;
-                episodeSteps[agent] = 0;
+                if (agentNewInfo.done || agentNewInfo.maxStepReached)
+                {
+                    stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
+                    stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
+
+
+                    accumulatedRewards[agent] = 0;
+                    episodeSteps[agent] = 0;
+                }
                 
             }
         }
@@ -281,6 +286,7 @@ public class TrainerPPO : Trainer
         fetches.Add(new ValueTuple<string, int, string>("Action", 0, "Action"));
         fetches.Add(new ValueTuple<string, int, string>("ActionProb", 0, "ActionProb"));
         fetches.Add(new ValueTuple<string, int, string>("TargetValue", 0, "TargetValue"));
+        fetches.Add(new ValueTuple<string, int, string>("OldValue", 0, "OldValue"));
         fetches.Add(new ValueTuple<string, int, string>("Advantage", 0, "Advantage"));
         for(int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
         {
@@ -288,7 +294,7 @@ public class TrainerPPO : Trainer
         }
 
 
-        float loss = 0, policyLoss = 0, valueLoss = 0;
+        float loss = 0, policyLoss = 0, valueLoss = 0, entropy = 0;
         for (int i = 0; i < parametersPPO.numEpochPerTrain; ++i)
         {
             //training from the main data buffer
@@ -299,6 +305,7 @@ public class TrainerPPO : Trainer
             float[,] actions = (float[,])samples["Action"];
             float[,] actionProbs = (float[,])samples["ActionProb"];
             float[,] targetValues = (float[,])samples["TargetValue"];
+            float[,] oldValues = (float[,])samples["OldValue"];
             float[,] advantages = (float[,])samples["Advantage"];
 
             
@@ -314,7 +321,7 @@ public class TrainerPPO : Trainer
             //int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
             //int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
-            float tempLoss = 0, tempPolicyLoss = 0, tempValueLoss = 0;
+            float tempLoss = 0, tempPolicyLoss = 0, tempValueLoss = 0, tempEntropy = 0;
             for (int j = 0; j < batchCount; ++j)
             {
                 
@@ -323,26 +330,50 @@ public class TrainerPPO : Trainer
                     SubRows(actions, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(actionProbs, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(targetValues, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
+                    SubRows(oldValues, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
                     SubRows(advantages, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten()
                     );
                 tempLoss += losses[0];
                 tempValueLoss  += losses[1];
                 tempPolicyLoss += losses[2];
+                tempEntropy += losses[3];
             }
 
             loss += tempLoss / (batchCount);
             policyLoss += tempPolicyLoss / (batchCount );
             valueLoss += tempValueLoss / (batchCount );
+            entropy += tempEntropy / (batchCount);
         }
         
         //log the stats
         stats.AddData("loss", loss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
         stats.AddData("policyLoss", policyLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
         stats.AddData("valueLoss", valueLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-
+        stats.AddData("entropy", entropy / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
         dataBuffer.ClearData();
     }
 
+    public override float[] PostprocessingAction(float[] rawAction)
+    {
+        if (parametersPPO.normalizeActionForAgent)
+        {
+            return ClipAndNormalize(rawAction, 3);
+        }
+        else
+        {
+            return rawAction;
+        }
+    }
+
+    private float[] ClipAndNormalize(float[] array, float value)
+    {
+        var result = new float[array.Length];
+        for (int i = 0; i < array.Length; ++i)
+        {
+            result[i] = Mathf.Clamp(array[i], -value, value) / value;
+        }
+        return result;
+    }
 
     private static T[,] SubRows<T>(T[,] data, int startRow, int rowCount)
     {

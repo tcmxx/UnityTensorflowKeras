@@ -632,6 +632,7 @@ MonoBehaviour:
     - 0.999
     - 0.00000001
     - 0
+  useInputNormalization: 0
 --- !u!114 &667765197
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1044,7 +1045,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 654033468}
-  isTraining: 1
+  isTraining: 0
   parameters: {fileID: 11400000, guid: 2739dacb167d7df489bcedea5510504d, type: 2}
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\3DBall\3DBallCheckpoint.bytes

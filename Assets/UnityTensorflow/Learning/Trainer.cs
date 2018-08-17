@@ -99,6 +99,13 @@ public interface ITrainer
     /// </summary>
     /// <returns></returns>
     bool IsTraining();
+
+
+    /// <summary>
+    /// The final action received by Agent will be post processed by this. The experience record will not be processed by this. Just return the input if you dont need any processing
+    /// </summary>
+    /// <returns>processed action</returns>
+    float[] PostprocessingAction(float[] rawAction);
 }
 
 
@@ -190,6 +197,12 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         steps = 0;
     }
 
+    public virtual float[] PostprocessingAction(float[] rawAction)
+    {
+        return rawAction;
+    }
+
+
     public abstract Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
     public abstract void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput);
     public abstract void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
@@ -206,6 +219,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         var fullPath = Path.GetFullPath(checkpointPath);
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
+        
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
         File.WriteAllBytes(fullPath, data);
         Debug.Log("Saved model checkpoint to " + fullPath);
     }

@@ -98,7 +98,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
                     loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
             }
             //add inputs, outputs and parameters to the list
-            List<Tensor> updateParameters = GetAllModelWeights();
+            List<Tensor> updateParameters = network.GetWeights();
             List<Tensor> allInputs = new List<Tensor>();
 
 
@@ -208,9 +208,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
 
     public override List<Tensor> GetAllModelWeights()
     {
-        List<Tensor> parameters = new List<Tensor>();
-        parameters.AddRange(network.GetWeights());
-        return parameters;
+        return network.GetWeights();
     }
 
     float[,] INeuralEvolutionModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
@@ -218,7 +216,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         return EvaluateAction(vectorObservation, visualObservation).Item1;
     }
 
-    public List<Tensor> GetWeightsToOptimize()
+    public List<Tensor> GetWeightsForNeuralEvolution()
     {
         return network.GetWeights();
     }

@@ -112,7 +112,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
 
         //outputs
-        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new GlorotUniform(scale: actorOutputLayerInitialScale));
+        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
         outAction = actorOutput.Call(encodedAllActor)[0];
         if (actionSpace == SpaceType.discrete)
         {

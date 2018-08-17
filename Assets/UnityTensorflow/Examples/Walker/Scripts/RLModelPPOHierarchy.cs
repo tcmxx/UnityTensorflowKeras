@@ -133,7 +133,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
 
 
             //add inputs, outputs and parameters to the list
-            List<Tensor> updateParameters = GetAllModelWeights();
+            List<Tensor> updateParameters = networkHierarchy.GetHighLevelWeights();
             List<Tensor> allInputs = new List<Tensor>();
             
             allInputs.Add(stateTensor);
@@ -311,7 +311,7 @@ public class RLModelPPOHierarchy : RLModelPPO {
 
 
 
-    public override float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
+    public override float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues,float[] oldValues, float[] advantages)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
 
@@ -346,7 +346,9 @@ public class RLModelPPOHierarchy : RLModelPPO {
 
     public override List<Tensor> GetAllModelWeights()
     {
-        return networkHierarchy.GetHighLevelWeights();
+        var result = new List<Tensor>();
+        result.AddRange(networkHierarchy.GetHighLevelWeights()); result.AddRange(networkHierarchy.GetLowLevelWeights());
+        return result;
     }
 
 

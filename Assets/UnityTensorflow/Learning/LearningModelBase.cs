@@ -15,7 +15,8 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-public abstract class LearningModelBase : MonoBehaviour {
+public abstract class LearningModelBase : MonoBehaviour
+{
 
     /// <summary>
     /// Whether this model has visual observation input. 
@@ -36,7 +37,7 @@ public abstract class LearningModelBase : MonoBehaviour {
     /// <summary>
     /// Total vector observation size, considering the stacked vector observations
     /// </summary>
-    protected int StateSize { get;  private set; }
+    protected int StateSize { get; private set; }
     protected int ActionSize { get; private set; }
     protected SpaceType ActionSpace { get; private set; }
     /// <summary>
@@ -93,11 +94,11 @@ public abstract class LearningModelBase : MonoBehaviour {
         HasVisualObservation = inputVisualTensors != null;
 
         //create inner intialization
-        InitializeInner(brainParameters, inputStateTensor, inputVisualTensors,  enableTraining? trainerParams:null);
+        InitializeInner(brainParameters, inputStateTensor, inputVisualTensors, enableTraining ? trainerParams : null);
 
         //test
-        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/"+name+".pb");
-        //((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/"+name+".pb");
+        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/" + name + ".pb");
+        ((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/" + name + ".pb");
 
         Current.K.try_initialize_variables();
         if (checkpointToLoad != null)
@@ -118,7 +119,7 @@ public abstract class LearningModelBase : MonoBehaviour {
     /// <param name="loss">loss tensor</param>
     /// <param name="optimizerCreator">A OptimizerCreator object where the information of the optimizer is specified.</param>
     /// <returns></returns>
-    public List<List<Tensor>> AddOptimizer(List<Tensor> allWeights, Tensor loss, OptimizerCreator optimizerCreator) 
+    public List<List<Tensor>> AddOptimizer(List<Tensor> allWeights, Tensor loss, OptimizerCreator optimizerCreator)
     {
         if (optimiers == null)
             optimiers = new List<OptimizerBase>();
@@ -146,36 +147,23 @@ public abstract class LearningModelBase : MonoBehaviour {
     /// This method will return all weights used in all optimizers
     /// </summary>
     /// <returns>all weights used by optimizers</returns>
-    public virtual List<Array> GetAllOptimizerWeights()
+    public virtual List<Tensor> GetAllOptimizerWeights()
     {
         if (!TrainingEnabled || optimiers == null)
-            return new List<Array>();
-        List<Array> allWeights = new List<Array>();
-        foreach(var o in optimiers)
+            return new List<Tensor>();
+        List<Tensor> allWeights = new List<Tensor>();
+        foreach (var o in optimiers)
         {
-            allWeights.AddRange(o.get_weights());
+            allWeights.AddRange(o.Weights);
         }
         return allWeights;
     }
-
-    /// <summary>
-    /// Set all the weights of the optimziers
-    /// </summary>
-    /// <param name="values">array of weights. might be values returned by <see cref="GetAllOptimizerWeights"/></param>
-    public virtual void SetAllOptimizerWeights(List<Array> values)
-    {
-        int currentIndex = 0;
-        foreach(var o in optimiers)
-        {
-            o.set_weights(values.GetRange(currentIndex, o.Weights.Count));
-            currentIndex += o.Weights.Count;
-        }
-    }
+    
 
     //the default set learning rate method.
     public virtual void SetLearningRate(float lr)
     {
-        if(optimiers != null && optimiers.Count > 0)
+        if (optimiers != null && optimiers.Count > 0)
             SetLearningRate(lr, 0);
     }
 
@@ -219,21 +207,63 @@ public abstract class LearningModelBase : MonoBehaviour {
         return allInputs;
     }
 
+
+
+
+
+
     /// <summary>
-    /// Set all weigths for the model.
+    /// Set all the weights of the optimziersThis will be deprecated soon.
+    /// </summary>
+    /// <param name="values">array of weights. might be values returned by <see cref="GetAllOptimizerWeights"/></param>
+    public virtual void SetAllOptimizerWeights(List<Array> values)
+    {
+        int currentIndex = 0;
+        foreach (var o in optimiers)
+        {
+            o.set_weights(values.GetRange(currentIndex, o.Weights.Count));
+            currentIndex += o.Weights.Count;
+        }
+    }
+
+    public virtual void SetAllOptimizerWeights(Dictionary<string, Array> values)
+    {
+        foreach (var o in optimiers)
+        {
+            var optWeights = o.Weights;
+            foreach (var w in optWeights)
+            {
+                Debug.Assert(values.ContainsKey(w.name), "Value of " + w.name + " can not be found in data. Set optimizer weights failed.");
+                Current.K.set_value(w, values[w.name]);
+            }
+        }
+    }
+    /// <summary>
+    /// Set all weigths for the model. This will be deprecated soon.
     /// </summary>
     /// <param name="values">list of arrays that are the values of each weight</param>
     public virtual void SetAllModelWeights(List<Array> values)
     {
-        List<Tensor> updateParameters = GetAllModelWeights();
+        List<Tensor> allModelWeights = GetAllModelWeights();
 
-        Debug.Assert(values.Count == updateParameters.Count, "SetAllModelWeights(): Counts of input values and parameters to update do not match.");
+        Debug.Assert(values.Count == allModelWeights.Count, "SetAllModelWeights(): Counts of input values and parameters to update do not match.");
 
-        for (int i = 0; i < updateParameters.Count; ++i)
+        for (int i = 0; i < allModelWeights.Count; ++i)
         {
-            Debug.Assert(values[i].GetLength().IsEqual(Mathf.Abs(updateParameters[i].shape.Aggregate((t, s) => t * s).Value)), "Input array shape does not match the Tensor to set value");
-            Current.K.set_value(updateParameters[i], values[i]);
+            Debug.Assert(values[i].GetLength().IsEqual(Mathf.Abs(allModelWeights[i].shape.Aggregate((t, s) => t * s).Value)), "Input array shape does not match the Tensor to set value");
+            Current.K.set_value(allModelWeights[i], values[i]);
         }
+    }
+
+    public virtual void SetAllModelWeights(Dictionary<string, Array> values)
+    {
+        List<Tensor> allModelWeights = GetAllModelWeights();
+        foreach (var w in allModelWeights)
+        {
+            Debug.Assert(values.ContainsKey(w.name), "Value of " + w.name + " can not be found in data. Set model weights failed.");
+            Current.K.set_value(w, values[w.name]);
+        }
+
     }
 
     /// <summary>
@@ -245,24 +275,40 @@ public abstract class LearningModelBase : MonoBehaviour {
         //deserialize the data
         var mStream = new MemoryStream(data);
         var binFormatter = new BinaryFormatter();
-        var floatData = (List<float[]>)binFormatter.Deserialize(mStream);
 
-        List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
-        var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
-        var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
+        var deserializedData = binFormatter.Deserialize(mStream);
 
-        if ((arrayData.Count >= modelWeigthLength && optimizerWeightLength == 0) || arrayData.Count == modelWeigthLength + optimizerWeightLength)
+        if (deserializedData is List<float[]>)
         {
+            var floatData = (List<float[]>)deserializedData;
 
-            SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
-            if (arrayData.Count == modelWeigthLength + optimizerWeightLength)
+
+            List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
+            var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
+            var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
+
+            if ((arrayData.Count >= modelWeigthLength && optimizerWeightLength == 0) || arrayData.Count == modelWeigthLength + optimizerWeightLength)
             {
-                SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+
+                SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
+                if (arrayData.Count == modelWeigthLength + optimizerWeightLength)
+                {
+                    SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
+                }
             }
+            else
+            {
+                Debug.LogError("Saved data to load not match the model!");
+            }
+        }else if(deserializedData is Dictionary<string, Array>)
+        {
+            Dictionary<string, Array> dicData = deserializedData as Dictionary<string, Array>;
+            SetAllModelWeights(dicData);
+            SetAllOptimizerWeights(dicData);
         }
         else
         {
-            Debug.LogError("Saved data to load not match the model!");
+            Debug.LogError("Not recognized datatype to restoed from");
         }
     }
 
@@ -272,6 +318,9 @@ public abstract class LearningModelBase : MonoBehaviour {
     /// <returns>the data</returns>
     public virtual byte[] SaveCheckpoint()
     {
+        /*
+        var allmodelweights = GetAllModelWeights();
+        var test = allmodelweights.Select(t => t.eval()).ToList();
         List<Array> data = GetAllModelWeights().Select(t => (Array)t.eval()).ToList();
         data.AddRange(GetAllOptimizerWeights());
 
@@ -284,6 +333,40 @@ public abstract class LearningModelBase : MonoBehaviour {
         var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
         binFormatter.Serialize(mStream, flattenedData);
+        return mStream.ToArray();*/
+
+        List<Tensor> allWeights = new List<Tensor>();
+        allWeights.AddRange(GetAllModelWeights());
+        allWeights.AddRange(GetAllOptimizerWeights());
+
+        Dictionary<string, Array> saveData = new Dictionary<string, Array>();
+        foreach (var w in allWeights)
+        {
+            if (saveData.ContainsKey(w.name))
+            {
+                Debug.LogWarning("tensors with the same name:" + w.name + ", ignored.");
+            }
+            else
+            {
+                object data = w.eval();
+
+                Array flattenedData = null;
+                if (data is Array)
+                {
+                    flattenedData = ((Array)data).DeepFlatten();
+                }
+                else
+                {
+
+                    flattenedData = Array.CreateInstance(data.GetType(), 1);
+                    flattenedData.SetValue(data,0);
+                }
+                saveData[w.name] = flattenedData;
+            }
+        }
+        var binFormatter = new BinaryFormatter();
+        var mStream = new MemoryStream();
+        binFormatter.Serialize(mStream, saveData);
         return mStream.ToArray();
     }
 

@@ -44,15 +44,16 @@ public class TrainerParamOverride : MonoBehaviour {
             {
                 originalValues[o.name] = GetValue(o.name);
             }
-
+            float value = 0;
             if (o.method == Method.AnimationCurve)
             {
-                float value = o.curve.Evaluate(Mathf.Clamp01(((float)trainer.GetStep()) / trainer.GetMaxStep())) * originalValues[o.name];
-                SetValue(o.name, value);
+                value = o.curve.Evaluate(Mathf.Clamp01(((float)trainer.GetStep()) / trainer.GetMaxStep())) * originalValues[o.name];
             }else if(o.method == Method.PolynomialDecay)
             {
-                float value = (originalValues[o.name] - o.endValue)*Mathf.Pow(1-((float)trainer.GetStep())/trainer.GetMaxStep(), o.power) +o.endValue;
+                value = (originalValues[o.name] - o.endValue)*Mathf.Pow(1-((float)trainer.GetStep())/trainer.GetMaxStep(), o.power) +o.endValue;
             }
+
+            SetValue(o.name, value);
         }
     }
 

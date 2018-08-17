@@ -34,7 +34,7 @@ public interface IRLModelPPO
     float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation);
     float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true);
     float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation);
-    float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages);
+    float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] oldValues, float[] advantages);
 }
 
 
@@ -45,21 +45,26 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
     protected Function ValueFunction { get; set; }
     protected Function ActionFunction { get; set; }
     protected Function UpdateFunction { get; set; }
+
+    protected Function UpdateNormalizerFunction { get; set; }
+
     [ShowAllPropertyAttr]
     public RLNetworkAC network;
 
     public OptimizerCreator optimizer;
-    
+    public bool useInputNormalization = false;
     public float EntropyLossWeight { get; set; }
     public float ValueLossWeight { get; set; }
     public float ClipEpsilon { get; set; }
 
-    //the variable for variance
-    //protected Tensor logSigmaSq = null;
-    
+    //the variables for normalization
+    protected Tensor runningMean = null;
+    protected Tensor runningVariance = null;
+    protected Tensor stepCount = null;
+
     //protected  inputStateTensor = null;
     //protected List<Tensor> inputVisualTensors = null;
-    
+
 
     /// <summary>
     /// Initialize the model without training parts
@@ -70,6 +75,12 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
         Tensor inputStateTensor = stateTensor;
         List<Tensor>  inputVisualTensors = visualTensors;
+
+        if (useInputNormalization && HasVectorObservation)
+        {
+            inputStateTensor = CreateRunninngNormalizer(inputStateTensor, StateSize);
+        }
+
 
         //build the network
         Tensor outputValue = null; Tensor outputAction = null; Tensor outputVariance = null;
@@ -110,6 +121,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
             var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
             var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
+            var inputOldValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputOldValue")[0];
 
             ClipEpsilon = trainingParams.clipEpsilon;
             ValueLossWeight = trainingParams.valueLossWeight;
@@ -149,7 +161,11 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             }
 
             // value loss
-            var outputValueLoss = K.mean(new MeanSquareError().Call(outputValue, inputTargetValue));
+            var clippedValueEstimate = inputOldValue + K.clip(outputValue - inputOldValue, 0.0f - inputClipEpsilon, inputClipEpsilon);
+            var valueLoss1 = new MeanSquareError().Call(outputValue, inputTargetValue);
+            var valueLoss2 = new MeanSquareError().Call(clippedValueEstimate, inputTargetValue);
+            var outputValueLoss = K.mean(K.maximum(valueLoss1, valueLoss2));
+            
 
             // Clipped Surrogate loss
             Tensor outputPolicyLoss;
@@ -167,7 +183,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
 
             //add inputs, outputs and parameters to the list
-            List<Tensor> updateParameters = GetAllModelWeights();
+            List<Tensor> updateParameters = network.GetWeights();
             List<Tensor> allInputs = new List<Tensor>();
             if (HasVectorObservation)
             {
@@ -180,6 +196,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             allInputs.Add(inputAction);
             allInputs.Add(inputOldProb);
             allInputs.Add(inputTargetValue);
+            allInputs.Add(inputOldValue);
             allInputs.Add(inputAdvantage);
             allInputs.Add(inputClipEpsilon);
             allInputs.Add(inputValuelossWeight);
@@ -187,7 +204,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
             //create optimizer and create necessary functions
             var updates = AddOptimizer(updateParameters, outputLoss, optimizer) ;
-            UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss }, updates, "UpdateFunction");
+            UpdateFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss, outputEntropy }, updates, "UpdateFunction");
         }
 
 
@@ -228,6 +245,11 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
     /// <returns></returns>
     public virtual float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true)
     {
+        if (useInputNormalization && HasVectorObservation)
+        {
+            UpdateNormalizerFunction.Call(new List<Array>() { vectorObservation });
+        }
+
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
         {
@@ -337,7 +359,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
 
 
-    public virtual float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] advantages)
+    public virtual float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] oldValues, float[] advantages)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
 
@@ -356,13 +378,14 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
 
         inputs.Add(actionProbs);
         inputs.Add(targetValues);
+        inputs.Add(oldValues);
         inputs.Add(advantages);
         inputs.Add(new float[] { ClipEpsilon });
         inputs.Add(new float[] { ValueLossWeight });
         inputs.Add(new float[] { EntropyLossWeight });
 
         var loss = UpdateFunction.Call(inputs);
-        var result =  new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval() };
+        var result =  new float[] { (float)loss[0].eval(), (float)loss[1].eval(), (float)loss[2].eval(), (float)loss[3].eval() };
 
         return result;
         //Debug.LogWarning("test save graph");
@@ -372,7 +395,13 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
     
     public override List<Tensor> GetAllModelWeights()
     {
-        return network.GetWeights();
+        List<Tensor> result = new List<Tensor>();
+        result.AddRange(network.GetWeights());
+        if(runningMean != null)
+        {
+            result.Add(runningMean); result.Add(runningVariance);result.Add(stepCount);
+        }
+        return result;
     }
 
     public float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
@@ -381,8 +410,39 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
         return EvaluateAction(vectorObservation, out outActionProbs, visualObservation, true);
     }
 
-    public List<Tensor> GetWeightsToOptimize()
+    public List<Tensor> GetWeightsForNeuralEvolution()
     {
         return network.GetActorWeights();
+    }
+
+
+    protected Tensor CreateRunninngNormalizer(Tensor vectorInput, int size)
+    {
+        using (K.name_scope("InputNormalizer"))
+        {
+            stepCount = K.variable(0, DataType.Float, "NormalizationStep");
+
+            runningMean = K.zeros(new int[] { size }, DataType.Float, "RunningMean");
+            float[] initialVariance = new float[size];
+            for(int i = 0; i < size; ++i)
+            {
+                initialVariance[i] = 1;
+            }
+            runningVariance = K.variable((Array)initialVariance, DataType.Float, "RunningVariance");
+
+            var meanCurrentObs = K.mean(vectorInput, 0);
+            var newMean = runningMean + (meanCurrentObs - runningMean) / (stepCount + 1);
+
+            var newVariance = runningVariance + (meanCurrentObs - newMean) * (meanCurrentObs - runningMean);
+            UpdateNormalizerFunction = K.function(new List<Tensor>() { vectorInput }, null, new List<List<Tensor>>() {
+                new List<Tensor>() { K.update(runningMean,newMean) },
+                new List<Tensor>() { K.update(runningVariance,newVariance) },
+                new List<Tensor>(){K.update_add(stepCount,1.0f) },
+            }, "UpdateNormalization");
+
+            var normalized = K.clip((vectorInput - runningMean) / K.sqrt(runningVariance / (stepCount + 1.0f)), -5.0f, 5.0f);
+            return normalized;
+
+        }
     }
 }
