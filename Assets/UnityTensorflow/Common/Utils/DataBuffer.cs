@@ -314,7 +314,7 @@ public class DataBuffer : ISerializable
         {
             indices[i] = i;
         }
-        MathUtils.Shuffle(indices, new System.Random());
+        MathUtils.Shuffle(indices);
 
         foreach (var d in fetchAndOffset)
         {
@@ -342,7 +342,7 @@ public class DataBuffer : ISerializable
         return result;
     }
 
-    /// <summary>
+   /* /// <summary>
     /// calculate the discrounted reward
     /// </summary>
     /// <param name="stepReward">the rewards list of each step</param>
@@ -360,9 +360,9 @@ public class DataBuffer : ISerializable
         }
 
         return result;
-    }
+    }*/
 
-
+    /*
     /// <summary>
     /// Get the Advantage for PPO algorithm
     /// </summary>
@@ -386,7 +386,7 @@ public class DataBuffer : ISerializable
 
         float[] advantages = GetDiscountedRewards(deltaTs, gamma * lambda);
         return advantages;
-    }
+    }*/
 
 
 

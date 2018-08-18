@@ -33,7 +33,8 @@ public static class RLUtils
             }
 
         }
-        return DiscountedRewards(deltaT, GAEFactor * discountedFactor);
+        var adv =  DiscountedRewards(deltaT, GAEFactor * discountedFactor);
+        return adv;
     }
 
 }

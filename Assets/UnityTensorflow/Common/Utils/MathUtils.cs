@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Accord.Math;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
+
 public static class MathUtils
 {
 
@@ -143,17 +146,26 @@ public static class MathUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="list"></param>
     /// <param name="rnd"></param>
-    public static void Shuffle<T>(IList<T> list, System.Random rnd)
+    public static void Shuffle<T>(this IList<T> list)
     {
         int n = list.Count;
         while (n > 1)
         {
-
             n--;
-            int k = rnd.Next(0, n + 1);
+            int k = ThreadSafeRandom.ThisThreadsRandom.Next(n + 1);
             T value = list[k];
             list[k] = list[n];
             list[n] = value;
+        }
+    }
+
+    public static class ThreadSafeRandom
+    {
+        [ThreadStatic] private static System.Random Local;
+
+        public static System.Random ThisThreadsRandom
+        {
+            get { return Local ?? (Local = new System.Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId))); }
         }
     }
 }
