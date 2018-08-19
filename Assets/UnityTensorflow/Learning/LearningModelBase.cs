@@ -228,6 +228,8 @@ public abstract class LearningModelBase : MonoBehaviour
 
     public virtual void SetAllOptimizerWeights(Dictionary<string, Array> values)
     {
+        if (optimiers == null)
+            return;
         foreach (var o in optimiers)
         {
             var optWeights = o.Weights;

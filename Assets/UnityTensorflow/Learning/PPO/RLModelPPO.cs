@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Accord;
 using Accord.Math;
+using Accord.Statistics;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 #if UNITY_EDITOR
@@ -110,16 +111,20 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             using (K.name_scope("SampleAction"))
             {
                 outputActualAction = K.standard_normal(K.shape(outputAction), DataType.Float) * K.sqrt(outputVariance) + outputAction;
+
+            }
+            using (K.name_scope("ActionProbs"))
+            {
                 actionProb = K.normal_probability(K.stop_gradient(outputActualAction), outputAction, outputVariance);
             }
-            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputActualAction, actionProb }, null, "ActionFunction");
+            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputActualAction, actionProb, outputAction, outputVariance }, null, "ActionFunction");
 
             var probInputs = new List<Tensor>(); probInputs.AddRange(allobservationInputs); probInputs.Add(outputActualAction);
             ActionProbabilityFunction = K.function(probInputs, new List<Tensor> { actionProb }, null, "ActionProbabilityFunction");
         }
         else
         {
-            
+
             ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
         }
 
@@ -127,7 +132,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
         if (trainingParams != null)
         {
             //training needed inputs
-            
+
             var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
             var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
             var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
@@ -144,9 +149,10 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             // action probability from input action
             Tensor outputEntropy;
             Tensor inputActionDiscrete = null;
-            using (K.name_scope("ActionProb"))
+
+            if (ActionSpace == SpaceType.continuous)
             {
-                if (ActionSpace == SpaceType.continuous)
+                using (K.name_scope("Entropy"))
                 {
                     var temp = K.mul(outputVariance, 2 * Mathf.PI * 2.7182818285);
                     temp = K.mul(K.log(temp), 0.5);
@@ -158,12 +164,14 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
                     {
                         outputEntropy = K.mean(temp, 0, false, name: "OutputEntropy");
                     }
-
-                    
                 }
-                else
+
+            }
+            else
+            {
+                using (K.name_scope("ActionProbAndEntropy"))
                 {
-                    inputActionDiscrete = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAction", dtype:DataType.Int32)[0];
+                    inputActionDiscrete = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAction", dtype: DataType.Int32)[0];
                     var onehotInputAction = K.one_hot(inputActionDiscrete, K.constant<int>(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
                     onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize });
                     outputEntropy = K.mean((-1.0f) * K.sum(outputAction * K.log(outputAction + 0.00000001f), axis: 1), 0);
@@ -190,12 +198,12 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
                 var p_opt_a = probRatio * inputAdvantage;
                 var p_opt_b = K.clip(probRatio, 1.0f - inputClipEpsilon, 1.0f + inputClipEpsilon) * inputAdvantage;
 
-                outputPolicyLoss = (-1f)*K.mean( K.mean(K.minimun(p_opt_a, p_opt_b)), name: "ClippedCurreogateLoss");
+                outputPolicyLoss = (-1f) * K.mean(K.mean(K.minimun(p_opt_a, p_opt_b)), name: "ClippedCurreogateLoss");
             }
             //final weighted loss
             var outputLoss = outputPolicyLoss + inputValuelossWeight * outputValueLoss;
             outputLoss = outputLoss - inputEntropyLossWeight * outputEntropy;
-            outputLoss = K.identity(outputLoss, "OutputLoss"); 
+            outputLoss = K.identity(outputLoss, "OutputLoss");
 
             //add inputs, outputs and parameters to the list
             List<Tensor> updateParameters = network.GetWeights();
@@ -208,7 +216,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             {
                 allInputs.AddRange(inputVisualTensors);
             }
-            if(ActionSpace == SpaceType.continuous)
+            if (ActionSpace == SpaceType.continuous)
             {
                 allInputs.Add(outputActualAction);
             }
@@ -216,7 +224,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             {
                 allInputs.Add(inputActionDiscrete);
             }
-            
+
             allInputs.Add(inputOldProb);
             allInputs.Add(inputTargetValue);
             allInputs.Add(inputOldValue);
@@ -292,6 +300,9 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
         {
             actions = outputAction;
             actionProbs = ((float[,])result[1].eval());
+            //var actionsMean = (float[,])(result[2].eval());
+            //var actionsVars = (float[])(result[3].eval());
+            //print("actual vars" + actions.GetColumn(0).Variance()+"," + actions.GetColumn(1).Variance() + "," + actions.GetColumn(2).Variance() + "," + actions.GetColumn(3).Variance());
         }
         else if (ActionSpace == SpaceType.discrete)
         {
@@ -437,7 +448,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel
             runningVariance = K.variable((Array)initialVariance, DataType.Float, "RunningVariance");
 
             var meanCurrentObs = K.mean(vectorInput, 0);
-            
+
             var newMean = runningMean + (meanCurrentObs - runningMean) / (stepCount + 1);
             var newVariance = runningVariance + (meanCurrentObs - newMean) * (meanCurrentObs - runningMean);
             var normalized = K.clip((vectorInput - runningMean) / K.sqrt(runningVariance / (stepCount + 1.0f)), -5.0f, 5.0f);

@@ -9,17 +9,10 @@ using KerasSharp.Backends;
 
 public struct TakeActionOutput
 {
-
-
-
-    // public Dictionary<Agent, float[]> outputAction;
-    // public Dictionary<Agent, float[]> allProbabilities; //used for RL
-    //public Dictionary<Agent, float> value;//use for RL
-     public float[] outputAction;
-     public float[] allProbabilities; //used for RL
-    public  float value;//use for RL
+    public float[] outputAction;
+    public float[] allProbabilities; //used for RL
+    public float value;//use for RL
     //public Dictionary<Agent, float[]> memory;
-
     //public Dictionary<Agent, string> textAction;
 }
 
@@ -127,8 +120,9 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets\testcheckpoint.bytes";
 
-    [ReadOnly]
+
     [SerializeField]
+    [Tooltip("Current steps of the trainer.")]
     protected int steps = 0;
 
 
@@ -154,7 +148,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
     protected virtual void FixedUpdate()
     {
-        if(BrainToTrain == null)
+        if (BrainToTrain == null)
         {
             Debug.LogError("Please assign this trainer to a Brain with CoreBrainInternalTrainable!");
         }
@@ -203,8 +197,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     }
 
 
-    public abstract Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
-    public abstract void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput);
+    public abstract Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
+    public abstract void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
     public abstract void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
     public abstract bool IsReadyUpdate();
     public abstract void UpdateModel();
@@ -219,7 +213,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         var fullPath = Path.GetFullPath(checkpointPath);
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
-        
+
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
         File.WriteAllBytes(fullPath, data);
         Debug.Log("Saved model checkpoint to " + fullPath);
@@ -259,12 +253,12 @@ public abstract class Trainer : MonoBehaviour, ITrainer
             pixels = 1;
         else
             pixels = 3;
-        float[,,] result = new float[ height, width, pixels];
-        float[] resultTemp = new float[ height * width * pixels];
+        float[,,] result = new float[height, width, pixels];
+        float[] resultTemp = new float[height * width * pixels];
         int wp = width * pixels;
 
         Color32[] cc = tex.GetPixels32();
-        for (int h = height-1; h >=0; h--)
+        for (int h = height - 1; h >= 0; h--)
         {
             for (int w = 0; w < width; w++)
             {
@@ -325,9 +319,9 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     public static float[,] CreateVectorInputBatch(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList)
     {
         int obsSize = currentInfo[agentList[0]].stackedVectorObservation.Count;
-        if(obsSize == 0)
+        if (obsSize == 0)
             return null;
-        var result = new float[agentList.Count,obsSize];
+        var result = new float[agentList.Count, obsSize];
 
         int i = 0;
         foreach (Agent agent in agentList)

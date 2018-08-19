@@ -63,7 +63,7 @@ public class DataBuffer : ISerializable
         {
             return dataList.GetLength(0);
         }
-
+        
     }
 
 

@@ -13,7 +13,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   learningRate: 0.005
   maxTotalSteps: 100000000
-  lossLogInterval: 4
   saveModelInterval: 10000
   rewardDiscountFactor: 0.99
   rewardGAEFactor: 0.95
@@ -24,6 +23,7 @@ MonoBehaviour:
   batchSize: 256
   bufferSizeForTrain: 5000
   numEpochPerTrain: 5
-  heuristicBufferSize: 0
-  extraBatchTFromHeuristicBuffer: 0
+  useHeuristicChance: 0.4
+  normalizeActionForAgent: 1
+  lossLogInterval: 4
   rewardLogInterval: 40

@@ -98,6 +98,14 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
             trainerInterface.UpdateModel();
         }
 
+        //clear the prev record if the agent is done
+        foreach (Agent agent in newAgentList)
+        {
+            if(newAgentInfos[agent].done || newAgentInfos[agent].maxStepReached)
+            {
+                currentInfo.Remove(agent);
+            }
+        }
 
     }
 
