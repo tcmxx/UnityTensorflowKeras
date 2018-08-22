@@ -22,7 +22,7 @@ namespace NWH
             string output = "";
             foreach (Sample s in samples)
             {
-                output += s.t + delimiter + s.d + Environment.NewLine;
+                output += s.x + delimiter + s.time + delimiter + s.y + Environment.NewLine;
             }
             if (string.IsNullOrEmpty(writePath))
                 writePath = defaultWritePath;
@@ -46,7 +46,7 @@ namespace NWH
                 string[] vs = lines[i].Trim().Split(',');
                 try
                 {
-                    Sample gs = new Sample(float.Parse(vs[1]), float.Parse(vs[0]));
+                    Sample gs = new Sample(float.Parse(vs[2]), vs[1], float.Parse(vs[0]));
                     sampleList.Add(gs);
                 }
                 catch { }

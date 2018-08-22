@@ -11,15 +11,7 @@ using NWH;
 public partial class Grapher : EditorWindow
 {
     private static List<string> replayFiles = new List<string>();
-    private static List<Queue<Sample>> replaySampleQueues = new List<Queue<Sample>>();
-
-    public static ReplayControls prevControl = ReplayControls.Stop;
-    public static ReplayControls replayControl = ReplayControls.Stop;
-    public enum ReplayControls
-    {
-        Play, Pause, Stop, Reverse, Forward, Replay
-    }
-
+    
     private void ReplayInit()
     {
         // No replay files, ask user to add some
@@ -50,16 +42,13 @@ public partial class Grapher : EditorWindow
                             ch = AddChannel();
                             ch.name = name;
                             ch.color = new Color(float.Parse(hs[2]), float.Parse(hs[3]), float.Parse(hs[4]), 1f);
-                            ch.TimeScale = GraphSettings.HorizontalResolution>0? GraphSettings.HorizontalResolution: TimeKeeper.Time;
-
                             // Self get
                             ch.verticalResolution = ch.verticalResolution;
                             ch.LogToFile = false;
-                            ch.LogToConsole = false;
 
                             foreach (Sample g in gs)
                             {
-                                ch.Enqueue(g.d, g.t);
+                                ch.Enqueue(g.y, g.time,g.x);
                             }
                         }
                     }
@@ -75,22 +64,7 @@ public partial class Grapher : EditorWindow
             }
         }
     }
-
-    private void UpdateReplay()
-    {
-        if (prevControl == ReplayControls.Stop && replayControl != ReplayControls.Stop)
-        {
-            TimeKeeper.Reset();
-            foreach(Channel ch in channels)
-            {
-                ch.firstVisiblePointIndex = 0;
-                ch.lastVisiblePointIndex = 0;
-            }
-        }
-
-        prevControl = replayControl;
-    }
-
+    
     private void OpenFiles()
     {
         List<string> files = FileHandler.BrowserOpenFiles();
@@ -99,10 +73,6 @@ public partial class Grapher : EditorWindow
         if (files != null)
         {
             replayFiles.AddRange(files);
-        }
-        else
-        {
-            replayControl = ReplayControls.Stop;
         }
     }
 }

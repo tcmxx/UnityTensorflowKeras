@@ -20,8 +20,12 @@ public class RLNetowrkACHierarchy : UnityNetwork
 
     public List<SimpleDenseLayerDef> actorLowlevelLayers;
 
-    public float outputLayerInitialScale = 0.1f;
-    public bool outputLayerUseBias = true;
+    public float actorOutputLayerInitialScale = 0.1f;
+    public bool actorOutputLayerBias = true;
+
+    public float criticOutputLayerInitialScale = 0.1f;
+    public bool criticOutputLayerBias = true;
+
 
     protected List<Tensor> weightsLowlevel;
     protected List<Tensor> weightsHighLevel;
@@ -69,7 +73,7 @@ public class RLNetowrkACHierarchy : UnityNetwork
         //outputs
         using (Current.K.name_scope("ActorOutput"))
         {
-            var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: outputLayerUseBias, kernel_initializer: new GlorotUniform(scale: outputLayerInitialScale));
+            var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
             outAction = actorOutput.Call(encodedAllActor)[0];
             if (actionSpace == SpaceType.discrete)
             {
@@ -81,7 +85,7 @@ public class RLNetowrkACHierarchy : UnityNetwork
 
         using (Current.K.name_scope("CriticOutput"))
         {
-            var criticOutput = new Dense(units: 1, activation: null, use_bias: outputLayerUseBias, kernel_initializer: new GlorotUniform(scale: outputLayerInitialScale));
+            var criticOutput = new Dense(units: 1, activation: null, use_bias: criticOutputLayerBias, kernel_initializer: new GlorotUniform(scale: criticOutputLayerInitialScale));
             outValue = criticOutput.Call(encodedAllCritic)[0];
             weightsHighLevel.AddRange(criticOutput.weights);
         }
@@ -93,7 +97,7 @@ public class RLNetowrkACHierarchy : UnityNetwork
             {
                 logSigmaSq = Current.K.variable((new Constant(0)).Call(new int[] { outActionSize }, DataType.Float), name: "PPO.log_sigma_square");
                 outVariance = Current.K.exp(logSigmaSq);
-                weightsLowlevel.Add(logSigmaSq);
+                weightsHighLevel.Add(logSigmaSq);
             }
         }
         else

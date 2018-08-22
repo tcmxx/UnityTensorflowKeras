@@ -7,13 +7,14 @@ namespace NWH
     [System.Serializable]
     public class Sample
     {
-        public float t;
-        public float d;
-
-        public Sample(float d, float t)
+        public string time;
+        public float y;
+        public float x;
+        public Sample(float y, string time, float x)
         {
-            this.t = t;
-            this.d = d;
+            this.time = time;
+            this.y = y;
+            this.x = x;
         }
     }
 }

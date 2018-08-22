@@ -100,7 +100,14 @@ public class TrainerPPO : Trainer
         base.FixedUpdate();
     }
 
-
+    public override void IncrementStep()
+    {
+        base.IncrementStep();
+        if(GetStep() % parametersPPO.logInterval == 0 && GetStep() != 0)
+        {
+            stats.LogAllCurrentData(GetStep());
+        }
+    }
     public override void ResetTrainer()
     {
         base.ResetTrainer();
@@ -231,8 +238,8 @@ public class TrainerPPO : Trainer
                 //update stats if the agent is not using heuristic
                 if (agentNewInfo.done || agentNewInfo.maxStepReached)
                 {
-                    stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
-                    stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
+                    stats.AddData("accumulatedRewards", accumulatedRewards[agent]);
+                    stats.AddData("episodeSteps", episodeSteps[agent]);
 
 
                     accumulatedRewards[agent] = 0;
@@ -388,10 +395,10 @@ public class TrainerPPO : Trainer
         }
         
         //log the stats
-        stats.AddData("loss", loss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-        stats.AddData("policyLoss", policyLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-        stats.AddData("valueLoss", valueLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-        stats.AddData("entropy", entropy / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
+        stats.AddData("loss", loss / parametersPPO.numEpochPerTrain);
+        stats.AddData("policyLoss", policyLoss / parametersPPO.numEpochPerTrain);
+        stats.AddData("valueLoss", valueLoss / parametersPPO.numEpochPerTrain);
+        stats.AddData("entropy", entropy / parametersPPO.numEpochPerTrain);
         dataBuffer.ClearData();
     }
     

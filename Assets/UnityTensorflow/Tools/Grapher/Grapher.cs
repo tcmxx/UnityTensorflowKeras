@@ -58,7 +58,6 @@ public partial class Grapher : EditorWindow
 
         // Add additional update functions
         EditorApplication.update += Update;
-        EditorApplication.update += UpdateReplay;
         EditorApplication.update += TimeKeeper.Update;
     }
 
@@ -66,7 +65,6 @@ public partial class Grapher : EditorWindow
     {
         // Remove additional update functions
         EditorApplication.update -= Update;
-        EditorApplication.update -= UpdateReplay;
         EditorApplication.update -= TimeKeeper.Update;
     }
 
@@ -112,12 +110,6 @@ public partial class Grapher : EditorWindow
                 }
             }
         }
-
-        // Log to console if playing
-        if (EditorApplication.isPlaying || replayControl == ReplayControls.Play)
-        {
-            LogToConsole();
-        }
     }
 
     void OnGUI()
@@ -161,23 +153,7 @@ public partial class Grapher : EditorWindow
         // Force GUI repaint every frame
         Repaint();
     }
-
-
-    public void LogToConsole()
-    {
-        // Log to console
-        if (!channels.All(x => x.LogToConsole == false))
-        {
-            foreach (Channel ch in channels)
-            {
-                if (ch.LogToConsole && ch.newestSample != null) consoleString += " " + ch.name + " = " + FloatToCompact(ch.newestSample.d) + "\t | ";
-            }
-            consoleString += "@ " + FloatToCompact(TimeKeeper.Time) + "s";
-            Debug.Log(consoleString);
-        }
-        consoleString = "";
-    }
-
+    
 
     /// <summary>
     /// Convert world position to graph position.
@@ -220,10 +196,6 @@ public partial class Grapher : EditorWindow
         try
         {
             channels.Clear();
-            replayControl = ReplayControls.Stop;
-            replaySampleQueues.Clear();
-            replayFiles.Clear();
-            TimeKeeper.Reset();
         }
         catch { }
     }
@@ -243,7 +215,7 @@ public partial class Grapher : EditorWindow
     /// <summary>
     /// Main Log function.
     /// </summary>
-    public static void Log(object obj, string name, Color color, float time)
+    public static void Log(object obj, string name, Color color, float x, string datetimeString)
     {
         // Check for vectors
         Type type = obj.GetType();
@@ -251,24 +223,24 @@ public partial class Grapher : EditorWindow
         if(type == typeof(Vector2))
         {
             Vector2 v = (Vector2)obj;
-            Log(v.x, name + " X", color, time);
-            Log(v.y, name + " Y", color, time);
+            Log(v.x, name + " X", color,x);
+            Log(v.y, name + " Y", color,x);
             return;
         }
         else if (type == typeof(Vector3))
         {
             Vector3 v = (Vector3)obj;
-            Log(v.x, name + " X", color, time);
-            Log(v.y, name + " Y", color, time);
-            Log(v.z, name + " Z", color, time);
+            Log(v.x, name + " X", color, x, datetimeString);
+            Log(v.y, name + " Y", color, x, datetimeString);
+            Log(v.z, name + " Z", color, x, datetimeString);
             return;
         }
         else if (type == typeof(Vector4))
         {
             Vector3 v = (Vector3)obj;
-            Log(v.x, name + " X", color, time);
-            Log(v.y, name + " Y", color, time);
-            Log(v.z, name + " Z", color, time);
+            Log(v.x, name + " X", color, x, datetimeString);
+            Log(v.y, name + " Y", color, x, datetimeString);
+            Log(v.z, name + " Z", color, x, datetimeString);
             return;
         }
         else if (typeof(IEnumerable).IsAssignableFrom(type))
@@ -277,7 +249,7 @@ public partial class Grapher : EditorWindow
             int n = 0;
             foreach(object item in enumerable)
             {
-                Log(item, name + "[" + n + "]", color, time);
+                Log(item, name + "[" + n + "]", color, x, datetimeString);
                 n++;
             }
             return;
@@ -286,21 +258,27 @@ public partial class Grapher : EditorWindow
         float d = ToFloat(obj);
 
         Channel ch = null;
+
+        float maxX = 0, minX = 0;
+        foreach(var c in channels)
+        {
+            maxX = Mathf.Max(c.MaxX, maxX);
+            minX = Mathf.Min(c.MinX, minX);
+        }
         if ((ch = channels.Find(i => i.name == name)) == null)
         {
             ch = AddChannel();
             ch.name = name;
             ch.color = color;
             SetChannel(color, name);
-            ch.TimeScale = GraphSettings.HorizontalResolution > 0 ? GraphSettings.HorizontalResolution : TimeKeeper.Time;
+            ch.XScale = GraphSettings.HorizontalResolution > 0 ? GraphSettings.HorizontalResolution : (maxX - minX);
 
             // Self get
             ch.verticalResolution = ch.verticalResolution;
             ch.LogToFile = ch.LogToFile;
-            ch.LogToConsole = ch.LogToConsole;
         }
 
-        if (EditorApplication.isPlayingOrWillChangePlaymode || replayControl == ReplayControls.Play)
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
         {
             if (obj != null)
             {
@@ -311,37 +289,25 @@ public partial class Grapher : EditorWindow
                 else
                 {
                     ch.newestObj = obj;
-                    ch.Enqueue(d, time);
+                    ch.Enqueue(d, datetimeString, x);
                 }
                 ch.lastFrame = frameCounter;
             }
         }
     }
 
-    public static void Log(object obj, string name, float time)
+    public static void Log(object obj, string name, float x)
     {
         Color chColor = GetChannelColor(name);
         SetChannel(chColor, name);
-        Log(obj, name, chColor, time);
+        Log(obj, name, chColor,x,TimeKeeper.DateTimeString);
     }
 
-    public static void Log(object obj, string name, Color color)
+    public static void Log(object obj, string name, Color color, float x)
     {
-        Log(obj, name, color, TimeKeeper.Time);
+        Log(obj, name, color, x, TimeKeeper.DateTimeString);
     }
-
-    public static void Log(object value, string name)
-    {
-        Color color = GetChannelColor(name);
-        SetChannel(color, name);
-        Log(value, name, color);
-    }
-
-    public static void Log(object value, int id)
-    {
-        string name = "Var " + id;
-        Log(value, name);
-    }
+    
 
     /// <summary>
     /// Called when Editor Application is stopped.
@@ -506,25 +472,18 @@ public partial class Grapher{
     /// <summary>
     /// Main Log function.
     /// </summary>
-    public static void Log(object obj, string name, Color color, float time)
+    public static void Log(object obj, string name, Color color, float x, string datetimeString)
     {
     }
 
-    public static void Log(object obj, string name, float time)
+    public static void Log(object obj, string name, float x)
     {
     }
 
-    public static void Log(object obj, string name, Color color)
+    public static void Log(object obj, string name, Color color, float x)
     {
     }
 
-    public static void Log(object value, string name)
-    {
-    }
-
-    public static void Log(object value, int id)
-    {
-    }
 }
 
 #endif

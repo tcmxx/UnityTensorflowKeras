@@ -29,7 +29,6 @@ public class TrainerParamsPPO : TrainerParams
     [Tooltip(" Unity's impelemntation does clip the normalize the final acion for continuous space before sending to agents: clip(action,-3,3)/3.")]
     public float finalActionDownscale = 3;
     [Header("Log related")]
-    public int lossLogInterval = 1;
-    public int rewardLogInterval = 10;
+    public int logInterval = 1000;
 
 }

@@ -118,7 +118,7 @@ public class NeuralEvolutionTest : MonoBehaviour
             float aveRewards = 0;
             for (int i = 0; i < evaluationLastRewardsNum; ++i)
             {
-                aveRewards += rewards[rewards.Count - 1 - i];
+                aveRewards += rewards[rewards.Count - 1 - i].Item2;
             }
             aveRewards = aveRewards / evaluationLastRewardsNum;
             samples[currentEvaluationIndex].objectiveFuncVal = aveRewards;

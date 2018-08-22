@@ -31,7 +31,6 @@ public interface ISupervisedLearningModel
     /// <returns>(means,vars). If the supervised learning model does not support var, the second can be null</returns>
     ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation);
     float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions);
-    bool HasVariance();
 }
 
 /// <summary>
@@ -122,10 +121,6 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     }
 
 
-    public bool HasVariance()
-    {
-        return hasVariance;
-    }
     /// <summary>
     /// 
     /// </summary>

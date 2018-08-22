@@ -103,7 +103,7 @@ public abstract class LearningModelBase : MonoBehaviour
         Current.K.try_initialize_variables();
         if (checkpointToLoad != null)
         {
-            RestoreCheckpoint(checkpointToLoad.bytes);
+            RestoreCheckpoint(checkpointToLoad.bytes,true);
         }
         Initialized = true;
         TrainingEnabled = enableTraining;
@@ -235,8 +235,20 @@ public abstract class LearningModelBase : MonoBehaviour
             var optWeights = o.Weights;
             foreach (var w in optWeights)
             {
-                Debug.Assert(values.ContainsKey(w.name), "Value of " + w.name + " can not be found in data. Set optimizer weights failed.");
+                if (!values.ContainsKey(w.name))
+                {
+                    Debug.LogWarning("Value of " + w.name + " can not be found in data. Set optimizer weights failed.");
+                    continue;
+                }
+                
+                if(w.int_shape.Aggregate((x, y) => x * y) != values[w.name].Length)
+                {
+                    Debug.LogWarning("Value of " + w.name + " does not match Tensor shape. Set optimizer weights failed.");
+                    continue;
+                }
                 Current.K.set_value(w, values[w.name]);
+                    
+                
             }
         }
     }
@@ -262,7 +274,11 @@ public abstract class LearningModelBase : MonoBehaviour
         List<Tensor> allModelWeights = GetAllModelWeights();
         foreach (var w in allModelWeights)
         {
-            Debug.Assert(values.ContainsKey(w.name), "Value of " + w.name + " can not be found in data. Set model weights failed.");
+            if (!values.ContainsKey(w.name))
+            {
+                Debug.LogWarning("Value of " + w.name + " can not be found in data. Value not set.");
+                continue;
+            }
             Current.K.set_value(w, values[w.name]);
         }
 
@@ -272,7 +288,7 @@ public abstract class LearningModelBase : MonoBehaviour
     /// set all weights including optimzierss and network's from a input byte array. 
     /// </summary>
     /// <param name="data">checkpoint data. It should be the one that is obtained from <see cref="SaveCheckpoint"/>)</param>
-    public virtual void RestoreCheckpoint(byte[] data)
+    public virtual void RestoreCheckpoint(byte[] data, bool modelOnly = false)
     {
         //deserialize the data
         var mStream = new MemoryStream(data);
@@ -280,33 +296,12 @@ public abstract class LearningModelBase : MonoBehaviour
 
         var deserializedData = binFormatter.Deserialize(mStream);
 
-        if (deserializedData is List<float[]>)
-        {
-            var floatData = (List<float[]>)deserializedData;
-
-
-            List<Array> arrayData = floatData.ConvertAll(t => (Array)t);
-            var optimizerWeightLength = GetAllOptimizerWeights().Count;   //used for initialize the graph.
-            var modelWeigthLength = GetAllModelWeights().Count;      //get the length of model weights and training param weights
-
-            if ((arrayData.Count >= modelWeigthLength && optimizerWeightLength == 0) || arrayData.Count == modelWeigthLength + optimizerWeightLength)
-            {
-
-                SetAllModelWeights(arrayData.GetRange(0, modelWeigthLength));
-                if (arrayData.Count == modelWeigthLength + optimizerWeightLength)
-                {
-                    SetAllOptimizerWeights(arrayData.GetRange(modelWeigthLength, optimizerWeightLength));
-                }
-            }
-            else
-            {
-                Debug.LogError("Saved data to load not match the model!");
-            }
-        }else if(deserializedData is Dictionary<string, Array>)
+        if(deserializedData is Dictionary<string, Array>)
         {
             Dictionary<string, Array> dicData = deserializedData as Dictionary<string, Array>;
             SetAllModelWeights(dicData);
-            SetAllOptimizerWeights(dicData);
+            if(!modelOnly)
+                SetAllOptimizerWeights(dicData);
         }
         else
         {

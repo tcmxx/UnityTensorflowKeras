@@ -15,7 +15,7 @@ public class TrainerMimic : Trainer
 
     [Tooltip("Whether collect data from Decision for supervised learning?")]
     public bool isCollectingData = true;
-
+    public string trainingDataSaveFileName = @"trainingData.bytes";
     StatsLogger stats;
 
     protected DataBuffer dataBuffer;
@@ -100,9 +100,14 @@ public class TrainerMimic : Trainer
     {
         base.IncrementStep();
         dataBufferCount = dataBuffer.CurrentCount;
-        if (GetStep() % parametersMimic.saveModelInterval == 0)
+        if (GetStep() % parametersMimic.saveModelInterval == 0 && GetStep() != 0)
         {
             SaveTrainingData();
+        }
+
+        if (GetStep() % parametersMimic.logInterval == 0 && GetStep() != 0)
+        {
+            stats.LogAllCurrentData(GetStep());
         }
     }
 
@@ -172,7 +177,7 @@ public class TrainerMimic : Trainer
 
         if (agentNumWithDecision > 0)
         {
-            stats.AddData("action difference", actionDiff/ agentNumWithDecision, parametersMimic.actionDiffLogInterval);
+            stats.AddData("action difference", actionDiff/ agentNumWithDecision);
         }
 
         return result;
@@ -213,7 +218,7 @@ public class TrainerMimic : Trainer
             loss += temoLoss;
         }
 
-        stats.AddData("loss", loss / parametersMimic.numIterationPerTrain, parametersMimic.lossLogInterval);
+        stats.AddData("loss", loss / parametersMimic.numIterationPerTrain);
     }
 
 
@@ -222,15 +227,18 @@ public class TrainerMimic : Trainer
 
     public void SaveTrainingData()
     {
+        if (string.IsNullOrEmpty(trainingDataSaveFileName))
+        {
+            Debug.Log("trainingDataSaveFileName empty. No training data saved.");
+            return;
+        }
         var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
 
         binFormatter.Serialize(mStream, dataBuffer);
         var data = mStream.ToArray();
-
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_trainingdata.bytes"));
+        
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, trainingDataSaveFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
 
@@ -241,11 +249,12 @@ public class TrainerMimic : Trainer
     }
     public void LoadTrainingData()
     {
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string savepath = Path.Combine(dir, file + "_trainingdata.bytes");
-
-        string fullPath = Path.GetFullPath(savepath);
+        if (string.IsNullOrEmpty(trainingDataSaveFileName))
+        {
+            Debug.Log("trainingDataSaveFileName empty. No training data loaded.");
+            return;
+        }
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, trainingDataSaveFileName));
 
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);

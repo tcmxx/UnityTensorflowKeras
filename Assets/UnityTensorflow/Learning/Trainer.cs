@@ -118,8 +118,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     [ShowAllPropertyAttr]
     public TrainerParams parameters;
     public bool continueFromCheckpoint = true;
-    public string checkpointPath = @"Assets\testcheckpoint.bytes";
-
+    public string checkpointPath = @"Assets";
+    public string checkpointFileName = @"testcheckpoint.bytes";
 
     [SerializeField]
     [Tooltip("Current steps of the trainer.")]
@@ -209,8 +209,13 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     /// </summary>
     public void SaveModel()
     {
+        if (string.IsNullOrEmpty(checkpointFileName))
+        {
+            Debug.Log("checkpointFileName empty. model not saved.");
+            return;
+        }
         var data = modelRef.SaveCheckpoint();
-        var fullPath = Path.GetFullPath(checkpointPath);
+        var fullPath = Path.GetFullPath(Path.Combine(checkpointPath, checkpointFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
 
@@ -224,7 +229,12 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     /// </summary>
     public void LoadModel()
     {
-        string fullPath = Path.GetFullPath(checkpointPath);
+        if (string.IsNullOrEmpty(checkpointFileName))
+        {
+            Debug.Log("checkpointFileName empty. model not loaded.");
+            return;
+        }
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, checkpointFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))

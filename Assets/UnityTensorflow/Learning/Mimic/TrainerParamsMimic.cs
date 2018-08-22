@@ -19,6 +19,5 @@ public class TrainerParamsMimic : TrainerParams
     public int maxBufferSize = 10000;
     
     [Header("Log related")]
-    public int lossLogInterval = 1;
-    public int actionDiffLogInterval = 100;
+    public int logInterval = 1000;
 }

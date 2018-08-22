@@ -18,7 +18,7 @@ namespace NWH
         public float tagY;
         public float tagX;
 
-        private float timeScale = 5;
+        private float xScale = 5;
         private float yMax;
         private float yMin;
         public int sampleNo = 0;
@@ -28,28 +28,13 @@ namespace NWH
         public int lastFrame = 0;
 
         // Sliders
-        public float timeScaleSlider;
         public float rangeSlider;
 
         // Marker
         public Vector2 pointAtMousePosition;
-
-        public int lastVisiblePointIndex;
-        public int firstVisiblePointIndex;
-
-        public Sample newestSample;
+        
+        public Sample newestSample { get; private set; } = null;
         public object newestObj;
-
-        // Scale
-        public float xScale;
-        public float yScale;
-
-        public float xOffset;
-        public float yOffset;
-
-        // Replay
-        public bool replay = false;
-        public bool replayEnded = false;
 
         public void Init()
         {
@@ -85,21 +70,7 @@ namespace NWH
                 EditorPrefs.SetBool(key, value);
             }
         }
-
-        public bool LogToConsole
-        {
-            get
-            {
-                string key = "Grapher" + name + "LogToConsole";
-                return EditorPrefs.HasKey(key) ? EditorPrefs.GetBool(key, true) 
-                    : GraphSettings.DefaultLogToConsole == 1 ? true : false;
-            }
-            set
-            {
-                string key = "Grapher" + name + "LogToConsole";
-                EditorPrefs.SetBool(key, value);
-            }
-        }
+        
 
         public bool AutoScale
         {
@@ -115,15 +86,21 @@ namespace NWH
             }
         }
 
-        public float TimeScale
+        public float MaxX { get; private set; } = 0;
+        public float MinX { get; private set; } = 0;
+
+        /// <summary>
+        /// X scale to draw
+        /// </summary>
+        public float XScale
         {
             get
             {
-                return timeScale;
+                return xScale;
             }
             set
             {
-                timeScale = Mathf.Clamp(value, 0.5f, 3600f);
+                xScale = Mathf.Max (value, 0.5f);
             }
         }
 
@@ -150,9 +127,13 @@ namespace NWH
             this.id = id;
         }
 
-        public void Enqueue(float x, float t)
+        public void Enqueue(float data, string dateTimeString, float x)
         {
-            Sample sample = new Sample(x, t);
+
+            Sample sample = new Sample(data, dateTimeString, x);
+
+            if (newestSample == null || sample.x > newestSample.x)
+                newestSample = sample;
 
             if (rawSampleList == null) rawSampleList = new List<Sample>();
             rawSampleList.Add(sample);
@@ -161,18 +142,19 @@ namespace NWH
             // Determine max and min
             if (sampleNo <= 2f)
             {
-                yMax = x;
-                yMin = x;
+                yMax = data;
+                yMin = data;
             }
-            else if (x > yMax)
+            else if (data > yMax)
             {
-                yMax = x;
+                yMax = data;
             }
-            else if (x < yMin)
+            else if (data < yMin)
             {
-                yMin = x;
+                yMin = data;
             }
-
+            MaxX = Mathf.Max(MaxX, x);
+            MinX = Mathf.Max(MinX, x);
             // Get auto range
             autoScaleResolution = Mathf.Max(Mathf.Abs(yMin), Mathf.Abs(yMax)) * 2f;
         }
@@ -191,9 +173,11 @@ namespace NWH
 
         public void ResetSamples()
         {
+            MaxX = 0;
+            MinX = 0;
             rawSampleList.Clear();
             sampleNo = 0;
-            timeScale = GraphSettings.HorizontalResolution;
+            xScale = GraphSettings.HorizontalResolution;
             verticalResolution = GraphSettings.DefaultVerticalResolution;
         }
     }

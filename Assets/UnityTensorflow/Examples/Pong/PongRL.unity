@@ -202,10 +202,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 1604954274}
-  isTraining: 0
+  isTraining: 1
   parameters: {fileID: 11400000, guid: ceae9610b797404448805d039594796b, type: 2}
   continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\Pong\Data\PongRLcheckpoint.bytes
+  checkpointFileName: testcheckpoint.bytes
   steps: 0
 --- !u!1 &516214003
 GameObject:
@@ -599,12 +600,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80885700eae055d47977cc84fd00de74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: e618062dea0e5d4469dd1ac7bebf274e, type: 2}
   optimizer:
     optimizerType: 0
-    parameterList: []
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
+  useInputNormalization: 0
+  mode: 0
 --- !u!114 &1619319147
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -210,7 +210,7 @@ public class TrainerNeuralEvolution : Trainer
         }
         aveRewards = aveRewards / rewardsOfCurrentChild.Count;
         rewardsOfCurrentChild.Clear();
-        stats.AddData("accumulatedRewards", aveRewards, parametersNE.lossLogInterval);
+        stats.AddData("accumulatedRewards", aveRewards);
 
 
         samples[currentEvaluationIndex].objectiveFuncVal = aveRewards;

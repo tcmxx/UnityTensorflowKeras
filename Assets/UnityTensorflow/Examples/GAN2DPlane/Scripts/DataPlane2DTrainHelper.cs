@@ -19,6 +19,8 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
     public float generatorLR = 0.001f;
     public float discriminatorLR = 0.001f;
 
+    public int tryGanInterval = 50;
+    protected int counter = 0;
 
     // Update is called once per frame
     void Update()
@@ -28,6 +30,12 @@ public class DataPlane2DTrainHelper : MonoBehaviour {
             modelRef.DiscriminatorLR = discriminatorLR;
             modelRef.GeneratorLR = generatorLR;
             TrainOnce(10);
+            counter++;
+            counter = counter % tryGanInterval;
+            if(counter == 0)
+            {
+                UseGAN(800);
+            }
         }
 
 
