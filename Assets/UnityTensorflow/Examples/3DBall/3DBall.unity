@@ -633,6 +633,7 @@ MonoBehaviour:
     - 0.00000001
     - 0
   useInputNormalization: 1
+  mode: 0
 --- !u!114 &667765197
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1048,7 +1049,8 @@ MonoBehaviour:
   isTraining: 0
   parameters: {fileID: 11400000, guid: 2739dacb167d7df489bcedea5510504d, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\3DBall\3DBallCheckpoint.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\3DBall
+  checkpointFileName: 3DBallCheckpoint.bytes
   steps: 0
 --- !u!1 &1583402087
 GameObject:

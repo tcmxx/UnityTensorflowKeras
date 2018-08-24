@@ -40,6 +40,8 @@ public class FieldOverrideDrawer : PropertyDrawer
 
 
         var obj = fieldInfo.GetValue(property.serializedObject.targetObject);
+        if (obj == null)
+            return;
         TrainerParamOverride.FieldOverride ov = obj as TrainerParamOverride.FieldOverride;
         if (obj.GetType().IsArray || obj.GetType() == typeof(List<TrainerParamOverride.FieldOverride>))
         {
@@ -84,6 +86,8 @@ public class FieldOverrideDrawer : PropertyDrawer
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         var obj = fieldInfo.GetValue(property.serializedObject.targetObject);
+        if (obj == null)
+            return 0;
         TrainerParamOverride.FieldOverride ov = obj as TrainerParamOverride.FieldOverride;
         if (obj.GetType().IsArray || obj.GetType() == typeof(List<TrainerParamOverride.FieldOverride>))
         {

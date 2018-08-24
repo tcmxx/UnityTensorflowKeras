@@ -427,7 +427,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c173384f130100d4bbe0b2067953a02c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 6d9a02d5cb79c714f9257f03428caa9f, type: 2}
   optimizer:
@@ -544,9 +544,11 @@ MonoBehaviour:
   isTraining: 0
   parameters: {fileID: 11400000, guid: 2891adc9117296a4faec323f41fa9afb, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardSLAndMAES-MultiShot.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data
+  checkpointFileName: BilliardSLAndMAES-MultiShot.bytes
   steps: 0
   isCollectingData: 1
+  trainingDataSaveFileName: BilliardSLAndMAES-MultiShot_TrainingData.bytes
   dataBufferCount: 0
 --- !u!4 &949524765
 Transform:

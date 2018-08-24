@@ -240,15 +240,18 @@ public abstract class LearningModelBase : MonoBehaviour
                     Debug.LogWarning("Value of " + w.name + " can not be found in data. Set optimizer weights failed.");
                     continue;
                 }
-                
-                if(w.int_shape.Aggregate((x, y) => x * y) != values[w.name].Length)
+
+                if ((w.int_shape.Length == 0 && values[w.name].Length == 1) || w.int_shape.Aggregate((x, y) => x * y) == values[w.name].Length)
+                {
+                    Current.K.set_value(w, values[w.name]);
+                }
+                else
                 {
                     Debug.LogWarning("Value of " + w.name + " does not match Tensor shape. Set optimizer weights failed.");
                     continue;
                 }
-                Current.K.set_value(w, values[w.name]);
-                    
-                
+
+
             }
         }
     }
@@ -285,15 +288,15 @@ public abstract class LearningModelBase : MonoBehaviour
     }
 
     /// <summary>
-    /// set all weights including optimzierss and network's from a input byte array. 
+    /// Load the data s dictionary and set the model/optimizer weights using that.
     /// </summary>
-    /// <param name="data">checkpoint data. It should be the one that is obtained from <see cref="SaveCheckpoint"/>)</param>
-    public virtual void RestoreCheckpoint(byte[] data, bool modelOnly = false)
+    /// <param name="data"></param>
+    /// <param name="modelOnly"></param>
+    protected void RestoreCheckpoint(byte[] data, bool modelOnly = false)
     {
         //deserialize the data
         var mStream = new MemoryStream(data);
         var binFormatter = new BinaryFormatter();
-
         var deserializedData = binFormatter.Deserialize(mStream);
 
         if(deserializedData is Dictionary<string, Array>)
@@ -308,30 +311,14 @@ public abstract class LearningModelBase : MonoBehaviour
             Debug.LogError("Not recognized datatype to restoed from");
         }
     }
+    
 
     /// <summary>
     /// get the models all weights,including neural network's and optimziers to a byte array. 
     /// </summary>
     /// <returns>the data</returns>
-    public virtual byte[] SaveCheckpoint()
+    public virtual Dictionary<string, Array> SaveCheckpoint()
     {
-        /*
-        var allmodelweights = GetAllModelWeights();
-        var test = allmodelweights.Select(t => t.eval()).ToList();
-        List<Array> data = GetAllModelWeights().Select(t => (Array)t.eval()).ToList();
-        data.AddRange(GetAllOptimizerWeights());
-
-        List<float[]> flattenedData = new List<float[]>();
-        foreach (var d in data)
-        {
-            flattenedData.Add(d.FlattenAndConvertArray<float>());
-        }
-
-        var binFormatter = new BinaryFormatter();
-        var mStream = new MemoryStream();
-        binFormatter.Serialize(mStream, flattenedData);
-        return mStream.ToArray();*/
-
         List<Tensor> allWeights = new List<Tensor>();
         allWeights.AddRange(GetAllModelWeights());
         allWeights.AddRange(GetAllOptimizerWeights());
@@ -361,10 +348,10 @@ public abstract class LearningModelBase : MonoBehaviour
                 saveData[w.name] = flattenedData;
             }
         }
-        var binFormatter = new BinaryFormatter();
+        /*var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
-        binFormatter.Serialize(mStream, saveData);
-        return mStream.ToArray();
+        binFormatter.Serialize(mStream, saveData);*/
+        return saveData;
     }
 
 }

@@ -6,6 +6,7 @@ using Accord.Math;
 using MLAgents;
 using System.IO;
 using KerasSharp.Backends;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public struct TakeActionOutput
 {
@@ -120,6 +121,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     public bool continueFromCheckpoint = true;
     public string checkpointPath = @"Assets";
     public string checkpointFileName = @"testcheckpoint.bytes";
+    private readonly string stepsSavingKey = "UnityTrainerSteps";
 
     [SerializeField]
     [Tooltip("Current steps of the trainer.")]
@@ -214,14 +216,21 @@ public abstract class Trainer : MonoBehaviour, ITrainer
             Debug.Log("checkpointFileName empty. model not saved.");
             return;
         }
-        var data = modelRef.SaveCheckpoint();
+        var dataDic = modelRef.SaveCheckpoint();
+        dataDic[stepsSavingKey] = new int[] { steps };
+
+        //serailzie the data and save it to path
+        var binFormatter = new BinaryFormatter();
+        var mStream = new MemoryStream();
+        binFormatter.Serialize(mStream, dataDic);
+        byte[] data = mStream.ToArray();
         var fullPath = Path.GetFullPath(Path.Combine(checkpointPath, checkpointFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
 
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
         File.WriteAllBytes(fullPath, data);
-        Debug.Log("Saved model checkpoint to " + fullPath);
+        Debug.Log("Checkpoint saved to " + fullPath);
     }
 
     /// <summary>
@@ -243,8 +252,27 @@ public abstract class Trainer : MonoBehaviour, ITrainer
             return;
         }
         var bytes = File.ReadAllBytes(fullPath);
-        modelRef.RestoreCheckpoint(bytes);
-        Debug.Log("Model loaded  from checkpoint " + fullPath);
+        var mStream = new MemoryStream(bytes);
+        var binFormatter = new BinaryFormatter();
+        var deserializedData = binFormatter.Deserialize(mStream);
+        if (deserializedData is Dictionary<string, Array>)
+        {
+            var dataDic = deserializedData as Dictionary<string, Array>;
+            modelRef.SetAllModelWeights(dataDic);
+            modelRef.SetAllOptimizerWeights(dataDic);
+            if (dataDic.ContainsKey(stepsSavingKey))
+            {
+                steps = (int)dataDic[stepsSavingKey].GetValue(0);
+            }
+            Debug.Log("Checkpoint loaded from " + fullPath);
+        }
+        else
+        {
+            Debug.LogError("Not recognized datatype to restoed from");
+        }
+
+        //load the datas for trainer
+
     }
 
 

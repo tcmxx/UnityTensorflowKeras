@@ -770,7 +770,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80885700eae055d47977cc84fd00de74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 0d4457cfcce2a624d9e661e4e79a870b, type: 2}
   optimizer:
@@ -781,6 +781,8 @@ MonoBehaviour:
     - 0.999
     - 0.00000001
     - 0
+  useInputNormalization: 0
+  mode: 0
 --- !u!1 &824392021
 GameObject:
   m_ObjectHideFlags: 0
@@ -860,7 +862,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useDecision: 0
-  useMAESParamsFromAgent: 1
   useHeuristic: 1
   log: 0
   logInterval: 20
@@ -1621,7 +1622,8 @@ MonoBehaviour:
   isTraining: 0
   parameters: {fileID: 11400000, guid: 063d746d40cfc3f4fa8e859ecf679eda, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardRL-OneShot.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data
+  checkpointFileName: BilliardRL-OneShot.bytes
   steps: 0
 --- !u!4 &1606815089 stripped
 Transform:

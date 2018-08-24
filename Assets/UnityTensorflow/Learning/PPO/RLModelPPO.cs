@@ -563,7 +563,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     /// <returns>(mean, var) var will be null for discrete</returns>
     ValueTuple<float[,], float[,]> ISupervisedLearningModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
     {
-        Debug.Assert(mode == Mode.SupervisedLearning, "This method is for SupervisedLearning mode only");
+        Debug.Assert(mode == Mode.SupervisedLearning, "This method is for SupervisedLearning mode only. Please set the mode of RLModePPO to SupervisedLearning in the editor.");
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
         {
@@ -606,7 +606,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     /// <returns></returns>
     public float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions)
     {
-        Debug.Assert(mode == Mode.SupervisedLearning, "This method is for SupervisedLearning mode only");
+        Debug.Assert(mode == Mode.SupervisedLearning, "This method is for SupervisedLearning mode only. Please set the mode of RLModePPO to SupervisedLearning in the editor.");
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
 
 

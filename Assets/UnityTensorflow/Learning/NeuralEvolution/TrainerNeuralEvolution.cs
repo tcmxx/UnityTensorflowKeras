@@ -22,6 +22,8 @@ public class TrainerNeuralEvolution : Trainer
     protected OptimizationSample bestSample;
     protected IMAES optimizer;
 
+    public string evolutionDataSaveFileName = @"NEData.bytes";
+
     [ReadOnly]
     [SerializeField]
     protected int currentEvaluationIndex = 0;
@@ -361,9 +363,7 @@ public class TrainerNeuralEvolution : Trainer
     public void SaveNEDataToFile()
     {
         var data = this.SaveNECheckpoint();
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_NEData.bytes"));
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, evolutionDataSaveFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         File.WriteAllBytes(fullPath, data);
@@ -376,9 +376,7 @@ public class TrainerNeuralEvolution : Trainer
     /// /// <returns>Whether loaded successfully</returns>
     public bool LoadNEDataFromFile()
     {
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_NEData.bytes"));
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, evolutionDataSaveFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))

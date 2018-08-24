@@ -11,12 +11,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8529238a3b364a64a84c7598158b11f8, type: 3}
   m_Name: PongMimicTrainerParams
   m_EditorClassIdentifier: 
-  learningRate: 0.0004
+  learningRate: 0.003
   maxTotalSteps: 100000000
   saveModelInterval: 3000
-  batchSize: 64
+  batchSize: 256
   numIterationPerTrain: 1
   requiredDataBeforeTraining: 5000
   maxBufferSize: -1
-  lossLogInterval: 100
-  actionDiffLogInterval: 100
+  logInterval: 1000
