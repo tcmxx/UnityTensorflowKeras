@@ -36,6 +36,9 @@ public class StatsLogger
         {
             LogCurrentData(k, currentStep);
         }
+#if UNITY_EDITOR
+        Grapher.SaveToFiles(Grapher.SessionName);
+#endif
     }
 
     public void LogCurrentData(string name, float currentStep)

@@ -331,7 +331,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     {
         if (cameraResolutions == null || cameraResolutions.Length <= 0)
             return null;
-
+        if (currentInfo.Count <= 0 || agentList.Count <= 0)
+            return null;
         var observationMatrixList = new List<float[,,,]>();
         var texturesHolder = new List<Texture2D>();
 
@@ -356,6 +357,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     /// <returns>bacth vector observation data.</returns>
     public static float[,] CreateVectorInputBatch(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList)
     {
+        if (currentInfo.Count <= 0 || agentList.Count <= 0)
+            return null;
         int obsSize = currentInfo[agentList[0]].stackedVectorObservation.Count;
         if (obsSize == 0)
             return null;

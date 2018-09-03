@@ -130,7 +130,8 @@ public class TrainerMimic : Trainer
         var result = new Dictionary<Agent, TakeActionOutput>();
 
         var agentList = new List<Agent>(agentInfos.Keys);
-
+        if (agentList.Count <= 0)
+            return result;
         float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
         var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 

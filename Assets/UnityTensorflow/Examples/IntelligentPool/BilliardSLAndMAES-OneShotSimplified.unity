@@ -536,12 +536,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 791075477}
-  isTraining: 0
+  isTraining: 1
   parameters: {fileID: 11400000, guid: 2891adc9117296a4faec323f41fa9afb, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardSLAndMAES-OneShotSimplified.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data
+  checkpointFileName: BilliardSLAndMAES-OneShotSimplified.bytes
   steps: 0
   isCollectingData: 0
+  trainingDataSaveFileName: BilliardSLAndMAES-OneShotSimplified_trainingdata.bytes
   dataBufferCount: 0
 --- !u!4 &949524765
 Transform:

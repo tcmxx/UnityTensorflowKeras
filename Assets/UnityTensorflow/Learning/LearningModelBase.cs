@@ -33,7 +33,8 @@ public abstract class LearningModelBase : MonoBehaviour
 
     [Tooltip("checkpoint to load if you are not using the trainer to load checkpoint")]
     public TextAsset checkpointToLoad = null;
-
+    [Tooltip("all namescope will be under this modelName.if it is null or empty, there will be not namescope")]
+    public string modelName = null;
     /// <summary>
     /// Total vector observation size, considering the stacked vector observations
     /// </summary>
@@ -83,6 +84,10 @@ public abstract class LearningModelBase : MonoBehaviour
     {
         Debug.Assert(Initialized == false, "Model already Initalized");
 
+        NameScope ns = null;
+        if (!string.IsNullOrEmpty(modelName))
+            ns = Current.K.name_scope(modelName);
+
         ActionSize = brainParameters.vectorActionSize;
         StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
         ActionSpace = brainParameters.vectorActionSpaceType;
@@ -100,7 +105,11 @@ public abstract class LearningModelBase : MonoBehaviour
         Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/" + name + ".pb");
         ((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/" + name + ".pb");
 
-        Current.K.try_initialize_variables();
+        Current.K.try_initialize_variables(true);
+
+        if (ns != null)
+            ns.Dispose();
+
         if (checkpointToLoad != null)
         {
             RestoreCheckpoint(checkpointToLoad.bytes,true);

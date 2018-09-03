@@ -16,10 +16,10 @@ public class RLNetworkSimpleAC : RLNetworkAC
     public List<SimpleDenseLayerDef> actorHiddenLayers;
     public List<SimpleDenseLayerDef> criticHiddenLayers;
 
-    public float actorOutputLayerInitialScale = 0.1f;
+    public float actorOutputLayerInitialScale = 0.01f;
     public bool actorOutputLayerBias = true;
 
-    public float criticOutputLayerInitialScale = 0.1f;
+    public float criticOutputLayerInitialScale = 1f;
     public bool criticOutputLayerBias = true;
 
     public float visualEncoderInitialScale = 0.01f;

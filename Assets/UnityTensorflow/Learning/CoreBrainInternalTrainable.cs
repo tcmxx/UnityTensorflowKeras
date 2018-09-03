@@ -54,10 +54,10 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         List<Agent> newAgentList = newAgentInfos.Keys.ToList();
         List<Agent> recordableAgentList = newAgentList.Where((a) => currentInfo != null && currentInfo.ContainsKey(a) && prevActionOutput.ContainsKey(a)).ToList();
 
-        if (currentBatchSize == 0)
+        /*if (currentBatchSize == 0)
         {
             return;
-        }
+        }*/
 
 
         //get the datas only for the agents in the agentInfo input

@@ -195,6 +195,7 @@ public partial class Grapher : EditorWindow
     {
         try
         {
+            replayFiles.Clear();
             channels.Clear();
         }
         catch { }
@@ -319,7 +320,7 @@ public partial class Grapher : EditorWindow
     }
 
 
-    private static void SaveToFiles(string sessionName = "", string directoryName = "")
+    public static void SaveToFiles(string sessionName = "", string directoryName = "")
     {
         // Generate session filename
         string sessionFilename = "";

@@ -95,7 +95,7 @@ public class NeuralEvolutionTest : MonoBehaviour
         if(prevIsOptimizing != isOptimizing )
         {
             prevIsOptimizing = isOptimizing;
-            Current.K.try_initialize_variables();
+            Current.K.try_initialize_variables(false);
             trainer.ResetTrainer();
             if (isOptimizing){
                 SetWeights(samples[currentEvaluationIndex]);
@@ -125,7 +125,7 @@ public class NeuralEvolutionTest : MonoBehaviour
 
             //reset stuff
             currentEvaluationIndex++;
-            Current.K.try_initialize_variables();
+            Current.K.try_initialize_variables(false);
             trainer.ResetTrainer();
             if (currentEvaluationIndex < populationSize)
             {

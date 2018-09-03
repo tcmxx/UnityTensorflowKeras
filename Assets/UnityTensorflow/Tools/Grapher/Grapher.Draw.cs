@@ -304,7 +304,7 @@ public partial class Grapher : EditorWindow
         // OPEN BUTTON
         if (GUILayout.Button("Load"))
         {
-            Reset();
+            //Reset();
             OpenFiles();
             ReplayInit();
         }
