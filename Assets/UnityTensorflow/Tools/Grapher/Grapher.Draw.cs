@@ -116,7 +116,7 @@ public partial class Grapher : EditorWindow
 
                     float graphXEnd = GraphSettings.graphMargins.x + graphRect.width;
                     float graphYEnd = GraphSettings.graphMargins.y + graphRect.height;
-                    
+
                     //minTime = 0;
                     int pointCount = 0;
 
@@ -124,8 +124,8 @@ public partial class Grapher : EditorWindow
                     {
                         float value = samples[i].y;
                         float st = samples[i].x;
-                        
-                        float t = maxXAll - samples[i].x;                
+
+                        float t = maxXAll - samples[i].x;
 
                         // Convert to graph space (faster WToG)
                         float x = graphXEnd - ((t * xScale) + xOffset);
@@ -154,7 +154,7 @@ public partial class Grapher : EditorWindow
                         Handles.DrawLine(WToG(new Vector2(0, GToW(points[pointCount - 1]).y)), WToG(new Vector2(-50, GToW(points[pointCount - 1]).y)));
 
                         // Right side label
-                        if(ch.newestSample != null)
+                        if (ch.newestSample != null)
                             DrawHorizontalLabel(WToG(new Vector2(4, GToW(points[pointCount - 1]).y + 8)), FloatToCompact(ch.newestSample.y), ch.color);
 
                         // Draw polyline (fastest)
@@ -190,18 +190,18 @@ public partial class Grapher : EditorWindow
                             if (mousePosition.x < textWidth / 2) outOfBoundsOfset += (textWidth / 2) - (int)mousePosition.x;
                             Vector2 timeIndicatorPosition = new Vector2(mousePosition.x - textWidth / 2 + outOfBoundsOfset, graphRect.height + 10);
                             string valueAtPointer = ch.tagX.ToString("0.00");
-                            DrawHorizontalLabel(timeIndicatorPosition, valueAtPointer + ", "+sampleAtMousePosition.time, Color.black);
+                            DrawHorizontalLabel(timeIndicatorPosition, valueAtPointer + ", " + sampleAtMousePosition.time, Color.black);
                         }
                     }
                 }
             }
-            
+
         }
 
         // Draw time marker when mouse outside of graph
         if (!mouseInside)
         {
-            string label = "(" + minXAll.ToString()+", " + maxXAll.ToString() + ")";
+            string label = "(" + minXAll.ToString() + ", " + maxXAll.ToString() + ")";
             DrawHorizontalLabel(new Vector2(graphRect.width - 25, graphRect.height + 10), label, Color.black);
         }
     }
@@ -254,7 +254,7 @@ public partial class Grapher : EditorWindow
 
         for (int i = 0; i < channels.Count; i++)
         {
-           DrawChannelSidebar(i);
+            DrawChannelSidebar(i);
         }
     }
 
@@ -278,7 +278,7 @@ public partial class Grapher : EditorWindow
             Grapher.SaveToFiles(fileName, dirPath);
         }
         GUI.enabled = false;
-        
+
         if (!EditorApplication.isPlaying) GUI.enabled = true;
         // SHOW IN EXPLORER BUTTON
         if (GUILayout.Button("Show in Explorer"))
@@ -310,7 +310,7 @@ public partial class Grapher : EditorWindow
         }
 
         GUI.enabled = false;
-        
+
 
         GUILayout.EndHorizontal();
         GUILayout.EndArea();
@@ -338,10 +338,12 @@ public partial class Grapher : EditorWindow
         Rect statRect = new Rect(panelRect.x, panelRect.y, panelRect.width, headerHeight);
         Handles.DrawSolidRectangleWithOutline(statRect, GraphSettings.panelHeaderColor, Color.grey);
 
+
         // Draw marker
         Handles.color = color;
         Rect markerRect = new Rect(panelRect.x + 4, panelRect.y + 4, headerHeight - 8, headerHeight - 8);
-        Handles.DrawSolidRectangleWithOutline(markerRect, color, Color.black);
+        //Handles.DrawSolidRectangleWithOutline(markerRect, color, Color.black);
+        channels[chId].color = EditorGUI.ColorField(markerRect, new GUIContent(), color, false, true, false);
 
         // Draw name
         GUIStyle titleStyle = new GUIStyle();
@@ -358,7 +360,7 @@ public partial class Grapher : EditorWindow
         ch.AutoScale = DrawToggleButton(ch.AutoScale, ch.name + "AutoScale", autoScaleTexture);
 
 
-        
+
         ch.LogToFile = DrawToggleButton(ch.LogToFile, ch.name + "LogToFile", logTexture);
 
 
@@ -373,16 +375,13 @@ public partial class Grapher : EditorWindow
 
         ch.rangeSlider = GUILayout.HorizontalSlider(ch.rangeSlider, -GraphSettings.sliderSensitivity, GraphSettings.sliderSensitivity, GUILayout.Width(95));
 
-        ch.beingManuallyAdjusted = false;
-
         try
         {
             float rangeInput = float.Parse(GUILayout.TextField(ch.verticalResolution.ToString("0.00000"), 10, GUILayout.Width(70)));
-            if (Mathf.Abs(rangeInput) > ch.verticalResolution + 0.00001f)
+            if (Mathf.Abs(rangeInput - ch.verticalResolution) > +0.00001f)
             {
                 ch.AutoScale = false;
                 ch.verticalResolution = rangeInput;
-                ch.beingManuallyAdjusted = true;
             }
         }
         catch { Debug.LogWarning("Input is not a number."); }
@@ -390,10 +389,11 @@ public partial class Grapher : EditorWindow
         // Check for mouse up
         if (mouseState == MouseState.Up)
             ch.rangeSlider = 0;
-
-        ch.verticalResolution += ch.verticalResolution * ch.rangeSlider * TimeKeeper.systemDeltaTime;
-        ch.verticalResolution = Mathf.Max(0.00001f, ch.verticalResolution);
-        
+        if (ch.rangeSlider != 0)
+        {
+            ch.verticalResolution += ch.verticalResolution * ch.rangeSlider * TimeKeeper.systemDeltaTime;
+            ch.verticalResolution = Mathf.Max(0.00001f, ch.verticalResolution);
+        }
 
         GUILayout.EndHorizontal();
 
@@ -408,7 +408,7 @@ public partial class Grapher : EditorWindow
         Color def = GUI.color;
         if (toggle)
             GUI.color = GraphSettings.buttonActiveColor;
-        
+
         // Draw button with supplied style
         if (GUILayout.Button(tex, toggleButtonStyle, GUILayout.Width(GraphSettings.chButtonSize), GUILayout.Height(GraphSettings.chButtonSize)))
         {
@@ -461,7 +461,7 @@ public partial class Grapher : EditorWindow
     private static string FloatToCompact(float x)
     {
         string first = " ";
-        if(x < 0)
+        if (x < 0)
         {
             x = Mathf.Abs(x);
             first = "-";
@@ -483,9 +483,10 @@ public partial class Grapher : EditorWindow
         {
             x = x / 1000f;
             appendix = "k";
-        }else if(xAbs < 0.001)
+        }
+        else if (xAbs < 0.001)
         {
-            int e = (int)(-Mathf.Log10(xAbs))+1;
+            int e = (int)(-Mathf.Log10(xAbs)) + 1;
             float multi = Mathf.Pow(10, e);
             x = x * multi;
             appendix = "e" + (-e);
@@ -533,7 +534,7 @@ public partial class Grapher : EditorWindow
             int sum = 0;
 
             // Get random color, avoid too dark for visibility
-            while(sum < 300)
+            while (sum < 300)
             {
                 sum = 0;
                 res.r = (byte)UnityEngine.Random.Range(40, 255);
