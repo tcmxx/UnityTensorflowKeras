@@ -281,6 +281,45 @@ public class DataBuffer : ISerializable
         return result;
     }
 
+    /// <summary>
+    /// get data from a specific position
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="length"></param>
+    /// <param name="fetchAndOffset"></param>
+    /// <returns></returns>
+    public Dictionary<string, Array> FetchDataAt(int index, int length, params ValueTuple<string, int, string>[] fetchAndOffset)
+    {
+        Debug.Assert(index + length <= CurrentCount, "index or length out of bound");
+        if (length <= 0)
+            return null;
+
+        Dictionary<string, Array> result = new Dictionary<string, Array>();
+
+        foreach (var d in fetchAndOffset)
+        {
+            Debug.Assert(dataset.ContainsKey(d.Item1));
+            Debug.Assert(!result.ContainsKey(d.Item3));
+            //result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), dataset[d.Item1].info.unitLength * numOfSamples);
+            result[d.Item3] = Array.CreateInstance(GetDataType(d.Item1), (new int[] { length }).Concat(dataset[d.Item1].info.dimension).ToArray());
+        }
+
+        foreach (var d in fetchAndOffset)
+        {
+            DataContainer c = dataset[d.Item1];
+            int typeSize = Marshal.SizeOf(c.info.type);
+
+            int unitLength = c.info.unitLength;
+            int actSampleInd = (index + d.Item2) % CurrentCount;
+            //Array.Copy(c.dataList, actSampleInd * unitLength, result[d.Item3], i * unitLength, unitLength);
+            Buffer.BlockCopy(c.dataList, actSampleInd * unitLength * typeSize, result[d.Item3], 0, unitLength * typeSize* length);
+        }
+
+
+        return result;
+    }
+
+
 
 
     /// <summary>

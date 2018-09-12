@@ -16,7 +16,8 @@ public class TrainerParamsPPO : TrainerParams
     [Tooltip("larger value means exploration is encouraged")]
     public float entropyLossWeight = 0.01f;
     public float clipEpsilon = 0.2f;
-    
+    public float clipValueLoss = 1f;
+
     public int batchSize = 128;
     public int bufferSizeForTrain = 2048;
     public int numEpochPerTrain = 3;
@@ -28,7 +29,5 @@ public class TrainerParamsPPO : TrainerParams
     public float finalActionClip = 3;
     [Tooltip(" Unity's impelemntation does clip the normalize the final acion for continuous space before sending to agents: clip(action,-3,3)/3.")]
     public float finalActionDownscale = 3;
-    [Header("Log related")]
-    public int logInterval = 1000;
 
 }

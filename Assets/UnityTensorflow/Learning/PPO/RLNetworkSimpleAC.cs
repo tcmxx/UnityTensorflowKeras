@@ -29,7 +29,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     protected List<Tensor> actorWeights;
 
     public override void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize, SpaceType actionSpace,
-        out Tensor outAction, out Tensor outValue, out Tensor outVariance)
+        out Tensor outAction, out Tensor outValue, out Tensor outLogVariance)
     {
 
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
@@ -128,12 +128,12 @@ public class RLNetworkSimpleAC : RLNetworkAC
         if (actionSpace == SpaceType.continuous)
         {
             var logSigmaSq = Current.K.variable((new Constant(0)).Call(new int[] { outActionSize }, DataType.Float), name: "PPO.log_sigma_square");
-            outVariance = Current.K.exp(logSigmaSq);
+            outLogVariance = logSigmaSq;
             actorWeights.Add(logSigmaSq);
         }
         else
         {
-            outVariance = null;
+            outLogVariance = null;
         }
         
     }

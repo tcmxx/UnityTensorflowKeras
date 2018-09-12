@@ -31,6 +31,7 @@ public interface IRLModelPPO
     float EntropyLossWeight { get; set; }
     float ValueLossWeight { get; set; }
     float ClipEpsilon { get; set; }
+    float ClipValueLoss { get; set; }
 
     float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation);
     float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true);
@@ -59,6 +60,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     public float EntropyLossWeight { get; set; }
     public float ValueLossWeight { get; set; }
     public float ClipEpsilon { get; set; }
+    public float ClipValueLoss { get; set; }
 
     //the variables for normalization
     protected Tensor runningMean = null;
@@ -79,6 +81,8 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     public override void InitializeInner(BrainParameters brainParameters, Tensor stateTensor, List<Tensor> visualTensors, TrainerParams trainerParams)
     {
 
+        Debug.Assert(ActionSize.Length <= 1, "Action branching is not supported yet");
+
         Tensor inputStateTensorToNetwork = stateTensor;
 
         if (useInputNormalization && HasVectorObservation)
@@ -88,18 +92,18 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
 
         //build the network
-        Tensor outputValue = null; Tensor outputAction = null; Tensor outputVariance = null;
-        network.BuildNetwork(inputStateTensorToNetwork, visualTensors, null, null, ActionSize, ActionSpace, out outputAction, out outputValue, out outputVariance);
+        Tensor outputValue = null; Tensor outputAction = null; Tensor outputLogVariance = null;
+        network.BuildNetwork(inputStateTensorToNetwork, visualTensors, null, null, ActionSize[0], ActionSpace, out outputAction, out outputValue, out outputLogVariance);
 
         if (trainerParams is TrainerParamsPPO  || mode == Mode.PPO)
         {
             mode = Mode.PPO;
-            InitializePPOStructures(trainerParams, stateTensor, visualTensors, outputValue, outputAction, outputVariance, network.GetWeights());
+            InitializePPOStructures(trainerParams, stateTensor, visualTensors, outputValue, outputAction, outputLogVariance, network.GetWeights());
         }
         else if (mode == Mode.SupervisedLearning || trainerParams is TrainerParamsMimic)
         {
             mode = Mode.SupervisedLearning;
-            InitializeSLStructures(trainerParams, stateTensor, visualTensors, outputAction, outputVariance, network.GetActorWeights());
+            InitializeSLStructures(trainerParams, stateTensor, visualTensors, outputAction, outputLogVariance, network.GetActorWeights());
         }
     }
 
@@ -114,10 +118,13 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     /// <param name="inputVisualTensors"></param>
     /// <param name="outputValueFromNetwork"></param>
     /// <param name="outputActionFromNetwork"></param>
-    /// <param name="outputVarianceFromNetwork"></param>
+    /// <param name="outputLogVarianceFromNetwork"></param>
     /// <param name="weightsToUpdate"></param>
-    protected void InitializePPOStructures(TrainerParams trainerParams, Tensor stateTensor, List<Tensor> inputVisualTensors, Tensor outputValueFromNetwork, Tensor outputActionFromNetwork, Tensor outputVarianceFromNetwork, List<Tensor> weightsToUpdate)
+    protected void InitializePPOStructures(TrainerParams trainerParams, Tensor stateTensor, List<Tensor> inputVisualTensors, Tensor outputValueFromNetwork, Tensor outputActionFromNetwork, Tensor outputLogVarianceFromNetwork, List<Tensor> weightsToUpdate)
     {
+
+        
+
         List<Tensor> allobservationInputs = new List<Tensor>();
         if (HasVectorObservation)
         {
@@ -130,22 +137,23 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
         ValueFunction = K.function(allobservationInputs, new List<Tensor> { outputValueFromNetwork }, null, "ValueFunction");
 
-        Tensor outputActualAction = null; Tensor actionProb = null;
+        Tensor outputActualAction = null, actionLogProb = null, outputVariance = null;
         if (ActionSpace == SpaceType.continuous)
         {
+            outputVariance = K.exp(outputLogVarianceFromNetwork);
             using (K.name_scope("SampleAction"))
             {
-                outputActualAction = K.standard_normal(K.shape(outputActionFromNetwork), DataType.Float) * K.sqrt(outputVarianceFromNetwork) + outputActionFromNetwork;
+                outputActualAction = K.standard_normal(K.shape(outputActionFromNetwork), DataType.Float) * K.sqrt(outputVariance) + outputActionFromNetwork;
 
             }
             using (K.name_scope("ActionProbs"))
             {
-                actionProb = K.normal_probability(K.stop_gradient(outputActualAction), outputActionFromNetwork, outputVarianceFromNetwork);
+                actionLogProb = K.log_normal_probability(K.stop_gradient(outputActualAction), outputActionFromNetwork, outputVariance, outputLogVarianceFromNetwork);
             }
-            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputActualAction, actionProb, outputActionFromNetwork, outputVarianceFromNetwork }, null, "ActionFunction");
+            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputActualAction, actionLogProb, outputActionFromNetwork }, null, "ActionFunction");
 
             var probInputs = new List<Tensor>(); probInputs.AddRange(allobservationInputs); probInputs.Add(outputActualAction);
-            ActionProbabilityFunction = K.function(probInputs, new List<Tensor> { actionProb }, null, "ActionProbabilityFunction");
+            ActionProbabilityFunction = K.function(probInputs, new List<Tensor> { actionLogProb }, null, "ActionProbabilityFunction");
         }
         else
         {
@@ -158,7 +166,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         {
             //training needed inputs
 
-            var inputOldProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputOldProb")[0];
+            var inputOldLogProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize[0] : 1 }, name: "InputOldLogProb")[0];
             var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
             var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
             var inputOldValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputOldValue")[0];
@@ -166,8 +174,10 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             ClipEpsilon = trainingParams.clipEpsilon;
             ValueLossWeight = trainingParams.valueLossWeight;
             EntropyLossWeight = trainingParams.entropyLossWeight;
+            ClipValueLoss = trainingParams.clipValueLoss;
 
             var inputClipEpsilon = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "ClipEpsilon", dtype: DataType.Float)[0];
+            var inputClipValueLoss = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "ClipValueLoss", dtype: DataType.Float)[0];
             var inputValuelossWeight = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "ValueLossWeight", dtype: DataType.Float)[0];
             var inputEntropyLossWeight = UnityTFUtils.Input(batch_shape: new int?[] { }, name: "EntropyLossWeight", dtype: DataType.Float)[0];
 
@@ -179,9 +189,8 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             {
                 using (K.name_scope("Entropy"))
                 {
-                    var temp = K.mul(outputVarianceFromNetwork, 2 * Mathf.PI * 2.7182818285);
-                    temp = K.mul(K.log(temp), 0.5);
-                    if (outputVarianceFromNetwork.shape.Length == 2)
+                    var temp = 0.5f * (Mathf.Log(2 * Mathf.PI * 2.7182818285f, 2.7182818285f) + outputLogVarianceFromNetwork);
+                    if (outputLogVarianceFromNetwork.shape.Length == 2)
                     {
                         outputEntropy = K.mean(K.mean(temp, 0, false), name: "OutputEntropy");
                     }
@@ -197,10 +206,10 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
                 using (K.name_scope("ActionProbAndEntropy"))
                 {
                     inputActionDiscrete = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAction", dtype: DataType.Int32)[0];
-                    onehotInputAction = K.one_hot(inputActionDiscrete, K.constant<int>(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                    onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize });
+                    onehotInputAction = K.one_hot(inputActionDiscrete, K.constant<int>(ActionSize[0], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
+                    onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize[0] });
                     outputEntropy = K.mean((-1.0f) * K.sum(outputActionFromNetwork * K.log(outputActionFromNetwork + 0.00000001f), axis: 1), 0);
-                    actionProb = K.reshape(K.sum(outputActionFromNetwork * onehotInputAction, 1), new int[] { -1, 1 });
+                    actionLogProb = K.reshape(K.sum(K.log(outputActionFromNetwork) * onehotInputAction, 1), new int[] { -1, 1 });
                 }
             }
 
@@ -208,7 +217,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             Tensor outputValueLoss = null;
             using (K.name_scope("ValueLoss"))
             {
-                var clippedValueEstimate = inputOldValue + K.clip(outputValueFromNetwork - inputOldValue, 0.0f - inputClipEpsilon, inputClipEpsilon);
+                var clippedValueEstimate = inputOldValue + K.clip(outputValueFromNetwork - inputOldValue, 0.0f - inputClipValueLoss, inputClipValueLoss);
                 var valueLoss1 = new MeanSquareError().Call(outputValueFromNetwork, inputTargetValue);
                 var valueLoss2 = new MeanSquareError().Call(clippedValueEstimate, inputTargetValue);
                 outputValueLoss = K.mean(K.maximum(valueLoss1, valueLoss2));
@@ -221,7 +230,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             {
                 //Debug.LogWarning("testnew");
                 //var probStopGradient = K.stop_gradient(actionProb);
-                var probRatio = actionProb / (inputOldProb + 0.0000000001f);
+                var probRatio = K.exp(actionLogProb - inputOldLogProb);
                 var p_opt_a = probRatio * inputAdvantage;
                 var p_opt_b = K.clip(probRatio, 1.0f - inputClipEpsilon, 1.0f + inputClipEpsilon) * inputAdvantage;
 
@@ -251,17 +260,18 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
                 allInputs.Add(inputActionDiscrete);
             }
 
-            allInputs.Add(inputOldProb);
+            allInputs.Add(inputOldLogProb);
             allInputs.Add(inputTargetValue);
             allInputs.Add(inputOldValue);
             allInputs.Add(inputAdvantage);
             allInputs.Add(inputClipEpsilon);
+            allInputs.Add(inputClipValueLoss);
             allInputs.Add(inputValuelossWeight);
             allInputs.Add(inputEntropyLossWeight);
 
             //create optimizer and create necessary functions
             var updates = AddOptimizer(weightsToUpdate, outputLoss, optimizer);
-            UpdatePPOFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss, outputEntropy, actionProb }, updates, "UpdateFunction");
+            UpdatePPOFunction = K.function(allInputs, new List<Tensor> { outputLoss, outputValueLoss, outputPolicyLoss, outputEntropy }, updates, "UpdateFunction");
 
 
 
@@ -275,9 +285,9 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     /// <param name="stateTensor"></param>
     /// <param name="inputVisualTensors"></param>
     /// <param name="outputActionFromNetwork"></param>
-    /// <param name="outputVarianceFromNetwork"></param>
+    /// <param name="outputLogVarianceFromNetwork"></param>
     /// <param name="weightsToUpdate"></param>
-    protected void InitializeSLStructures(TrainerParams trainerParams, Tensor stateTensor, List<Tensor> inputVisualTensors, Tensor outputActionFromNetwork, Tensor outputVarianceFromNetwork, List<Tensor> weightsToUpdate)
+    protected void InitializeSLStructures(TrainerParams trainerParams, Tensor stateTensor, List<Tensor> inputVisualTensors, Tensor outputActionFromNetwork, Tensor outputLogVarianceFromNetwork, List<Tensor> weightsToUpdate)
     {
         List<Tensor> allobservationInputs = new List<Tensor>();
         if (HasVectorObservation)
@@ -289,9 +299,11 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             allobservationInputs.AddRange(inputVisualTensors);
         }
 
+        Tensor outputVariance = null;
         if (ActionSpace == SpaceType.continuous)
         {
-            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputActionFromNetwork, outputVarianceFromNetwork }, null, "ActionFunction");
+            outputVariance = K.exp(outputLogVarianceFromNetwork);
+            ActionFunction = K.function(allobservationInputs, new List<Tensor> { outputActionFromNetwork, outputVariance }, null, "ActionFunction");
         }
         else
         {
@@ -303,16 +315,16 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
         ///created losses for supervised learning part
         Tensor supervisedLearingLoss = null;
-        var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+        var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize[0] : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
         if (ActionSpace == SpaceType.discrete)
         {
-            var onehotInputAction = K.one_hot(inputActionLabel, K.constant<int>(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-            onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize });
+            var onehotInputAction = K.one_hot(inputActionLabel, K.constant<int>(ActionSize[0], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
+            onehotInputAction = K.reshape(onehotInputAction, new int[] { -1, ActionSize[0] });
             supervisedLearingLoss = K.mean(K.categorical_crossentropy(onehotInputAction, outputActionFromNetwork, false));
         }
         else
         {
-            supervisedLearingLoss = K.mean(K.mean(0.5 * K.square(inputActionLabel - outputActionFromNetwork) / outputVarianceFromNetwork + 0.5 * K.log(outputVarianceFromNetwork)));
+            supervisedLearingLoss = K.mean(K.mean(0.5 * K.square(inputActionLabel - outputActionFromNetwork) / outputVariance + 0.5 * outputLogVarianceFromNetwork));
         }
 
         var updates = AddOptimizer(weightsToUpdate, supervisedLearingLoss, optimizer);
@@ -352,7 +364,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     /// Query actions based on curren states. The first dimension of the array must be batch dimension
     /// </summary>
     /// <param name="vectorObservation">current vector states. Can be batch input</param>
-    /// <param name="actionProbs">output actions' probabilities</param>
+    /// <param name="actionProbs">output actions' probabilities. note that it is the log probability</param>
     /// <param name="useProbability">when true, the output actions are sampled based on output mean and variance. Otherwise it uses mean directly.</param>
     /// <returns></returns>
     public virtual float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, bool useProbability = true)
@@ -394,7 +406,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
                 else
                     actions[j, 0] = outputAction.GetRow(j).ArgMax();
 
-                actionProbs[j, 0] = outputAction.GetRow(j)[Mathf.RoundToInt(actions[j, 0])];
+                actionProbs[j, 0] = Mathf.Log(outputAction.GetRow(j)[Mathf.RoundToInt(actions[j, 0])]);
             }
         }
 
@@ -414,7 +426,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
 
     /// <summary>
-    /// Query actions' probabilities based on curren states. The first dimension of the array must be batch dimension
+    /// Query actions' probabilities based on curren states. The first dimension of the array must be batch dimension. Note that it is the log probability
     /// </summary>
     public virtual float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation)
     {
@@ -448,7 +460,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             var outputAction = ((float[,])result[0].eval());
             for (int j = 0; j < outputAction.GetLength(0); ++j)
             {
-                actionProbs[j, 0] = outputAction.GetRow(j)[Mathf.RoundToInt(actions[j, 0])];
+                actionProbs[j, 0] = Mathf.Log(outputAction.GetRow(j)[Mathf.RoundToInt(actions[j, 0])]);
             }
         }
 
@@ -481,6 +493,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         inputs.Add(oldValues);
         inputs.Add(advantages);
         inputs.Add(new float[] { ClipEpsilon });
+        inputs.Add(new float[] { ClipValueLoss });
         inputs.Add(new float[] { ValueLossWeight });
         inputs.Add(new float[] { EntropyLossWeight });
 

@@ -40,6 +40,8 @@ public class TrainerPPO : Trainer
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
 
+        
+
         //initialize all data buffers
         statesEpisodeHistory = new Dictionary<Agent, List<float>>();
         rewardsEpisodeHistory = new Dictionary<Agent, List<float>>();
@@ -53,10 +55,11 @@ public class TrainerPPO : Trainer
 
 
         var brainParameters = BrainToTrain.brainParameters;
+        Debug.Assert(brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
 
         List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
-            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
-            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 }),
+            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 }),
             new DataBuffer.DataInfo("TargetValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("OldValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("Advantage", typeof(float), new int[] { 1 })
@@ -96,7 +99,7 @@ public class TrainerPPO : Trainer
         iModelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
         iModelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
         iModelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
-
+        iModelPPO.ClipValueLoss = parametersPPO.clipValueLoss;
         base.FixedUpdate();
     }
 
@@ -114,16 +117,18 @@ public class TrainerPPO : Trainer
 
         var agents = statesEpisodeHistory.Keys;
         stats.ClearAll();
+        statesEpisodeHistory.Clear();
+        rewardsEpisodeHistory.Clear();
+        actionprobsEpisodeHistory.Clear();
+        actionsEpisodeHistory.Clear();
+        valuesEpisodeHistory.Clear();
+        accumulatedRewards.Clear();
+        episodeSteps.Clear();
+        dataBuffer.ClearData();
         foreach (var agent in agents)
         {
-            statesEpisodeHistory[agent].Clear();
-            rewardsEpisodeHistory[agent].Clear();
-            actionsEpisodeHistory[agent].Clear();
-            actionprobsEpisodeHistory[agent].Clear();
-            valuesEpisodeHistory[agent].Clear();
-            accumulatedRewards[agent] = 0;
-            episodeSteps[agent] = 0;
-            agent.AgentReset();
+            if (agent)
+                agent.AgentReset();
         }
     }
 

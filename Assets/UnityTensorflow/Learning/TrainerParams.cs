@@ -11,5 +11,6 @@ public class TrainerParams : ScriptableObject
     public float learningRate = 0.001f;
     public int maxTotalSteps = 100000000;
     public int saveModelInterval = 10000;
-
+    [Header("Log related")]
+    public int logInterval = 1000;
 }

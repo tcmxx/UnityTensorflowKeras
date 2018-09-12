@@ -41,8 +41,9 @@ public class TrainerMimic : Trainer
         var brainParameters = BrainToTrain.brainParameters;
 
         //intialize data buffer
+        Debug.Assert(brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
         List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
-            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 })
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 })
         };
 
         if (brainParameters.vectorObservationSize > 0)
@@ -60,6 +61,8 @@ public class TrainerMimic : Trainer
 
             allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, width, channels }));
         }
+        allBufferData.Add(new DataBuffer.DataInfo("Reward", typeof(float), new int[] { 1 }));
+
         dataBuffer = new DataBuffer(parametersMimic.maxBufferSize, allBufferData.ToArray());
 
         if (continueFromCheckpoint)
@@ -91,6 +94,8 @@ public class TrainerMimic : Trainer
                     Array arrayToAdd = TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
                     dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
                 }
+                dataToAdd.Add(ValueTuple.Create<string, Array>("Reward", new float[] { newInfo[agent].reward}));
+
                 dataBuffer.AddData(dataToAdd.ToArray());
             }
         }

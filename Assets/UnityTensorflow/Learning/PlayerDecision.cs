@@ -63,7 +63,7 @@ public class PlayerDecision : AgentDependentDecision
         if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
         {
 
-            var action = new float[agent.brain.brainParameters.vectorActionSize];
+            var action = new float[agent.brain.brainParameters.vectorActionSize[0]];
             foreach (KeyContinuousPlayerAction cha in keyContinuousPlayerActions)
             {
                 if (Input.GetKey(cha.key))
@@ -87,7 +87,7 @@ public class PlayerDecision : AgentDependentDecision
         }
         else
         {
-
+            Debug.Assert(agent.brain.brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
             var action = new float[1] { defaultAction };
             foreach (DiscretePlayerAction dha in discretePlayerActions)
             {

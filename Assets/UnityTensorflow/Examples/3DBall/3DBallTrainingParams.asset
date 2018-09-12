@@ -14,16 +14,17 @@ MonoBehaviour:
   learningRate: 0.005
   maxTotalSteps: 100000000
   saveModelInterval: 10000
+  logInterval: 1000
   rewardDiscountFactor: 0.99
   rewardGAEFactor: 0.95
   valueLossWeight: 1
   timeHorizon: 1000
   entropyLossWeight: 0
   clipEpsilon: 0.2
+  clipValueLoss: 1
   batchSize: 256
   bufferSizeForTrain: 5000
-  numEpochPerTrain: 5
+  numEpochPerTrain: 3
   useHeuristicChance: 0.4
-  normalizeActionForAgent: 1
-  lossLogInterval: 4
-  rewardLogInterval: 40
+  finalActionClip: 3
+  finalActionDownscale: 3

@@ -50,7 +50,8 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors,  TrainerParams trainerParams)
     {
         //build the network
-        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize,ActionSpace);
+        Debug.Assert(ActionSize.Length <= 1, "Action branching is not supported yet");
+        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize[0],ActionSpace);
         Tensor outputAction = networkOutputs.Item1;
         Tensor outputVar = networkOutputs.Item2;
         hasVariance = outputVar != null && brainParameters.vectorActionSpaceType == SpaceType.continuous;
@@ -78,13 +79,13 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         if (trainingParams != null)
         {
             //training inputs
-            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize[0] : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
             //creat the loss
             Tensor loss = null;
             if (ActionSpace == SpaceType.discrete)
             {
                 Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSize });
+                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSize[0] });
                 loss = K.mean(K.categorical_crossentropy(reshapedOnehot, outputAction, false));
             }
             else

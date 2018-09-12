@@ -143,7 +143,7 @@ public partial class Grapher : EditorWindow
 
         DrawStatic();
         // Avoid double calculations during layout and repaint
-        if(Event.current.type == EventType.Repaint)
+        if (Event.current.type == EventType.Repaint)
             DrawGraph();
         DrawRules();
         DrawBottomControls();
@@ -153,7 +153,7 @@ public partial class Grapher : EditorWindow
         // Force GUI repaint every frame
         Repaint();
     }
-    
+
 
     /// <summary>
     /// Convert world position to graph position.
@@ -221,11 +221,11 @@ public partial class Grapher : EditorWindow
         // Check for vectors
         Type type = obj.GetType();
 
-        if(type == typeof(Vector2))
+        if (type == typeof(Vector2))
         {
             Vector2 v = (Vector2)obj;
-            Log(v.x, name + " X", color,x);
-            Log(v.y, name + " Y", color,x);
+            Log(v.x, name + " X", color, x);
+            Log(v.y, name + " Y", color, x);
             return;
         }
         else if (type == typeof(Vector3))
@@ -248,7 +248,7 @@ public partial class Grapher : EditorWindow
         {
             IEnumerable enumerable = (IEnumerable)obj;
             int n = 0;
-            foreach(object item in enumerable)
+            foreach (object item in enumerable)
             {
                 Log(item, name + "[" + n + "]", color, x, datetimeString);
                 n++;
@@ -261,7 +261,7 @@ public partial class Grapher : EditorWindow
         Channel ch = null;
 
         float maxX = 0, minX = 0;
-        foreach(var c in channels)
+        foreach (var c in channels)
         {
             maxX = Mathf.Max(c.MaxX, maxX);
             minX = Mathf.Min(c.MinX, minX);
@@ -301,21 +301,21 @@ public partial class Grapher : EditorWindow
     {
         Color chColor = GetChannelColor(name);
         SetChannel(chColor, name);
-        Log(obj, name, chColor,x,TimeKeeper.DateTimeString);
+        Log(obj, name, chColor, x, TimeKeeper.DateTimeString);
     }
 
     public static void Log(object obj, string name, Color color, float x)
     {
         Log(obj, name, color, x, TimeKeeper.DateTimeString);
     }
-    
+
 
     /// <summary>
     /// Called when Editor Application is stopped.
     /// </summary>
     private static void OnStopped()
     {
-        if(GraphSettings.SaveWhenStopped != 0)
+        if (GraphSettings.SaveWhenStopped != 0)
             SaveToFiles(SessionName);
     }
 
@@ -331,7 +331,7 @@ public partial class Grapher : EditorWindow
             IncrementRecordingSessionID();
             sessionFilename = "S" + GetRecordingSessionID() + "_" + GetFilenameTimestamp() + ".ses";
         }
-        else if(string.IsNullOrEmpty(sessionName))
+        else if (string.IsNullOrEmpty(sessionName))
         {
             sessionFilename = "S" + GetRecordingSessionID() + ".ses";
         }
@@ -359,12 +359,13 @@ public partial class Grapher : EditorWindow
                 {
                     filename = FileHandler.CleanFilename(ch.name) + ".csv";
                 }
-                else if(string.IsNullOrEmpty(sessionName))
+                else if (string.IsNullOrEmpty(sessionName))
                 {
                     filename = "S" + GetRecordingSessionID() + "_" + GetFilenameTimestamp() + "_" + FileHandler.CleanFilename(ch.name) + ".csv";
-                }else if(GraphSettings.OverwriteFiles == 0)
+                }
+                else if (GraphSettings.OverwriteFiles == 0)
                 {
-                    filename = FileHandler.CleanFilename(sessionName) + "_" + GetFilenameTimestamp() + "_" + FileHandler.CleanFilename(ch.name)+ ".csv";
+                    filename = FileHandler.CleanFilename(sessionName) + "_" + GetFilenameTimestamp() + "_" + FileHandler.CleanFilename(ch.name) + ".csv";
                 }
                 else
                 {
@@ -374,10 +375,10 @@ public partial class Grapher : EditorWindow
                 // Write header
                 string header = "";
                 header += ch.name + "," + ch.verticalResolution + "," + ch.color.r + "," + ch.color.g + "," + ch.color.b + Environment.NewLine;
-                FileHandler.WriteStringToCSV(header, filename);
+                FileHandler.WriteStringToCSV(header, filename, directoryName);
 
                 // Append samples
-                FileHandler.AppendSamplesToCSV(ch.rawSampleList, filename);
+                FileHandler.AppendSamplesToCSV(ch.rawSampleList, filename, directoryName);
 
                 // Append to session
                 sessionList += filename;
@@ -386,7 +387,7 @@ public partial class Grapher : EditorWindow
         }
 
         // Add channel filename to session filename list
-        if (sessionList != "") FileHandler.WriteStringToCSV(sessionList, sessionFilename);
+        if (sessionList != "") FileHandler.WriteStringToCSV(sessionList, sessionFilename, directoryName);
     }
 
 
@@ -435,7 +436,7 @@ public partial class Grapher : EditorWindow
 
     private static string GetFilenameTimestamp()
     {
-        return "_" + DateTime.Now.ToString("ddMMyyyy")  + DateTime.Now.ToString("HHmmss");
+        return "_" + DateTime.Now.ToString("ddMMyyyy") + DateTime.Now.ToString("HHmmss");
     }
 
     private static int GetRecordingSessionID()

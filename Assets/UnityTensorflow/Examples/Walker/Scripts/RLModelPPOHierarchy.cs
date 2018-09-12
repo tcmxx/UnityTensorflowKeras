@@ -68,8 +68,9 @@ public class RLModelPPOHierarchy : RLModelPPO {
 
 
         Tensor outputValue = null; Tensor outputAction = null; Tensor outputVariance = null;
+        Debug.Assert(ActionSize.Length <= 1, "Action branching is not supported yet");
         //build the network
-        networkHierarchy.BuildNetwork(inputLowLevelTensor, inputHighLevelTensor, ActionSize, ActionSpace, out outputAction, out outputValue, out outputVariance);
+        networkHierarchy.BuildNetwork(inputLowLevelTensor, inputHighLevelTensor, ActionSize[0], ActionSpace, out outputAction, out outputValue, out outputVariance);
 
         InitializePPOStructures(trainerParams, stateTensor, inputVisualTensors, outputValue, outputAction, outputVariance, networkHierarchy.GetHighLevelWeights());
 
