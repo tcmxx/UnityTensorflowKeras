@@ -404,7 +404,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c173384f130100d4bbe0b2067953a02c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 6d9a02d5cb79c714f9257f03428caa9f, type: 2}
   optimizer:
@@ -536,12 +536,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 791075477}
-  isTraining: 0
+  isTraining: 1
   parameters: {fileID: 11400000, guid: 2891adc9117296a4faec323f41fa9afb, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardSLAndMAES-OneShotSimplified.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data
+  checkpointFileName: BilliardSLAndMAES-OneShotSimplified.bytes
   steps: 0
   isCollectingData: 0
+  trainingDataSaveFileName: BilliardSLAndMAES-OneShotSimplified_trainingdata.bytes
   dataBufferCount: 0
 --- !u!4 &949524765
 Transform:
@@ -701,6 +703,11 @@ Prefab:
         type: 2}
       propertyPath: initialStepSize
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114185723549392986, guid: 516fb5a9405a3b141b40831dd2ba3441,
+        type: 2}
+      propertyPath: targetValue
+      value: 0.9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}

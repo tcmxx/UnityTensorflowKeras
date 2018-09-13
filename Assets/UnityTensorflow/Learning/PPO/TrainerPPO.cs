@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Accord.Math;
 using System.Linq;
+using Accord.Statistics;
 using System.Runtime.InteropServices;
 using System.IO;
 using MLAgents;
@@ -39,6 +40,8 @@ public class TrainerPPO : Trainer
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
 
+        
+
         //initialize all data buffers
         statesEpisodeHistory = new Dictionary<Agent, List<float>>();
         rewardsEpisodeHistory = new Dictionary<Agent, List<float>>();
@@ -52,11 +55,13 @@ public class TrainerPPO : Trainer
 
 
         var brainParameters = BrainToTrain.brainParameters;
+        Debug.Assert(brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
 
         List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
-            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
-            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 }),
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 }),
+            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 }),
             new DataBuffer.DataInfo("TargetValue", typeof(float), new int[] { 1 }),
+            new DataBuffer.DataInfo("OldValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("Advantage", typeof(float), new int[] { 1 })
         };
 
@@ -81,8 +86,7 @@ public class TrainerPPO : Trainer
 
         //initialize loggers and neuralnetowrk model
         stats = new StatsLogger();
-
-
+        
         modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);
         if (continueFromCheckpoint)
         {
@@ -95,27 +99,36 @@ public class TrainerPPO : Trainer
         iModelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
         iModelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
         iModelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
-
+        iModelPPO.ClipValueLoss = parametersPPO.clipValueLoss;
         base.FixedUpdate();
     }
 
-
+    public override void IncrementStep()
+    {
+        base.IncrementStep();
+        if(GetStep() % parametersPPO.logInterval == 0 && GetStep() != 0)
+        {
+            stats.LogAllCurrentData(GetStep());
+        }
+    }
     public override void ResetTrainer()
     {
         base.ResetTrainer();
 
         var agents = statesEpisodeHistory.Keys;
         stats.ClearAll();
+        statesEpisodeHistory.Clear();
+        rewardsEpisodeHistory.Clear();
+        actionprobsEpisodeHistory.Clear();
+        actionsEpisodeHistory.Clear();
+        valuesEpisodeHistory.Clear();
+        accumulatedRewards.Clear();
+        episodeSteps.Clear();
+        dataBuffer.ClearData();
         foreach (var agent in agents)
         {
-            statesEpisodeHistory[agent].Clear();
-            rewardsEpisodeHistory[agent].Clear();
-            actionsEpisodeHistory[agent].Clear();
-            actionprobsEpisodeHistory[agent].Clear();
-            valuesEpisodeHistory[agent].Clear();
-            accumulatedRewards[agent] = 0;
-            episodeSteps[agent] = 0;
-            agent.AgentReset();
+            if (agent)
+                agent.AgentReset();
         }
     }
 
@@ -172,16 +185,25 @@ public class TrainerPPO : Trainer
         foreach (var agent in agentList)
         {
             var agentNewInfo = newInfo[agent];
-            if (agentNewInfo.done || agentNewInfo.maxStepReached || actionsEpisodeHistory[agent].Count > parametersPPO.timeHorizon)
+            if (agentNewInfo.done || agentNewInfo.maxStepReached || rewardsEpisodeHistory[agent].Count > parametersPPO.timeHorizon)
             {
                 //update process the episode data for PPO.
-                float nextValue = iModelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(),1, agentNewInfo.stackedVectorObservation.Count),
-                    CreateVisualIInputBatch(newInfo, new List<Agent>() { agent },BrainToTrain.brainParameters.cameraResolutions))[0];
-                var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
-                    valuesEpisodeHistory[agent].ToArray(), parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
-                float[] targetValues = new float[advantages.Length];
+                float nextValue = 0;
 
-                var valueHistory = valuesEpisodeHistory[agent];
+                if (agentNewInfo.done && !agentNewInfo.maxStepReached)
+                {
+                    nextValue = 0;  //this is very important!
+                }
+                else
+                {
+                    nextValue = iModelPPO.EvaluateValue(Matrix.Reshape(agentNewInfo.stackedVectorObservation.ToArray(), 1, agentNewInfo.stackedVectorObservation.Count),
+                        CreateVisualInputBatch(newInfo, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions))[0];
+                }
+
+                var valueHistory = valuesEpisodeHistory[agent].ToArray();
+                var advantages = RLUtils.GeneralAdvantageEst(rewardsEpisodeHistory[agent].ToArray(),
+                    valueHistory, parametersPPO.rewardDiscountFactor, parametersPPO.rewardGAEFactor, nextValue);
+                float[] targetValues = new float[advantages.Length];
                 for (int i = 0; i < targetValues.Length; ++i)
                 {
                     targetValues[i] = advantages[i] + valueHistory[i];
@@ -193,30 +215,41 @@ public class TrainerPPO : Trainer
                 dataToAdd.Add(ValueTuple.Create<string, Array>("Action", actionsEpisodeHistory[agent].ToArray()));
                 dataToAdd.Add(ValueTuple.Create<string, Array>("ActionProb", actionprobsEpisodeHistory[agent].ToArray()));
                 dataToAdd.Add(ValueTuple.Create<string, Array>("TargetValue", targetValues));
+                dataToAdd.Add(ValueTuple.Create<string, Array>("OldValue", valueHistory));
                 dataToAdd.Add(ValueTuple.Create<string, Array>("Advantage", advantages));
                 if (statesEpisodeHistory[agent].Count > 0)
                     dataToAdd.Add(ValueTuple.Create<string, Array>("VectorObservation", statesEpisodeHistory[agent].ToArray()));
-
-               for(int i = 0; i < visualEpisodeHistory[agent].Count; ++i)
+                for (int i = 0; i < visualEpisodeHistory[agent].Count; ++i)
                 {
                     dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, DataBuffer.ListToArray(visualEpisodeHistory[agent][i])));
-                    visualEpisodeHistory[agent][i].Clear();
                 }
+
+                dataBuffer.AddData(dataToAdd.ToArray());
+
                 //clear the temperary data record
                 statesEpisodeHistory[agent].Clear();
                 rewardsEpisodeHistory[agent].Clear();
                 actionsEpisodeHistory[agent].Clear();
                 actionprobsEpisodeHistory[agent].Clear();
                 valuesEpisodeHistory[agent].Clear();
-                
-                dataBuffer.AddData(dataToAdd.ToArray());
+                for (int i = 0; i < visualEpisodeHistory[agent].Count; ++i)
+                {
+                    visualEpisodeHistory[agent][i].Clear();
+                }
+
+
+
+
                 //update stats if the agent is not using heuristic
-                stats.AddData("accumulatedRewards", accumulatedRewards[agent], parametersPPO.rewardLogInterval);
-                stats.AddData("episodeSteps", episodeSteps[agent], parametersPPO.rewardLogInterval);
-                
-                
-                accumulatedRewards[agent] = 0;
-                episodeSteps[agent] = 0;
+                if (agentNewInfo.done || agentNewInfo.maxStepReached)
+                {
+                    stats.AddData("accumulatedRewards", accumulatedRewards[agent]);
+                    stats.AddData("episodeSteps", episodeSteps[agent]);
+
+
+                    accumulatedRewards[agent] = 0;
+                    episodeSteps[agent] = 0;
+                }
                 
             }
         }
@@ -226,14 +259,16 @@ public class TrainerPPO : Trainer
     {
         var result = new Dictionary<Agent, TakeActionOutput>();
         var agentList = new List<Agent>(agentInfos.Keys);
-
-        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
-        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
+        if (agentList.Count <= 0)
+            return result;
+        float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
 
         float[,] actionProbs = null;
-        var actions = iModelPPO.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
         var values = iModelPPO.EvaluateValue(vectorObsAll, visualObsAll);
+        var actions = iModelPPO.EvaluateAction(vectorObsAll, out actionProbs, visualObsAll, true);
+        
 
 
         int i = 0;
@@ -246,8 +281,8 @@ public class TrainerPPO : Trainer
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];
                 var action = agentDecision.Decide(info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
-                float[,] vectorOb = CreateVectorIInputBatch(agentInfos, new List<Agent>() { agent});
-                var visualOb = CreateVisualIInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
+                float[,] vectorOb = CreateVectorInputBatch(agentInfos, new List<Agent>() { agent});
+                var visualOb = CreateVisualInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
                 var probs = iModelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb);
 
                 var temp = new TakeActionOutput();
@@ -281,6 +316,7 @@ public class TrainerPPO : Trainer
         fetches.Add(new ValueTuple<string, int, string>("Action", 0, "Action"));
         fetches.Add(new ValueTuple<string, int, string>("ActionProb", 0, "ActionProb"));
         fetches.Add(new ValueTuple<string, int, string>("TargetValue", 0, "TargetValue"));
+        fetches.Add(new ValueTuple<string, int, string>("OldValue", 0, "OldValue"));
         fetches.Add(new ValueTuple<string, int, string>("Advantage", 0, "Advantage"));
         for(int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
         {
@@ -288,7 +324,7 @@ public class TrainerPPO : Trainer
         }
 
 
-        float loss = 0, policyLoss = 0, valueLoss = 0;
+        float loss = 0, policyLoss = 0, valueLoss = 0, entropy = 0;
         for (int i = 0; i < parametersPPO.numEpochPerTrain; ++i)
         {
             //training from the main data buffer
@@ -299,9 +335,21 @@ public class TrainerPPO : Trainer
             float[,] actions = (float[,])samples["Action"];
             float[,] actionProbs = (float[,])samples["ActionProb"];
             float[,] targetValues = (float[,])samples["TargetValue"];
-            float[,] advantages = (float[,])samples["Advantage"];
+            float[,] oldValues = (float[,])samples["OldValue"];
+            float[] advantages = ((float[,])samples["Advantage"]).Flatten() ;
 
             
+            //print("Adv before normalizatoin:" + advantages.Mean());
+
+            float advMean = advantages.Mean();
+            double advstd = advantages.StandardDeviation();
+            for(int n = 0; n < advantages.Length; ++n)
+            {
+                advantages[n] = (advantages[n] - advMean) / ((float)advstd + 0.0000000001f);
+            }
+
+
+
             List<float[,,,]> visualObservations = null;
             for (int j = 0; j < BrainToTrain.brainParameters.cameraResolutions.Length; ++j)
             {
@@ -314,35 +362,74 @@ public class TrainerPPO : Trainer
             //int actionUnitSize = (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous ? BrainToTrain.brainParameters.vectorActionSize : 1);
             //int totalStateSize = BrainToTrain.brainParameters.vectorObservationSize * BrainToTrain.brainParameters.numStackedVectorObservations;
 
-            float tempLoss = 0, tempPolicyLoss = 0, tempValueLoss = 0;
+            float tempLoss = 0, tempPolicyLoss = 0, tempValueLoss = 0, tempEntropy = 0;
             for (int j = 0; j < batchCount; ++j)
             {
-                
+
+
                 float[] losses = iModelPPO.TrainBatch(SubRows(vectorObservations, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(visualObservations, j * parametersPPO.batchSize, parametersPPO.batchSize),
                     SubRows(actions, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(actionProbs, j * parametersPPO.batchSize , parametersPPO.batchSize ),
                     SubRows(targetValues, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
-                    SubRows(advantages, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten()
+                    SubRows(oldValues, j * parametersPPO.batchSize, parametersPPO.batchSize).Flatten(),
+                    advantages.Get( j * parametersPPO.batchSize, (j+1)*parametersPPO.batchSize)
                     );
+                /*var testSamples = dataBuffer.RandomSample(parametersPPO.batchSize, fetches.ToArray());
+                float[] losses = iModelPPO.TrainBatch((float[,])testSamples["VectorObservation"],null,
+                    (float[,])testSamples["Action"],
+                    (float[,])testSamples["ActionProb"],
+                    ((float[,])testSamples["TargetValue"]).Flatten(),
+                    ((float[,])testSamples["OldValue"]).Flatten(),
+                    ((float[,])testSamples["Advantage"]).Flatten()
+                );*/
+                
+                //print("policyLoss:" + losses[2]);
+                //print("valueLoss:" + losses[1]);
+                //print("actions mean:" + actions.Flatten().Mean());
+
                 tempLoss += losses[0];
                 tempValueLoss  += losses[1];
                 tempPolicyLoss += losses[2];
+                tempEntropy += losses[3];
             }
 
             loss += tempLoss / (batchCount);
             policyLoss += tempPolicyLoss / (batchCount );
             valueLoss += tempValueLoss / (batchCount );
+            entropy += tempEntropy / (batchCount);
         }
         
         //log the stats
-        stats.AddData("loss", loss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-        stats.AddData("policyLoss", policyLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-        stats.AddData("valueLoss", valueLoss / parametersPPO.numEpochPerTrain, parametersPPO.lossLogInterval);
-
+        stats.AddData("loss", loss / parametersPPO.numEpochPerTrain);
+        stats.AddData("policyLoss", policyLoss / parametersPPO.numEpochPerTrain);
+        stats.AddData("valueLoss", valueLoss / parametersPPO.numEpochPerTrain);
+        stats.AddData("entropy", entropy / parametersPPO.numEpochPerTrain);
         dataBuffer.ClearData();
     }
+    
 
+    public override float[] PostprocessingAction(float[] rawAction)
+    {
+        if (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
+        {
+            return ClipAndNormalize(rawAction, parametersPPO.finalActionClip,parametersPPO.finalActionDownscale);
+        }
+        else
+        {
+            return rawAction;
+        }
+    }
+
+    private float[] ClipAndNormalize(float[] array, float clip, float divide)
+    {
+        var result = new float[array.Length];
+        for (int i = 0; i < array.Length; ++i)
+        {
+            result[i] = Mathf.Clamp(array[i], -clip, clip) / divide;
+        }
+        return result;
+    }
 
     private static T[,] SubRows<T>(T[,] data, int startRow, int rowCount)
     {

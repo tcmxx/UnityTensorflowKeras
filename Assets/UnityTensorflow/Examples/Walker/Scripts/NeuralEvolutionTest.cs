@@ -42,9 +42,13 @@ public class NeuralEvolutionTest : MonoBehaviour
     [SerializeField]
     protected int currentGeneration = 0;
 
-    public OptimizationSample[] samples;
+    protected OptimizationSample[] samples;
+
+    public OptimizationSample Best { get; private set; }
 
     //protected EvolutionData data;
+    public bool isOptimizing = true;
+    protected bool prevIsOptimizing = true;
 
     [Serializable]
     protected class EvolutionData
@@ -52,8 +56,8 @@ public class NeuralEvolutionTest : MonoBehaviour
         public OptimizationSample[] samples;
         public int currentEvaluationIndex = 0;
         public int currentGeneration = 0;
+        public OptimizationSample best;
     }
-
 
     void Start()
     {
@@ -86,10 +90,26 @@ public class NeuralEvolutionTest : MonoBehaviour
         SetWeights(samples[currentEvaluationIndex]);
     }
 
-
-
+    private void Update()
+    {
+        if(prevIsOptimizing != isOptimizing )
+        {
+            prevIsOptimizing = isOptimizing;
+            Current.K.try_initialize_variables(false);
+            trainer.ResetTrainer();
+            if (isOptimizing){
+                SetWeights(samples[currentEvaluationIndex]);
+            }
+            else{
+                SetWeights(Best);
+            }
+        }
+    }
     private void FixedUpdate()
     {
+        if (!isOptimizing)
+            return;
+
         if (trainer.GetStep() >= evaluationSteps)
         {
             //set the objective function value to the samples
@@ -98,14 +118,14 @@ public class NeuralEvolutionTest : MonoBehaviour
             float aveRewards = 0;
             for (int i = 0; i < evaluationLastRewardsNum; ++i)
             {
-                aveRewards += rewards[rewards.Count - 1 - i];
+                aveRewards += rewards[rewards.Count - 1 - i].Item2;
             }
             aveRewards = aveRewards / evaluationLastRewardsNum;
             samples[currentEvaluationIndex].objectiveFuncVal = aveRewards;
 
             //reset stuff
             currentEvaluationIndex++;
-            Current.K.try_initialize_variables();
+            Current.K.try_initialize_variables(false);
             trainer.ResetTrainer();
             if (currentEvaluationIndex < populationSize)
             {
@@ -123,6 +143,19 @@ public class NeuralEvolutionTest : MonoBehaviour
             currentGeneration++;
             currentEvaluationIndex = 0;
             optimizer.generateSamples(samples);//generate new samples
+
+            if (Best == null)
+            {
+                Best = new OptimizationSample();
+                Best.x = optimizer.getBest();
+                Best.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
+            }
+            else if ((mode == OptimizationModes.maximize && Best.objectiveFuncVal < optimizer.getBestObjectiveFuncValue()) ||
+                (mode == OptimizationModes.minimize && Best.objectiveFuncVal > optimizer.getBestObjectiveFuncValue()))
+            {
+                Best.x = optimizer.getBest();
+                Best.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
+            }
 
             SaveToFile();
 
@@ -169,11 +202,21 @@ public class NeuralEvolutionTest : MonoBehaviour
         //deserialize the data
         var mStream = new MemoryStream(data);
         var binFormatter = new BinaryFormatter();
-        var restoredData = (EvolutionData)binFormatter.Deserialize(mStream);
+        object deserizlied = binFormatter.Deserialize(mStream);
+        var restoredData = deserizlied as EvolutionData;
+        if (restoredData == null)
+        {
+            Debug.LogError("loaded data error");
+        }
+        else{
+            samples = restoredData.samples;
+            currentGeneration = restoredData.currentGeneration;
+            currentEvaluationIndex = restoredData.currentEvaluationIndex;
+            Best = restoredData.best;
+        }
 
-        samples = restoredData.samples;
-        currentGeneration = restoredData.currentGeneration;
-        currentEvaluationIndex = restoredData.currentEvaluationIndex;
+
+
     }
 
     /// <summary>
@@ -187,7 +230,7 @@ public class NeuralEvolutionTest : MonoBehaviour
         data.samples = samples;
         data.currentEvaluationIndex = currentEvaluationIndex;
         data.currentGeneration = currentGeneration;
-
+        data.best = Best;
         var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
         binFormatter.Serialize(mStream, data);

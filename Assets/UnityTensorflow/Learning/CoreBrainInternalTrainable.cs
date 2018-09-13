@@ -88,7 +88,23 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         foreach (Agent agent in newAgentList)
         {
             if (actionOutputs.ContainsKey(agent) && actionOutputs[agent].outputAction != null)
-                agent.UpdateVectorAction(actionOutputs[agent].outputAction);
+                agent.UpdateVectorAction(trainerInterface.PostprocessingAction(actionOutputs[agent].outputAction));
+        }
+
+
+
+        if (trainerInterface.IsReadyUpdate() && trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
+        {
+            trainerInterface.UpdateModel();
+        }
+
+        //clear the prev record if the agent is done
+        foreach (Agent agent in newAgentList)
+        {
+            if(newAgentInfos[agent].done || newAgentInfos[agent].maxStepReached)
+            {
+                currentInfo.Remove(agent);
+            }
         }
 
     }

@@ -24,9 +24,5 @@ MonoBehaviour:
   outputLayerBias: 1
   visualEncoderInitialScale: 1
   visualEncoderBias: 1
-  numHidden: 2
-  width: 64
-  hiddenWeightsInitialScale: 1
-  outputWeightsInitialScale: 0.01
   useVarianceForContinuousAction: 0
   minStd: 0.1

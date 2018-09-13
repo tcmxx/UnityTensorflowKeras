@@ -8,15 +8,23 @@ public class TrainerParamOverride : MonoBehaviour {
 
     
 
-    public List<FieldOverride> overrides = new List<FieldOverride>();
+    public FieldOverride[] overrides;
 
     [Serializable]
-    public struct FieldOverride
+    public class FieldOverride
     {
         public string name;
+        public Method method;
         public AnimationCurve curve;
+        public float endValue;
+        public float power;
     }
 
+    public enum Method
+    {
+        AnimationCurve,
+        PolynomialDecay
+    }
     protected Dictionary<string, float> originalValues = new Dictionary<string, float>();
 
     protected TrainerParams parameters;
@@ -36,8 +44,15 @@ public class TrainerParamOverride : MonoBehaviour {
             {
                 originalValues[o.name] = GetValue(o.name);
             }
+            float value = 0;
+            if (o.method == Method.AnimationCurve)
+            {
+                value = o.curve.Evaluate(Mathf.Clamp01(((float)trainer.GetStep()) / trainer.GetMaxStep())) * originalValues[o.name];
+            }else if(o.method == Method.PolynomialDecay)
+            {
+                value = (originalValues[o.name] - o.endValue)*Mathf.Pow(1-((float)trainer.GetStep())/trainer.GetMaxStep(), o.power) +o.endValue;
+            }
 
-            float value = o.curve.Evaluate(Mathf.Clamp01(((float)trainer.GetStep()) / trainer.GetMaxStep())) * originalValues[o.name];
             SetValue(o.name, value);
         }
     }

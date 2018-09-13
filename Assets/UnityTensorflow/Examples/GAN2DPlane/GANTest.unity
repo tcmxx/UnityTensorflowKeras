@@ -1279,8 +1279,9 @@ MonoBehaviour:
   training: 0
   usePredictionInTraining: 1
   trainedEpisodes: 0
-  generatorLR: 0.001
-  discriminatorLR: 0.001
+  generatorLR: 0.0006
+  discriminatorLR: 0.0003
+  tryGanInterval: 50
 --- !u!114 &2127189634
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1305,12 +1306,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2544b11577dabe74ea576f1261f9a08b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: a6eb24f26c3faed43a2e1332cabb4107, type: 2}
   generatorL2LossWeight: 0.1
   outputShape: 02000000
-  inputNoiseShape: 02000000
+  inputNoiseShape: 04000000
   inputConditionShape: 
   hasGeneratorL2Loss: 0
   generatorOptimizer:

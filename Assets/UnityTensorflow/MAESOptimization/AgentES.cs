@@ -75,6 +75,6 @@ public abstract class AgentES : Agent, IESOptimizable
 
     public int GetParamDimension()
     {
-        return brain.brainParameters.vectorActionSize;
+        return brain.brainParameters.vectorActionSize[0];
     }
 }

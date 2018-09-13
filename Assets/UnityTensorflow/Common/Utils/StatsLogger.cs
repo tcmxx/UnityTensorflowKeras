@@ -6,9 +6,9 @@ using UnityEngine;
 
 public class StatsLogger
 {
-    protected Dictionary<string, List<float>> data;
+    protected Dictionary<string, List<ValueTuple<float, float>>> loggedData;
 
-    protected Dictionary<string, AutoAverage> averageCounter;
+    protected Dictionary<string, List< float>> tempData;
 
     public bool LogToGrapher { get; set; } = true;
 
@@ -17,63 +17,88 @@ public class StatsLogger
 
     public StatsLogger()
     {
-        data = new Dictionary<string, List<float>>();
-        averageCounter = new Dictionary<string, AutoAverage>();
+        loggedData = new Dictionary<string, List<ValueTuple<float, float>>>();
+        tempData = new Dictionary<string, List<float>>();
 
         Type type = Type.GetType("Grapher");
         if (type != null)
         {
-            logMethodInfo = type.GetMethod("Log", new Type[] { typeof(float), typeof(string) });
-            resetMethodInfo = type.GetMethod("Reset", new Type[] { typeof(float), typeof(string) });
+            logMethodInfo = type.GetMethod("Log", new Type[] { typeof(float), typeof(string), typeof(float) });
+            resetMethodInfo = type.GetMethod("Reset", new Type[] {});
         }
     }
 
 
-
-    public void AddData(string name, float datapoint, int logAverageFrequency = 1)
+    public void LogAllCurrentData(float currentStep)
     {
-        if (!data.ContainsKey(name))
-        {
-            data[name] = new List<float>();
-            averageCounter[name] = new AutoAverage(logAverageFrequency);
-        }
 
-        
-        averageCounter[name].AddValue(datapoint);
-        if (averageCounter[name].JustUpdated)
+        foreach(var k in loggedData.Keys)
         {
-            data[name].Add(averageCounter[name].Average);
+            LogCurrentData(k, currentStep);
         }
-        if (LogToGrapher && averageCounter[name].JustUpdated)
+#if UNITY_EDITOR
+        Grapher.SaveToFiles(Grapher.SessionName);
+#endif
+    }
+
+    public void LogCurrentData(string name, float currentStep)
+    {
+
+        if(tempData.ContainsKey(name) && tempData[name].Count > 0)
         {
+            float ave = 0;
+            int count = tempData[name].Count;
+            for (int i = 0; i < count; ++i) {
+                ave += tempData[name][i];
+            }
+            
+            ave = ave / count;
+            tempData[name].Clear();
+
+            loggedData[name].Add(ValueTuple.Create(currentStep, ave));
+
 #if UNITY_EDITOR
             //Grapher.Log(averageCounter[name].Average, name);
             if (logMethodInfo != null)
             {
-                object[] parametersArray = new object[] { averageCounter[name].Average, name };
+                object[] parametersArray = new object[] { ave, name, currentStep };
                 logMethodInfo.Invoke(null, parametersArray);
 
             }
 #endif
         }
 
+
     }
 
 
-    public List<float> GetStat(string name)
+
+    public void AddData(string name, float datapoint)
     {
-        return data.TryGetOr(name, null);
+        if (!loggedData.ContainsKey(name))
+        {
+            loggedData[name] =  new List<ValueTuple<float, float>>();
+            tempData[name] =  new List<float>();
+        }
+        
+        tempData[name].Add(datapoint);
+    }
+
+
+    public List<ValueTuple<float,float>> GetStat(string name)
+    {
+        return loggedData.TryGetOr(name, null);
     }
 
     public void Clear(string name)
     {
-        data.Remove(name);
-        averageCounter.Remove(name);
+        tempData.Remove(name);
+        loggedData.Remove(name);
     }
     public void ClearAll()
     {
-        data.Clear();
-        averageCounter.Clear();
+        tempData.Clear();
+        loggedData.Clear();
 #if UNITY_EDITOR
         //Grapher.Log(averageCounter[name].Average, name);
         if (resetMethodInfo != null)

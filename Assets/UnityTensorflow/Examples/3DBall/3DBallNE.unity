@@ -609,11 +609,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 654033468}
-  isTraining: 1
+  isTraining: 0
   parameters: {fileID: 11400000, guid: 2386b5c0cac59514193ed38630e846a4, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\3DBall\3DBallNECheckpoint.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\3DBall
+  checkpointFileName: 3DBallNECheckpoint.bytes
   steps: 0
+  evolutionDataSaveFileName: 3DBallNECheckpoint_NEData.bytes
   currentEvaluationIndex: 0
   currentGeneration: 0
   paramDimension: 0
@@ -657,7 +659,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80885700eae055d47977cc84fd00de74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: d0dfaadcde51e804eb6f4efd1876b41e, type: 2}
   optimizer:
@@ -668,6 +670,8 @@ MonoBehaviour:
     - 0.999
     - 0.00000001
     - 0
+  useInputNormalization: 0
+  mode: 0
 --- !u!114 &667765197
 MonoBehaviour:
   m_ObjectHideFlags: 0

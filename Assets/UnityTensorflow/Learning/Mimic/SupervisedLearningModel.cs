@@ -31,7 +31,6 @@ public interface ISupervisedLearningModel
     /// <returns>(means,vars). If the supervised learning model does not support var, the second can be null</returns>
     ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation);
     float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions);
-    bool HasVariance();
 }
 
 /// <summary>
@@ -51,7 +50,8 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors,  TrainerParams trainerParams)
     {
         //build the network
-        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize,ActionSpace);
+        Debug.Assert(ActionSize.Length <= 1, "Action branching is not supported yet");
+        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize[0],ActionSpace);
         Tensor outputAction = networkOutputs.Item1;
         Tensor outputVar = networkOutputs.Item2;
         hasVariance = outputVar != null && brainParameters.vectorActionSpaceType == SpaceType.continuous;
@@ -79,13 +79,13 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         if (trainingParams != null)
         {
             //training inputs
-            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize[0] : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
             //creat the loss
             Tensor loss = null;
             if (ActionSpace == SpaceType.discrete)
             {
                 Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSize });
+                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSize[0] });
                 loss = K.mean(K.categorical_crossentropy(reshapedOnehot, outputAction, false));
             }
             else
@@ -98,7 +98,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
                     loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
             }
             //add inputs, outputs and parameters to the list
-            List<Tensor> updateParameters = GetAllModelWeights();
+            List<Tensor> updateParameters = network.GetWeights();
             List<Tensor> allInputs = new List<Tensor>();
 
 
@@ -122,10 +122,6 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     }
 
 
-    public bool HasVariance()
-    {
-        return hasVariance;
-    }
     /// <summary>
     /// 
     /// </summary>
@@ -208,9 +204,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
 
     public override List<Tensor> GetAllModelWeights()
     {
-        List<Tensor> parameters = new List<Tensor>();
-        parameters.AddRange(network.GetWeights());
-        return parameters;
+        return network.GetWeights();
     }
 
     float[,] INeuralEvolutionModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
@@ -218,7 +212,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         return EvaluateAction(vectorObservation, visualObservation).Item1;
     }
 
-    public List<Tensor> GetWeightsToOptimize()
+    public List<Tensor> GetWeightsForNeuralEvolution()
     {
         return network.GetWeights();
     }

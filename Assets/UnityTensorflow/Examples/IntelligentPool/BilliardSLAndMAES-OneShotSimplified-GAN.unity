@@ -778,7 +778,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2544b11577dabe74ea576f1261f9a08b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkpointTOLoad: {fileID: 0}
+  checkpointToLoad: {fileID: 0}
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 7280f9cda48515f4a8e2ba0b537d9ae7, type: 2}
   generatorL2LossWeight: 1
@@ -909,9 +909,11 @@ MonoBehaviour:
   isTraining: 0
   parameters: {fileID: 11400000, guid: 9acfa770db3e7484fa67b58669a53213, type: 2}
   continueFromCheckpoint: 1
-  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data\BilliardSLAndMAES-OneShotSimplified-GAN.bytes
+  checkpointPath: Assets\UnityTensorflow\Examples\IntelligentPool\Data
+  checkpointFileName: BilliardSLAndMAES-OneShotSimplified-GAN.bytes
   steps: 0
   isCollectingData: 0
+  trainingDataSaveFileName: BilliardSLAndMAES-OneShotSimplified-GAN_trainingdata.bytes
   dataBufferCount: 0
 --- !u!4 &949524765
 Transform:

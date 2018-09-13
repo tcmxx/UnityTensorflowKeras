@@ -15,7 +15,7 @@ public class TrainerMimic : Trainer
 
     [Tooltip("Whether collect data from Decision for supervised learning?")]
     public bool isCollectingData = true;
-
+    public string trainingDataSaveFileName = @"trainingData.bytes";
     StatsLogger stats;
 
     protected DataBuffer dataBuffer;
@@ -41,8 +41,9 @@ public class TrainerMimic : Trainer
         var brainParameters = BrainToTrain.brainParameters;
 
         //intialize data buffer
+        Debug.Assert(brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
         List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
-            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize : 1 })
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 })
         };
 
         if (brainParameters.vectorObservationSize > 0)
@@ -60,6 +61,8 @@ public class TrainerMimic : Trainer
 
             allBufferData.Add(new DataBuffer.DataInfo("VisualObservation" + i, typeof(float), new int[] { height, width, channels }));
         }
+        allBufferData.Add(new DataBuffer.DataInfo("Reward", typeof(float), new int[] { 1 }));
+
         dataBuffer = new DataBuffer(parametersMimic.maxBufferSize, allBufferData.ToArray());
 
         if (continueFromCheckpoint)
@@ -91,6 +94,8 @@ public class TrainerMimic : Trainer
                     Array arrayToAdd = TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
                     dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
                 }
+                dataToAdd.Add(ValueTuple.Create<string, Array>("Reward", new float[] { newInfo[agent].reward}));
+
                 dataBuffer.AddData(dataToAdd.ToArray());
             }
         }
@@ -100,9 +105,14 @@ public class TrainerMimic : Trainer
     {
         base.IncrementStep();
         dataBufferCount = dataBuffer.CurrentCount;
-        if (GetStep() % parametersMimic.saveModelInterval == 0)
+        if (GetStep() % parametersMimic.saveModelInterval == 0 && GetStep() != 0)
         {
             SaveTrainingData();
+        }
+
+        if (GetStep() % parametersMimic.logInterval == 0 && GetStep() != 0)
+        {
+            stats.LogAllCurrentData(GetStep());
         }
     }
 
@@ -125,9 +135,10 @@ public class TrainerMimic : Trainer
         var result = new Dictionary<Agent, TakeActionOutput>();
 
         var agentList = new List<Agent>(agentInfos.Keys);
-
-        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
-        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
+        if (agentList.Count <= 0)
+            return result;
+        float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
         float[,] actions = null;
         var evalOutput = modelSL.EvaluateAction(vectorObsAll, visualObsAll);
@@ -172,7 +183,7 @@ public class TrainerMimic : Trainer
 
         if (agentNumWithDecision > 0)
         {
-            stats.AddData("action difference", actionDiff/ agentNumWithDecision, parametersMimic.actionDiffLogInterval);
+            stats.AddData("action difference", actionDiff/ agentNumWithDecision);
         }
 
         return result;
@@ -213,7 +224,7 @@ public class TrainerMimic : Trainer
             loss += temoLoss;
         }
 
-        stats.AddData("loss", loss / parametersMimic.numIterationPerTrain, parametersMimic.lossLogInterval);
+        stats.AddData("loss", loss / parametersMimic.numIterationPerTrain);
     }
 
 
@@ -222,15 +233,18 @@ public class TrainerMimic : Trainer
 
     public void SaveTrainingData()
     {
+        if (string.IsNullOrEmpty(trainingDataSaveFileName))
+        {
+            Debug.Log("trainingDataSaveFileName empty. No training data saved.");
+            return;
+        }
         var binFormatter = new BinaryFormatter();
         var mStream = new MemoryStream();
 
         binFormatter.Serialize(mStream, dataBuffer);
         var data = mStream.ToArray();
-
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_trainingdata.bytes"));
+        
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, trainingDataSaveFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
 
@@ -241,11 +255,12 @@ public class TrainerMimic : Trainer
     }
     public void LoadTrainingData()
     {
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string savepath = Path.Combine(dir, file + "_trainingdata.bytes");
-
-        string fullPath = Path.GetFullPath(savepath);
+        if (string.IsNullOrEmpty(trainingDataSaveFileName))
+        {
+            Debug.Log("trainingDataSaveFileName empty. No training data loaded.");
+            return;
+        }
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, trainingDataSaveFileName));
 
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);

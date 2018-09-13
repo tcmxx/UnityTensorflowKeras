@@ -33,7 +33,7 @@ public abstract class UnityNetwork : ScriptableObject
         /// <returns>(output tensor, list of weights)</returns>
         public ValueTuple<Tensor, List<Tensor>> Call(Tensor x)
         {
-            var layer = new Dense(size, Activation.GetActivationFunction(activationFunction), useBias, kernel_initializer: new GlorotUniform(scale: initialScale));
+            var layer = new Dense(size, Activation.GetActivationFunction(activationFunction), useBias, kernel_initializer: new VarianceScaling(scale: initialScale));
             var output = layer.Call(x)[0];
             return ValueTuple.Create(output, layer.weights);
         }

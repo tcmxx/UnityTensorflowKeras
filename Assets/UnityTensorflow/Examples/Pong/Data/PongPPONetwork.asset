@@ -16,18 +16,22 @@ MonoBehaviour:
     initialScale: 1
     useBias: 1
     activationFunction: 0
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
   criticHiddenLayers:
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
   - size: 64
     initialScale: 1
     useBias: 1
     activationFunction: 0
   actorOutputLayerInitialScale: 0.01
   actorOutputLayerBias: 1
-  criticOutputLayerInitialScale: 0.01
+  criticOutputLayerInitialScale: 1
   criticOutputLayerBias: 1
-  actorNNHidden: 1
-  actorNNWidth: 64
-  criticNNHidden: 1
-  criticNNWidth: 64
-  hiddenWeightsInitialScale: 1
-  outputWeightsInitialScale: 0.01
+  visualEncoderInitialScale: 0.01
+  visualEncoderBias: 1

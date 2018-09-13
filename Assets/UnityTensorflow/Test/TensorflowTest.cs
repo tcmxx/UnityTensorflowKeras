@@ -35,7 +35,7 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestModelCompileAndFit();
 
-        //TestDataBuffer();
+        TestDataBuffer();
 
         //print(Path.GetFullPath("Set/setset/set.ser"));
 
@@ -84,8 +84,20 @@ public class TensorflowTest : MonoBehaviour {
 
         testBuffer.AddData(dataToAdd.ToArray());
 
-        //var result = testBuffer.FetchDataAt(1, ValueTuple.Create("Test1", 2, "Test1"), ValueTuple.Create("Test2", 2, "Test2"));
+        var result = testBuffer.FetchDataAt(1, ValueTuple.Create("Test1", 2, "Test1"), ValueTuple.Create("Test2", 2, "Test2"));
+        Debug.Assert(ArrayEqual<float>(result["Test1"], new float[1, 1, 2]{ { { 3,4} } }), "Data not matching.");
+        Debug.Assert(ArrayEqual<float>(result["Test2"], new float[1, 4] { {  5,6,7,8  } }), "Data not matching.");
 
+        testBuffer.ClearData();
+        dataToAdd = new List<ValueTuple<string, Array>>();
+        dataToAdd.Add(ValueTuple.Create<string, Array>("Test1", new float[3, 1, 2] { { { 9, 9 } }, { { 76, 55 } }, { { 88, 99} } }));
+        dataToAdd.Add(ValueTuple.Create<string, Array>("Test2", new float[12] { 11, 22, 33, 44, 55, 66, 77, 88,110,220,330,440 }));
+        testBuffer.AddData(dataToAdd.ToArray());
+
+        var result3 = testBuffer.FetchDataAt(1, ValueTuple.Create("Test1", 0, "Test1"), ValueTuple.Create("Test2", 0, "Test2"));
+        Debug.Assert(ArrayEqual<float>(result3["Test2"], new float[1, 4] { { 55, 66, 77, 88 } }), "Data not matching.");
+
+        //var result2 = testBuffer.SampleBatchesReordered(1, ValueTuple.Create("Test1", 0, "Test1"), ValueTuple.Create("Test2", 0, "Test2"));
 
 
         var formatter = new BinaryFormatter();
@@ -102,13 +114,21 @@ public class TensorflowTest : MonoBehaviour {
         var t2Result = t2.FetchDataAt(1,  ValueTuple.Create("Test2", 2, "Test2"));
         var t1Result = t2.FetchDataAt(1, ValueTuple.Create("Test2", 2, "Test2"));
 
-        bool resultEquals = t1Result["Test2"].Equals(t2Result["Test2"]);
-        Debug.Assert(resultEquals, "Data not matching.Wrong serialization.");
+        Debug.Assert(ArrayEqual<float>(t1Result["Test2"], t2Result["Test2"]), "Data not matching.Wrong serialization.");
 
 
 
     }
 
+    public static bool ArrayEqual<T>(Array data1, Array data2)
+    {
+
+        var equal =
+            data1.Rank == data2.Rank &&
+            Enumerable.Range(0, data1.Rank).All(dimension => data1.GetLength(dimension) == data2.GetLength(dimension)) &&
+            data1.Cast<T>().SequenceEqual(data2.Cast<T>());
+        return equal;
+    }
 
     public void TestBasicBackendAndOptimizerAndExportGraph()
     {

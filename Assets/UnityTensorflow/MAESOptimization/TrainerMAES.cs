@@ -93,4 +93,10 @@ public class TrainerMAES : MonoBehaviour, ITrainer
     {
         return false;
     }
+
+    public float[] PostprocessingAction(float[] rawAction)
+    {
+        return rawAction;
+    }
+    
 }

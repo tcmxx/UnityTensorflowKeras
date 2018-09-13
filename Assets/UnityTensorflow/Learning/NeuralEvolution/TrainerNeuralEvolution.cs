@@ -22,6 +22,8 @@ public class TrainerNeuralEvolution : Trainer
     protected OptimizationSample bestSample;
     protected IMAES optimizer;
 
+    public string evolutionDataSaveFileName = @"NEData.bytes";
+
     [ReadOnly]
     [SerializeField]
     protected int currentEvaluationIndex = 0;
@@ -94,7 +96,7 @@ public class TrainerNeuralEvolution : Trainer
         rewardsOfCurrentChild = new List<float>();
 
 
-        tensorsToOptimize = modeNE.GetWeightsToOptimize();
+        tensorsToOptimize = modeNE.GetWeightsForNeuralEvolution();
         paramDimension = 0;
         foreach (var t in tensorsToOptimize)
         {
@@ -139,8 +141,8 @@ public class TrainerNeuralEvolution : Trainer
 
         var agentList = new List<Agent>(agentInfos.Keys);
 
-        float[,] vectorObsAll = CreateVectorIInputBatch(agentInfos, agentList);
-        var visualObsAll = CreateVisualIInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
+        float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
+        var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
 
         float[,] actions = null;
         actions = modeNE.EvaluateAction(vectorObsAll, visualObsAll);
@@ -210,7 +212,7 @@ public class TrainerNeuralEvolution : Trainer
         }
         aveRewards = aveRewards / rewardsOfCurrentChild.Count;
         rewardsOfCurrentChild.Clear();
-        stats.AddData("accumulatedRewards", aveRewards, parametersNE.lossLogInterval);
+        stats.AddData("accumulatedRewards", aveRewards);
 
 
         samples[currentEvaluationIndex].objectiveFuncVal = aveRewards;
@@ -234,10 +236,18 @@ public class TrainerNeuralEvolution : Trainer
             currentEvaluationIndex = 0;
             optimizer.generateSamples(samples);//generate new samples
 
-            bestSample = new OptimizationSample();
-            bestSample.x = optimizer.getBest();
-            bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
-            
+            if (bestSample == null)
+            {
+                bestSample = new OptimizationSample();
+                bestSample.x = optimizer.getBest();
+                bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
+            }
+            else if((parametersNE.mode == OptimizationModes.maximize && bestSample.objectiveFuncVal< optimizer.getBestObjectiveFuncValue()) ||
+                (parametersNE.mode == OptimizationModes.minimize && bestSample.objectiveFuncVal > optimizer.getBestObjectiveFuncValue()))
+            {
+                bestSample.x = optimizer.getBest();
+                bestSample.objectiveFuncVal = optimizer.getBestObjectiveFuncValue();
+            }
             SetWeights(samples[currentEvaluationIndex]);//set weight for the first sample
         }
 
@@ -353,9 +363,7 @@ public class TrainerNeuralEvolution : Trainer
     public void SaveNEDataToFile()
     {
         var data = this.SaveNECheckpoint();
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_NEData.bytes"));
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, evolutionDataSaveFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         File.WriteAllBytes(fullPath, data);
@@ -368,9 +376,7 @@ public class TrainerNeuralEvolution : Trainer
     /// /// <returns>Whether loaded successfully</returns>
     public bool LoadNEDataFromFile()
     {
-        string dir = Path.GetDirectoryName(checkpointPath);
-        string file = Path.GetFileNameWithoutExtension(checkpointPath);
-        string fullPath = Path.GetFullPath(Path.Combine(dir, file + "_NEData.bytes"));
+        string fullPath = Path.GetFullPath(Path.Combine(checkpointPath, evolutionDataSaveFileName));
         fullPath = fullPath.Replace('/', Path.DirectorySeparatorChar);
         fullPath = fullPath.Replace('\\', Path.DirectorySeparatorChar);
         if (!File.Exists(fullPath))

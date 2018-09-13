@@ -16,10 +16,10 @@ public class RLNetworkSimpleAC : RLNetworkAC
     public List<SimpleDenseLayerDef> actorHiddenLayers;
     public List<SimpleDenseLayerDef> criticHiddenLayers;
 
-    public float actorOutputLayerInitialScale = 0.1f;
+    public float actorOutputLayerInitialScale = 0.01f;
     public bool actorOutputLayerBias = true;
 
-    public float criticOutputLayerInitialScale = 0.1f;
+    public float criticOutputLayerInitialScale = 1f;
     public bool criticOutputLayerBias = true;
 
     public float visualEncoderInitialScale = 0.01f;
@@ -29,7 +29,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     protected List<Tensor> actorWeights;
 
     public override void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize, SpaceType actionSpace,
-        out Tensor outAction, out Tensor outValue, out Tensor outVariance)
+        out Tensor outAction, out Tensor outValue, out Tensor outLogVariance)
     {
 
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
@@ -112,7 +112,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
 
         //outputs
-        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new GlorotUniform(scale: actorOutputLayerInitialScale));
+        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
         outAction = actorOutput.Call(encodedAllActor)[0];
         if (actionSpace == SpaceType.discrete)
         {
@@ -128,12 +128,12 @@ public class RLNetworkSimpleAC : RLNetworkAC
         if (actionSpace == SpaceType.continuous)
         {
             var logSigmaSq = Current.K.variable((new Constant(0)).Call(new int[] { outActionSize }, DataType.Float), name: "PPO.log_sigma_square");
-            outVariance = Current.K.exp(logSigmaSq);
+            outLogVariance = logSigmaSq;
             actorWeights.Add(logSigmaSq);
         }
         else
         {
-            outVariance = null;
+            outLogVariance = null;
         }
         
     }
