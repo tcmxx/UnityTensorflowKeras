@@ -9,7 +9,7 @@ using KerasSharp.Initializers;
 using KerasSharp.Activations;
 using System;
 
-[CreateAssetMenu()]
+[CreateAssetMenu(menuName = "ml-agent/sl/SupervisedLearningNetworkSimple")]
 public class SupervisedLearningNetworkSimple : SupervisedLearningNetwork
 {
 

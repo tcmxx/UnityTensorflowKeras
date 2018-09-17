@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
-
+/*
 public class TrainerNeuralEvolution : Trainer
 {
 
@@ -390,3 +390,4 @@ public class TrainerNeuralEvolution : Trainer
         return true;
     }
 }
+*/

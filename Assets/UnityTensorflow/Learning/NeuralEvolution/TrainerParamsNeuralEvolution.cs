@@ -7,6 +7,7 @@ using ICM;
 using UnityEditor;
 #endif
 
+/*
 [CreateAssetMenu()]
 public class TrainerParamsNeuralEvolution : TrainerParams
 {
@@ -22,3 +23,4 @@ public class TrainerParamsNeuralEvolution : TrainerParams
     [Header("Log")]
     public int lossLogInterval = 1;
 }
+*/

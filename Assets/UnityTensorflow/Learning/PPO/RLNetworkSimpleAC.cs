@@ -10,7 +10,7 @@ using KerasSharp.Activations;
 using System;
 using static KerasSharp.Backends.Current;
 
-[CreateAssetMenu()]
+[CreateAssetMenu(menuName = "ml-agent/ppo/RLNetworkSimpleAC")]
 public class RLNetworkSimpleAC : RLNetworkAC
 {
 

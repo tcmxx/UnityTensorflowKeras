@@ -159,6 +159,14 @@ public class TrainerPPO : Trainer
                     visualEpisodeHistory[agent].Add(new List<float[,,]>());
                 }
                 accumulatedRewards[agent] = 0;
+                actionMasksEpisodeHistory[agent] = new List<List<float>>();
+                if (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.discrete)
+                {
+                    for (int i = 0; i < BrainToTrain.brainParameters.vectorActionSize.Length; ++i)
+                    {
+                        actionMasksEpisodeHistory[agent].Add(new List<float>());
+                    }
+                }
             }
             if (currentInfo[agent].stackedVectorObservation.Count > 0)
                 statesEpisodeHistory[agent].AddRange(currentInfo[agent].stackedVectorObservation.ToArray());
@@ -179,7 +187,19 @@ public class TrainerPPO : Trainer
                 int startIndex = 0;
                 for (int i = 0; i < BrainToTrain.brainParameters.vectorActionSize.Length; ++i)
                 {
-                    actionMasksEpisodeHistory[agent][i].AddRange(currentInfo[agent].actionMasks.Get(startIndex, startIndex + BrainToTrain.brainParameters.vectorActionSize[i]).Select(x=>x?0.0f:1.0f));
+                    float[] tempMask = null;
+                    if(currentInfo[agent].actionMasks == null)
+                    {
+                        
+                        tempMask = new float[BrainToTrain.brainParameters.vectorActionSize[i]];
+                        tempMask.Set(1, 0, tempMask.Length);
+                        actionMasksEpisodeHistory[agent][i].AddRange(tempMask);
+                    }
+                    else
+                    {
+                        actionMasksEpisodeHistory[agent][i].AddRange(currentInfo[agent].actionMasks.Get(startIndex, startIndex + BrainToTrain.brainParameters.vectorActionSize[i]).Select(x => x ? 0.0f : 1.0f));
+                    }
+                    startIndex += BrainToTrain.brainParameters.vectorActionSize[i];
                 }
             }
             accumulatedRewards[agent] += newInfo[agent].reward;
@@ -257,7 +277,10 @@ public class TrainerPPO : Trainer
                 {
                     visualEpisodeHistory[agent][i].Clear();
                 }
-
+                for (int i = 0; i < actionMasksEpisodeHistory[agent].Count; ++i)
+                {
+                    actionMasksEpisodeHistory[agent][i].Clear();
+                }
 
 
 
@@ -392,7 +415,7 @@ public class TrainerPPO : Trainer
                 actionMasks = new List<float[,]>();
                 for (int b = 0; b < BrainToTrain.brainParameters.vectorActionSize.Length; ++b)
                 {
-                    actionMasks.Add((float[,])samples["ActionMask" + i]);
+                    actionMasks.Add((float[,])samples["ActionMask" + b]);
                 }
             }
 

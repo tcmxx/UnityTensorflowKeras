@@ -148,7 +148,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
         //output tensors for discrete actions. Includes all action selected actions and the normalized logits of all actions
         var outputDiscreteActions = new List<Tensor>();
-        outputDiscreteActions.Add(K.concat(outputActions.ToList(),1));
+        outputDiscreteActions.Add(K.identity(K.cast(ActionSizes.Length == 1? outputActions[0]: K.concat(outputActions.ToList(),1), DataType.Float), "OutputAction"));
         outputDiscreteActions.AddRange(outputNormalizedLogits);
         var actionFunctionInputs = new List<Tensor>();
         actionFunctionInputs.AddRange(allObservationInputs); actionFunctionInputs.AddRange(actionMasksInputs);
@@ -169,7 +169,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             using (K.name_scope("ActionProbAndEntropy"))
             {
 
-                onehotInputActions = inputActionsDiscrete.Select((x, i) => K.one_hot(x, K.constant<int>(ActionSizes[i], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f))).ToList().ToArray();
+                onehotInputActions = inputActionsDiscrete.Select((x, i) => K.reshape(K.one_hot(x, K.constant<int>(ActionSizes[i], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f)),new int[]{ -1,ActionSizes[i]})).ToList().ToArray();
 
                 //entropy
                 var entropies = outputActionsLogits.Select((t) => { return K.mean((-1.0f) * K.sum(K.softmax(t) * K.log(K.softmax(t) + 0.00000001f), axis: 1), 0); });
@@ -178,7 +178,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
                 //probabilities
                 var actionProbsArray = ActionSizes.Select((x, i) => { return K.sum(outputNormalizedLogits[i] * onehotInputActions[i], 1, true); }).ToList();
                 //actionLogProb = K.reshape(K.sum(K.log(outputActionFromNetwork) * onehotInputAction, 1), new int[] { -1, 1 });
-                actionLogProb = K.concat(actionProbsArray, 1);
+                actionLogProb = ActionSizes.Length == 1 ? actionProbsArray[0]:K.concat(actionProbsArray, 1);
             }
 
             List<Tensor> extraInputs = new List<Tensor>();
@@ -422,6 +422,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             inputLists.AddRange(masks);
 
             var result = ActionFunction.Call(inputLists);
+            var temp = result[0].eval();
             actions = ((float[,])result[0].eval());
 
             //get the log probabilities
@@ -622,9 +623,9 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     {
 
         var rawProbs = all_logits.Select((x, i) => K.softmax(x) * action_masks[i] + Mathf.Epsilon);
-        var normalizedProbs = rawProbs.Select((x) => x / (K.sum(x) + Mathf.Epsilon));
+        var normalizedProbs = rawProbs.Select((x) => x / (K.sum(x,1,true) + 0.00000000001f));
         normalizedLogProbs = normalizedProbs.Select((x) => K.log(x)).ToList().ToArray();
-        outputs = normalizedLogProbs.Select(x => K.multinomial(x, K.constant(1))).ToList().ToArray();
+        outputs = normalizedLogProbs.Select(x => K.multinomial(x, K.constant(1,dtype:DataType.Int32))).ToList().ToArray();
     }
 
 

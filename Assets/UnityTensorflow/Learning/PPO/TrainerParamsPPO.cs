@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[CreateAssetMenu()]
+[CreateAssetMenu(menuName = "ml-agent/ppo/TrainerParamsPPO")]
 public class TrainerParamsPPO : TrainerParams
 {
     [Header("Learning related")]
