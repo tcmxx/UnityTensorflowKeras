@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
+  m_Name: GridWorldTraineParamsPPO
+  m_EditorClassIdentifier: 
+  learningRate: 0.0003
+  maxTotalSteps: 500000
+  saveModelInterval: 10000
+  logInterval: 2000
+  rewardDiscountFactor: 0.99
+  rewardGAEFactor: 0.95
+  valueLossWeight: 0.5
+  timeHorizon: 3
+  entropyLossWeight: 0.01
+  clipEpsilon: 0.2
+  clipValueLoss: 0.2
+  batchSize: 32
+  bufferSizeForTrain: 256
+  numEpochPerTrain: 3
+  useHeuristicChance: 0.4
+  finalActionClip: 3
+  finalActionDownscale: 3

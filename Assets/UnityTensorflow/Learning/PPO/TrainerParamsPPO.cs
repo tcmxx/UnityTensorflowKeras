@@ -16,7 +16,7 @@ public class TrainerParamsPPO : TrainerParams
     [Tooltip("larger value means exploration is encouraged")]
     public float entropyLossWeight = 0.01f;
     public float clipEpsilon = 0.2f;
-    public float clipValueLoss = 1f;
+    public float clipValueLoss = 0.2f;
 
     public int batchSize = 128;
     public int bufferSizeForTrain = 2048;

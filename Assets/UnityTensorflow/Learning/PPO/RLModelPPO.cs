@@ -80,9 +80,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     /// <param name="brainParameters"></param>
     public override void InitializeInner(BrainParameters brainParameters, Tensor vecotrObsTensor, List<Tensor> visualTensors, TrainerParams trainerParams)
     {
-
-        Debug.Assert(ActionSizes.Length <= 1, "Action branching is not supported yet");
-
+        
         //vector observation normalization
         Tensor normalizedVectorObs = vecotrObsTensor;
         if (useInputNormalization && HasVectorObservation)
@@ -161,15 +159,23 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         {
             // action probability from input action
             Tensor outputEntropy;
-            Tensor[] inputActionsDiscrete = null, onehotInputActions = null;    //for discrete action space
+            List<Tensor> inputActionsDiscreteSeperated = null, onehotInputActions = null;    //for discrete action space
 
-            inputActionsDiscrete = ActionSizes.Select((x, i) => { return UnityTFUtils.Input(new int?[] { 1 }, name: "InputAction_Branch" + i, dtype: DataType.Int32)[0]; }).ToList().ToArray();
-            
+            Tensor inputAction = UnityTFUtils.Input(new int?[] { ActionSizes.Length }, name: "InputActions", dtype: DataType.Int32)[0];
+
+            //split the input for each discrete branch
+            var splits = new int[ActionSizes.Length];
+            for(int i = 0; i < splits.Length; ++i)
+            {
+                splits[i] = 1;
+            }
+            inputActionsDiscreteSeperated = K.split(inputAction, K.constant(splits, dtype:DataType.Int32), K.constant(1, dtype:DataType.Int32), ActionSizes.Length);
+
             Tensor actionLogProb = null;
             using (K.name_scope("ActionProbAndEntropy"))
             {
 
-                onehotInputActions = inputActionsDiscrete.Select((x, i) => K.reshape(K.one_hot(x, K.constant<int>(ActionSizes[i], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f)),new int[]{ -1,ActionSizes[i]})).ToList().ToArray();
+                onehotInputActions = inputActionsDiscreteSeperated.Select((x, i) => K.reshape(K.one_hot(x, K.constant<int>(ActionSizes[i], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f)),new int[]{ -1,ActionSizes[i]})).ToList();
 
                 //entropy
                 var entropies = outputActionsLogits.Select((t) => { return K.mean((-1.0f) * K.sum(K.softmax(t) * K.log(K.softmax(t) + 0.00000001f), axis: 1), 0); });
@@ -183,7 +189,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
             List<Tensor> extraInputs = new List<Tensor>();
             extraInputs.AddRange(actionFunctionInputs);
-            extraInputs.AddRange(inputActionsDiscrete);
+            extraInputs.Add(inputAction);
 
             CreatePPOOptimizer(trainingParams, outputEntropy, actionLogProb, outputValue, extraInputs, network.GetWeights());
 
@@ -269,7 +275,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         ClipValueLoss = trainingParams.clipValueLoss;
 
 
-        var inputOldLogProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSizes[0] : 1 }, name: "InputOldLogProb")[0];
+        var inputOldLogProb = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSizes[0] : ActionSizes.Length }, name: "InputOldLogProb")[0];
         var inputAdvantage = UnityTFUtils.Input(new int?[] { 1 }, name: "InputAdvantage")[0];
         var inputTargetValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputTargetValue")[0];
         var inputOldValue = UnityTFUtils.Input(new int?[] { 1 }, name: "InputOldValue")[0];

@@ -40,7 +40,7 @@ public class TrainerPPO : Trainer
         Debug.Assert(iModelPPO != null, "Please assign a model that implement interface IRLModelPPO to modelRef");
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
-
+        
 
 
         //initialize all data buffers
@@ -57,11 +57,10 @@ public class TrainerPPO : Trainer
 
 
         var brainParameters = BrainToTrain.brainParameters;
-        Debug.Assert(brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
-
+        Debug.Assert(brainParameters.vectorActionSize.Length > 0, "Action size can not be zero. Please set it in the brain");
         List<DataBuffer.DataInfo> allBufferData = new List<DataBuffer.DataInfo>() {
-            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 }),
-            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : 1 }),
+            new DataBuffer.DataInfo("Action", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : brainParameters.vectorActionSize.Length }),
+            new DataBuffer.DataInfo("ActionProb", typeof(float), new int[] { brainParameters.vectorActionSpaceType == SpaceType.continuous ? brainParameters.vectorActionSize[0] : brainParameters.vectorActionSize.Length }),
             new DataBuffer.DataInfo("TargetValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("OldValue", typeof(float), new int[] { 1 }),
             new DataBuffer.DataInfo("Advantage", typeof(float), new int[] { 1 })
