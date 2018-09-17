@@ -176,6 +176,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     {
         var result = new AgentInfo()
         {
+            actionMasks = (bool[])agentInfo.actionMasks?.Clone(),
             vectorObservation = new List<float>(agentInfo.vectorObservation),
             stackedVectorObservation = new List<float>(agentInfo.stackedVectorObservation),
             visualObservations = new List<Texture2D>(agentInfo.visualObservations),

@@ -5,6 +5,6 @@ using UnityEngine;
 
 public interface INeuralEvolutionModel
 {
-    float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation);
+    float[,] EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null);
     List<Tensor> GetWeightsForNeuralEvolution();
 }

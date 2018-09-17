@@ -8,6 +8,7 @@ using KerasSharp;
 using KerasSharp.Initializers;
 using KerasSharp.Activations;
 using System;
+using static KerasSharp.Backends.Current;
 
 [CreateAssetMenu()]
 public class RLNetworkSimpleAC : RLNetworkAC
@@ -24,29 +25,64 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
     public float visualEncoderInitialScale = 0.01f;
     public bool visualEncoderBias = true;
-    
+
     protected List<Tensor> criticWeights;
     protected List<Tensor> actorWeights;
 
-    public override void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize, SpaceType actionSpace,
-        out Tensor outAction, out Tensor outValue, out Tensor outLogVariance)
+    public override void BuildNetworkForContinuousActionSapce(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, int outActionSize,
+        out Tensor outActionMean, out Tensor outValue, out Tensor outActionLogVariance)
     {
 
+        Tensor encodedAllActor = null;
+        CreateCommonLayers(inVectorObs, inVisualObs, inMemery, inPrevAction, out outValue, out encodedAllActor);
+
+        //outputs
+        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
+        outActionMean = actorOutput.Call(encodedAllActor)[0];
+        actorWeights.AddRange(actorOutput.weights);
+
+        var logSigmaSq = Current.K.variable((new Constant(0)).Call(new int[] { outActionSize }, DataType.Float), name: "PPO.log_sigma_square");
+        outActionLogVariance = logSigmaSq;
+        actorWeights.Add(logSigmaSq);
+
+
+    }
+
+    public override void BuildNetworkForDiscreteActionSpace(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction,int[] outActionSizes, out Tensor[] outActionLogits, out Tensor outValue)
+    {
+        Tensor encodedAllActor = null;
+        CreateCommonLayers(inVectorObs, inVisualObs, inMemery, inPrevAction, out outValue, out encodedAllActor);
+
+        List<Tensor> policy_branches = new List<Tensor>();
+        foreach(var size in outActionSizes)
+        {
+            var tempOutput = new Dense(units: size, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
+            policy_branches.Add( tempOutput.Call(encodedAllActor)[0]);
+            actorWeights.AddRange(tempOutput.weights);
+        }
+        outActionLogits = policy_branches.ToArray();
+    }
+
+
+
+
+    protected void CreateCommonLayers(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, out Tensor outValue, out Tensor encodedAllActor)
+    {
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
         Debug.Assert(inPrevAction == null, "Currently previous action input is not supported by RLNetworkSimpleAC");
-        Debug.Assert(!(inVectorstate == null && inVisualState == null), "Network need at least one vector observation or visual observation");
-        //Debug.Assert(actionSpace == SpaceType.continuous, "Only continuous action space is supported by RLNetworkSimpleAC");
+        Debug.Assert(!(inVectorObs == null && inVisualObs == null), "Network need at least one vector observation or visual observation");
+
         criticWeights = new List<Tensor>();
         actorWeights = new List<Tensor>();
 
         //visual encoders
         Tensor encodedVisualActor = null;
         Tensor encodedVisualCritic = null;
-        if (inVisualState != null)
+        if (inVisualObs != null)
         {
             List<Tensor> visualEncodedActor = new List<Tensor>();
             List<Tensor> visualEncodedCritic = new List<Tensor>();
-            foreach (var v in inVisualState)
+            foreach (var v in inVisualObs)
             {
                 var ha = CreateVisualEncoder(v, actorHiddenLayers, "ActorVisualEncoder");
                 var hc = CreateVisualEncoder(v, criticHiddenLayers, "CriticVisualEncoder");
@@ -57,7 +93,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
                 criticWeights.AddRange(hc.Item2);
                 visualEncodedCritic.Add(hc.Item1);
             }
-            if(inVisualState.Count > 1)
+            if (inVisualObs.Count > 1)
             {
                 //Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
                 encodedVisualActor = Current.K.stack(visualEncodedActor, 1);
@@ -74,69 +110,51 @@ public class RLNetworkSimpleAC : RLNetworkAC
 
         }
 
-        
-
         //vector states encode
         Tensor encodedVectorStateActor = null;
         Tensor encodedVectorStateCritic = null;
-        if (inVectorstate != null)
+        if (inVectorObs != null)
         {
-            var output = BuildSequentialLayers(actorHiddenLayers, inVectorstate, "ActorStateEncoder");
+            var output = BuildSequentialLayers(actorHiddenLayers, inVectorObs, "ActorStateEncoder");
             encodedVectorStateActor = output.Item1;
             actorWeights.AddRange(output.Item2);
-            output = BuildSequentialLayers(criticHiddenLayers, inVectorstate, "CriticStateEncoder");
+            output = BuildSequentialLayers(criticHiddenLayers, inVectorObs, "CriticStateEncoder");
             encodedVectorStateCritic = output.Item1;
             criticWeights.AddRange(output.Item2);
         }
 
         //concat all inputs
-        Tensor encodedAllActor = null;
+        encodedAllActor = null;
         Tensor encodedAllCritic = null;
 
-        if(inVisualState == null && inVectorstate != null)
+        if (inVisualObs == null && inVectorObs != null)
         {
             encodedAllActor = encodedVectorStateActor;
             encodedAllCritic = encodedVectorStateCritic;
         }
-        else if(inVisualState != null && inVectorstate == null)
+        else if (inVisualObs != null && inVectorObs == null)
         {
             encodedAllActor = encodedVisualActor;
             encodedAllCritic = encodedVisualCritic;
         }
-        else if(inVisualState != null && inVectorstate != null)
+        else if (inVisualObs != null && inVectorObs != null)
         {
             //Debug.LogWarning("Tensorflow does not have gradient for concat operation in C yet. Please only use one type of observation if you need training.");
-            encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor,encodedVisualActor},1);
+            encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor, encodedVisualActor }, 1);
             encodedAllCritic = Current.K.concat(new List<Tensor>() { encodedVectorStateCritic, encodedVisualCritic }, 1);
         }
 
 
-        //outputs
-        var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
-        outAction = actorOutput.Call(encodedAllActor)[0];
-        if (actionSpace == SpaceType.discrete)
-        {
-            outAction = Current.K.softmax(outAction);
-        }
-        actorWeights.AddRange(actorOutput.weights);
 
         var criticOutput = new Dense(units: 1, activation: null, use_bias: criticOutputLayerBias, kernel_initializer: new GlorotUniform(scale: criticOutputLayerInitialScale));
         outValue = criticOutput.Call(encodedAllCritic)[0];
         criticWeights.AddRange(criticOutput.weights);
 
-        //output variance. Currently not depending on the inputs for this simple network implementation        
-        if (actionSpace == SpaceType.continuous)
-        {
-            var logSigmaSq = Current.K.variable((new Constant(0)).Call(new int[] { outActionSize }, DataType.Float), name: "PPO.log_sigma_square");
-            outLogVariance = logSigmaSq;
-            actorWeights.Add(logSigmaSq);
-        }
-        else
-        {
-            outLogVariance = null;
-        }
-        
     }
+
+
+
+
 
 
     protected ValueTuple<Tensor, List<Tensor>> CreateVisualEncoder(Tensor visualInput, List<SimpleDenseLayerDef> denseLayers, string scope)
@@ -146,7 +164,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         List<Tensor> returnWeights = new List<Tensor>();
         using (Current.K.name_scope(scope))
         {
-            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 },use_bias:visualEncoderBias ,kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
+            var conv1 = new Conv2D(16, new int[] { 8, 8 }, new int[] { 4, 4 }, use_bias: visualEncoderBias, kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
             var conv2 = new Conv2D(32, new int[] { 4, 4 }, new int[] { 2, 2 }, use_bias: visualEncoderBias, kernel_initializer: new GlorotUniform(scale: visualEncoderInitialScale), activation: new ELU());
 
             temp = conv1.Call(visualInput)[0];
@@ -158,13 +176,13 @@ public class RLNetworkSimpleAC : RLNetworkAC
             returnWeights.AddRange(conv1.weights);
             returnWeights.AddRange(conv2.weights);
         }
-        
+
         var output = BuildSequentialLayers(denseLayers, temp, scope);
         var hiddenFlat = output.Item1;
         returnWeights.AddRange(output.Item2);
 
 
-        return ValueTuple.Create(hiddenFlat,returnWeights);
+        return ValueTuple.Create(hiddenFlat, returnWeights);
     }
 
 
@@ -186,4 +204,6 @@ public class RLNetworkSimpleAC : RLNetworkAC
     {
         return criticWeights;
     }
+
+
 }

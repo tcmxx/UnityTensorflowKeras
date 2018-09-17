@@ -12,7 +12,7 @@ using System.IO;
 
 public class NeuralEvolutionTest : MonoBehaviour
 {
-
+    /*
     public TrainerPPO trainer;
     public RLModelPPOHierarchy model;
     public ESOptimizer.ESOptimizerType optimizerType;
@@ -260,5 +260,5 @@ public class NeuralEvolutionTest : MonoBehaviour
         var bytes = File.ReadAllBytes(fullPath);
         this.RestoreCheckpoint(bytes);
         Debug.Log("evolution childrens loaded  from " + fullPath);
-    }
+    }*/
 }

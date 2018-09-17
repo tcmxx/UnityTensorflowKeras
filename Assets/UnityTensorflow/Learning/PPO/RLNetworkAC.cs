@@ -13,20 +13,28 @@ public abstract class RLNetworkAC : UnityNetwork
 {
 
 
+
+
     /// <summary>
     /// Impelment this abstract method to build your own neural network
     /// </summary>
-    /// <param name="inVectorstate">input vector observation tensor</param>
-    /// <param name="inVisualState">input visual observation tensors</param>
+    /// <param name="inVectorObs">input vector observation tensor</param>
+    /// <param name="inVisualObs">input visual observation tensors</param>
     /// <param name="inMemery">input memory tensor. Not in use right now</param>
     /// <param name="inPrevAction">input previous action tensor. Noe in use right now</param>
-    /// <param name="outActionSize">output action size</param>
-    /// <param name="actionSpace">action space</param>
-    /// <param name="outAction">Output action. If action space is continuous, it is the mean; if aciton space is discrete, it is the probability of each action</param>
+    /// <param name="outActionSize">output action size. </param>
+    /// <param name="outActionMean">outout value.</param>
     /// <param name="outValue">outout value.</param>
-    /// <param name="outLogVariance">output outLogVariance. Only needed if the action space is continuous. It can either have batch dimension or not for RLModelPPO</param>
-    public abstract void BuildNetwork(Tensor inVectorstate, List<Tensor> inVisualState, Tensor inMemery, Tensor inPrevAction, int outActionSize, SpaceType actionSpace,
-        out Tensor outAction, out Tensor outValue, out Tensor outLogVariance);
+    /// <param name="outActionLogVariance">output outLogVariance. Only needed if the action space is continuous. It can either have batch dimension or not for RLModelPPO</param>
+    public abstract void BuildNetworkForContinuousActionSapce(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, int outActionSize,
+        out Tensor outActionMean, out Tensor outValue, out Tensor outActionLogVariance);
+
+    /// <param name="outActionSizes">output action sizes. Each element in the array is the size of each branch.(See unity ML agent for branches)/ </param>
+    /// <param name="outActionLogits">Output action log probabilities.  Each element in the array is the probabilities of each branch.(See unity ML agent for branches)</param>
+    public abstract void BuildNetworkForDiscreteActionSpace(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction,  int[] outActionSizes,
+        out Tensor[] outActionLogits, out Tensor outValue);
+
+
 
     /// <summary>
     /// return all weights of the neural network

@@ -39,7 +39,7 @@ public abstract class LearningModelBase : MonoBehaviour
     /// Total vector observation size, considering the stacked vector observations
     /// </summary>
     protected int StateSize { get; private set; }
-    protected int[] ActionSize { get; private set; }
+    protected int[] ActionSizes { get; private set; }
     protected SpaceType ActionSpace { get; private set; }
     /// <summary>
     /// Whether training is enabled in this model.
@@ -88,7 +88,7 @@ public abstract class LearningModelBase : MonoBehaviour
         if (!string.IsNullOrEmpty(modelName))
             ns = Current.K.name_scope(modelName);
 
-        ActionSize = brainParameters.vectorActionSize;
+        ActionSizes = brainParameters.vectorActionSize;
         StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
         ActionSpace = brainParameters.vectorActionSpaceType;
 

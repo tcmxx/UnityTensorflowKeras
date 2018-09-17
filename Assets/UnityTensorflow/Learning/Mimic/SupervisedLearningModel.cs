@@ -29,8 +29,8 @@ public interface ISupervisedLearningModel
     /// <param name="vectorObservation"></param>
     /// <param name="visualObservation"></param>
     /// <returns>(means,vars). If the supervised learning model does not support var, the second can be null</returns>
-    ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation);
-    float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions);
+    ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null);
+    float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, List<float[,]> actionsMask = null);
 }
 
 /// <summary>
@@ -50,8 +50,8 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors,  TrainerParams trainerParams)
     {
         //build the network
-        Debug.Assert(ActionSize.Length <= 1, "Action branching is not supported yet");
-        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSize[0],ActionSpace);
+        Debug.Assert(ActionSizes.Length <= 1, "Action branching is not supported yet");
+        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSizes[0],ActionSpace);
         Tensor outputAction = networkOutputs.Item1;
         Tensor outputVar = networkOutputs.Item2;
         hasVariance = outputVar != null && brainParameters.vectorActionSpaceType == SpaceType.continuous;
@@ -79,13 +79,13 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         if (trainingParams != null)
         {
             //training inputs
-            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSize[0] : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSizes[0] : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
             //creat the loss
             Tensor loss = null;
             if (ActionSpace == SpaceType.discrete)
             {
-                Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSize, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSize[0] });
+                Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSizes, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
+                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSizes[0] });
                 loss = K.mean(K.categorical_crossentropy(reshapedOnehot, outputAction, false));
             }
             else
@@ -128,7 +128,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     /// <param name="vectorObservation"></param>
     /// <param name="visualObservation"></param>
     /// <returns></returns>
-    public virtual ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    public virtual ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null)
     {
         List<Array> inputLists = new List<Array>();
         if (HasVectorObservation)
@@ -175,7 +175,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     }
 
 
-    public virtual float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions)
+    public virtual float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, List<float[,]> actionsMask = null)
     {
         Debug.Assert(TrainingEnabled == true, "The model needs to initalized with Training enabled to use TrainBatch()");
 
@@ -207,9 +207,9 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         return network.GetWeights();
     }
 
-    float[,] INeuralEvolutionModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    float[,] INeuralEvolutionModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null)
     {
-        return EvaluateAction(vectorObservation, visualObservation).Item1;
+        return EvaluateAction(vectorObservation, visualObservation, actionsMask).Item1;
     }
 
     public List<Tensor> GetWeightsForNeuralEvolution()

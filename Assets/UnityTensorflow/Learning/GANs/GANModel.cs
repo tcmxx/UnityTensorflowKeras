@@ -343,8 +343,8 @@ public class GANModel : LearningModelBase, ISupervisedLearningModel
             Debug.LogError("Trainer params for GAN needs to be a TrainerParamsGAN type");
         }
 
-        Debug.Assert(ActionSize.Length <= 1, "Action branching is not supported yet");
-        outputShape = new int[] { ActionSize[0] };
+        Debug.Assert(ActionSizes.Length <= 1, "Action branching is not supported yet");
+        outputShape = new int[] { ActionSizes[0] };
         inputConditionShape = new int[] { StateSize };
 
         Initialize(trainerParams != null);
@@ -358,7 +358,7 @@ public class GANModel : LearningModelBase, ISupervisedLearningModel
     /// <param name="vectorObservation"></param>
     /// <param name="visualObservation"></param>
     /// <returns></returns>
-    public ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation)
+    public ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null)
     {
         return ValueTuple.Create<float[,],float[,]>(
             (float[,])GenerateBatch(vectorObservation, MathUtils.GenerateWhiteNoise(vectorObservation.GetLength(0), -1, 1,inputNoiseShape)),
@@ -372,7 +372,7 @@ public class GANModel : LearningModelBase, ISupervisedLearningModel
     /// <param name="visualObservations"></param>
     /// <param name="actions"></param>
     /// <returns></returns>
-    public float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions)
+    public float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, List<float[,]> actionsMask = null)
     {
         float disLoss = 0, genLoss = 0;
         int batchSize = vectorObservations.GetLength(0);

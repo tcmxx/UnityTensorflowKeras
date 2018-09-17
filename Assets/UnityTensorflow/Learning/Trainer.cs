@@ -359,7 +359,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     {
         if (currentInfo.Count <= 0 || agentList.Count <= 0)
             return null;
-        int obsSize = currentInfo[agentList[0]].stackedVectorObservation.Count;
+        int obsSize = currentInfo[agentList[0]].stackedVectorObservation.Count; 
         if (obsSize == 0)
             return null;
         var result = new float[agentList.Count, obsSize];
@@ -373,6 +373,46 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
         return result;
     }
+
+
+    public static List<float[,]> CreateActionMasks(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList, int[] actionSizes)
+    {
+
+        if (currentInfo.Count <= 0 || agentList.Count <= 0)
+            return null;
+        List<float[,]> masks  = new List<float[,]>();
+        int agentCount = agentList.Count;
+        int currentActionIndex = 0;
+        for (int b = 0; b < actionSizes.Length; b++)
+        {
+            float[,] mask = new float[agentList.Count, actionSizes[b]];
+            int actionSize = actionSizes[b];
+            for(int i = 0; i < agentCount; ++i)
+            {
+                var agentMasks = currentInfo[agentList[i]].actionMasks;
+                if (agentMasks == null)
+                {
+                    for (int j = 0; j < actionSize; ++j)
+                    {
+                        mask[i, j] = 1;
+                        currentActionIndex++;
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < actionSize; ++j)
+                    {
+                        mask[i, j] = agentMasks[currentActionIndex] ? 0 : 1;
+                        currentActionIndex++;
+                    }
+                }
+            }
+            masks.Add(mask);
+        }
+
+        return masks;
+    }
+
 
     public bool IsTraining()
     {
