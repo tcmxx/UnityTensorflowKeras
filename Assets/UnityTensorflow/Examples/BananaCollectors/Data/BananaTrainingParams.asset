@@ -13,11 +13,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   learningRate: 0.0003
   maxTotalSteps: 100000
-  saveModelInterval: 10000
+  saveModelInterval: 5000
   logInterval: 1000
   rewardDiscountFactor: 0.99
   rewardGAEFactor: 0.95
-  valueLossWeight: 1
+  valueLossWeight: 0.5
   timeHorizon: 64
   entropyLossWeight: 0.005
   clipEpsilon: 0.2

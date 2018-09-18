@@ -92,6 +92,8 @@ public abstract class LearningModelBase : MonoBehaviour
         StateSize = brainParameters.vectorObservationSize * brainParameters.numStackedVectorObservations;
         ActionSpace = brainParameters.vectorActionSpaceType;
 
+        Debug.Assert(ActionSizes[0] > 0, "Action size can not be zero");
+
         //create basic inputs
         var inputStateTensor = StateSize > 0 ? UnityTFUtils.Input(new int?[] { StateSize }, name: "InputStates")[0] : null;
         HasVectorObservation = inputStateTensor != null;

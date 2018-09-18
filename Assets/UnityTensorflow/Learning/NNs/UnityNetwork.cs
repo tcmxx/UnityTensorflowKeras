@@ -17,13 +17,20 @@ public abstract class UnityNetwork : ScriptableObject
     public class SimpleDenseLayerDef
     {
         public int size = 32;
-        public float initialScale = 0.7f;
+        public float initialScale = 1f;
         public bool useBias = true;
         public Activation.ActivationFunction activationFunction;
-
         public SimpleDenseLayerDef()
         {
             size = 32;
+        }
+
+        public void Reinitialize()
+        {
+            size = 32;
+            initialScale = 1;
+            useBias = true;
+            activationFunction = Activation.ActivationFunction.Swish;
         }
 
         /// <summary>

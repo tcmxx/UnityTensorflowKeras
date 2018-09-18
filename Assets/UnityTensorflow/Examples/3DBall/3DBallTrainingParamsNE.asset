@@ -13,11 +13,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   learningRate: 0.001
   maxTotalSteps: 100000000
-  lossLogInterval: 10
   saveModelInterval: 10000
+  logInterval: 1000
   optimizerType: 1
   sampleCountForEachChild: 10
   populationSize: 16
   mode: 1
-  initialStepSize: 1
+  initialStepSize: 0.5
   timeHorizon: 500

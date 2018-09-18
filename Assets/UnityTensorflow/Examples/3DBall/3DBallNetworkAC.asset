@@ -12,26 +12,27 @@ MonoBehaviour:
   m_Name: 3DBallNetworkAC
   m_EditorClassIdentifier: 
   actorHiddenLayers:
-  - size: 128
+  - size: 32
     initialScale: 1
     useBias: 1
-    activationFunction: 0
-  - size: 128
+    activationFunction: 3
+  - size: 32
     initialScale: 1
     useBias: 1
-    activationFunction: 0
+    activationFunction: 3
   criticHiddenLayers:
-  - size: 128
+  - size: 32
     initialScale: 1
     useBias: 1
-    activationFunction: 0
-  - size: 128
+    activationFunction: 3
+  - size: 32
     initialScale: 1
     useBias: 1
-    activationFunction: 0
+    activationFunction: 3
   actorOutputLayerInitialScale: 0.01
   actorOutputLayerBias: 1
   criticOutputLayerInitialScale: 1
   criticOutputLayerBias: 1
   visualEncoderInitialScale: 0.01
   visualEncoderBias: 1
+  shareEncoder: 0

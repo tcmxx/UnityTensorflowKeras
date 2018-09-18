@@ -7,8 +7,8 @@ using ICM;
 using UnityEditor;
 #endif
 
-/*
-[CreateAssetMenu()]
+
+[CreateAssetMenu(menuName = "ml-agent/neural evolution/TrainerParamsNeuralEvolution")]
 public class TrainerParamsNeuralEvolution : TrainerParams
 {
     [Header("Optimization")]
@@ -19,8 +19,5 @@ public class TrainerParamsNeuralEvolution : TrainerParams
     public OptimizationModes mode;
     public float initialStepSize = 1;
     public int timeHorizon = 500;
-
-    [Header("Log")]
-    public int lossLogInterval = 1;
+    
 }
-*/

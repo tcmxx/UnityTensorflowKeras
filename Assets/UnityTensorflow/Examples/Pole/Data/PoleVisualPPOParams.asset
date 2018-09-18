@@ -11,18 +11,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3b2cffc6f799a841a0dc06b2a622d21, type: 3}
   m_Name: PoleVisualPPOParams
   m_EditorClassIdentifier: 
-  learningRate: 0.0001
-  maxTotalSteps: 50000
-  lossLogInterval: 1
+  learningRate: 0.01
+  maxTotalSteps: 100000
   saveModelInterval: 2000
+  logInterval: 1000
   rewardDiscountFactor: 0.995
   rewardGAEFactor: 0.95
-  valueLossWeight: 1
-  timeHorizon: 500
-  entropyLossWeight: 0.1
+  valueLossWeight: 0.5
+  timeHorizon: 128
+  entropyLossWeight: 0.005
   clipEpsilon: 0.2
-  batchSize: 256
-  bufferSizeForTrain: 4096
+  clipValueLoss: 0.2
+  batchSize: 128
+  bufferSizeForTrain: 2048
   numEpochPerTrain: 5
   useHeuristicChance: 0.4
-  rewardLogInterval: 10
+  finalActionClip: 3
+  finalActionDownscale: 3

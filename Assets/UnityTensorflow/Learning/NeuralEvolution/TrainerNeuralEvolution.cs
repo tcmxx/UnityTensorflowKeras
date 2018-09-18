@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
-/*
+
 public class TrainerNeuralEvolution : Trainer
 {
 
@@ -135,7 +135,7 @@ public class TrainerNeuralEvolution : Trainer
     }
 
 
-    public override Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public override Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos)
     {
         var result = new Dictionary<Agent, TakeActionOutput>();
 
@@ -166,7 +166,7 @@ public class TrainerNeuralEvolution : Trainer
 
 
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -180,7 +180,7 @@ public class TrainerNeuralEvolution : Trainer
         }
     }
 
-    public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
+    public override void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -268,6 +268,11 @@ public class TrainerNeuralEvolution : Trainer
         {
             SaveModel();
             SaveNEDataToFile();
+        }
+
+        if (GetStep() % parameters.logInterval == 0 && GetStep() != 0)
+        {
+            stats.LogAllCurrentData(GetStep());
         }
     }
 
@@ -390,4 +395,3 @@ public class TrainerNeuralEvolution : Trainer
         return true;
     }
 }
-*/

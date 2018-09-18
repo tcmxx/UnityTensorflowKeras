@@ -11,9 +11,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d99c8458226607a4bb1b2196d603c1b6, type: 3}
   m_Name: 3DBAllNetworkACNE
   m_EditorClassIdentifier: 
-  actorNNHidden: 2
-  actorNNWidth: 32
-  criticNNHidden: 2
-  criticNNWidth: 32
-  hiddenWeightsInitialScale: 1
-  outputWeightsInitialScale: 0.01
+  actorHiddenLayers:
+  - size: 32
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
+  criticHiddenLayers:
+  - size: 32
+    initialScale: 1
+    useBias: 1
+    activationFunction: 0
+  actorOutputLayerInitialScale: 0.01
+  actorOutputLayerBias: 1
+  criticOutputLayerInitialScale: 1
+  criticOutputLayerBias: 1
+  visualEncoderInitialScale: 0.01
+  visualEncoderBias: 1
+  shareEncoder: 0

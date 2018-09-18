@@ -628,7 +628,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
     public static void CreateDiscreteActionMaskingLayer(Tensor[] all_logits, Tensor[] action_masks, out Tensor[] outputs, out Tensor[] normalizedLogProbs)
     {
 
-        var rawProbs = all_logits.Select((x, i) => K.softmax(x) * action_masks[i] + 0.0000000001f);
+        var rawProbs = all_logits.Select((x, i) => K.softmax(x) * action_masks[i]);
         var normalizedProbs = rawProbs.Select((x) => x / (K.sum(x,1,true) + 0.00000000001f));
         normalizedLogProbs = normalizedProbs.Select((x) => K.log(x + 0.00000000001f)).ToList().ToArray();
         outputs = normalizedLogProbs.Select(x => K.multinomial(x, K.constant(1,dtype:DataType.Int32))).ToList().ToArray();

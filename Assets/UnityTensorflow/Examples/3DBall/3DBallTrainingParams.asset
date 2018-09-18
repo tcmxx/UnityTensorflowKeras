@@ -13,17 +13,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   learningRate: 0.005
   maxTotalSteps: 100000000
-  saveModelInterval: 10000
+  saveModelInterval: 5000
   logInterval: 1000
   rewardDiscountFactor: 0.99
   rewardGAEFactor: 0.95
-  valueLossWeight: 1
+  valueLossWeight: 0.5
   timeHorizon: 1000
-  entropyLossWeight: 0
+  entropyLossWeight: 0.001
   clipEpsilon: 0.2
-  clipValueLoss: 1
-  batchSize: 256
-  bufferSizeForTrain: 5000
+  clipValueLoss: 0.2
+  batchSize: 128
+  bufferSizeForTrain: 2048
   numEpochPerTrain: 3
   useHeuristicChance: 0.4
   finalActionClip: 3

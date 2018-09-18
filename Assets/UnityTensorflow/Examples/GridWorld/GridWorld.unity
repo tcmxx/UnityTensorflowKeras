@@ -703,9 +703,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 1774820491}
-  isTraining: 1
+  isTraining: 0
   parameters: {fileID: 11400000, guid: 9ac68691f040860429963bb7cf31c106, type: 2}
-  continueFromCheckpoint: 0
+  continueFromCheckpoint: 1
   checkpointPath: Assets/UnityTensorflow/Examples/GridWorld/Data
   checkpointFileName: Checkpoint.bytes
   steps: 0

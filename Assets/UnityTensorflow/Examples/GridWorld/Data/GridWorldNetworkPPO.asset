@@ -27,3 +27,4 @@ MonoBehaviour:
   criticOutputLayerBias: 1
   visualEncoderInitialScale: 0.01
   visualEncoderBias: 1
+  shareEncoder: 1

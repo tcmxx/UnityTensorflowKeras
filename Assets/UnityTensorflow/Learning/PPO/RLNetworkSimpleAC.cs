@@ -8,6 +8,8 @@ using KerasSharp;
 using KerasSharp.Initializers;
 using KerasSharp.Activations;
 using System;
+using System.Linq;
+
 using static KerasSharp.Backends.Current;
 
 [CreateAssetMenu(menuName = "ml-agent/ppo/RLNetworkSimpleAC")]
@@ -26,6 +28,8 @@ public class RLNetworkSimpleAC : RLNetworkAC
     public float visualEncoderInitialScale = 0.01f;
     public bool visualEncoderBias = true;
 
+    public bool shareEncoder = false;
+
     protected List<Tensor> criticWeights;
     protected List<Tensor> actorWeights;
 
@@ -34,7 +38,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     {
 
         Tensor encodedAllActor = null;
-        CreateCommonLayers(inVectorObs, inVisualObs, inMemery, inPrevAction, out outValue, out encodedAllActor);
+        CreateCommonLayers(inVectorObs, inVisualObs, inMemery, inPrevAction, out outValue, out encodedAllActor, shareEncoder);
 
         //outputs
         var actorOutput = new Dense(units: outActionSize, activation: null, use_bias: actorOutputLayerBias, kernel_initializer: new VarianceScaling(scale: actorOutputLayerInitialScale));
@@ -51,7 +55,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     public override void BuildNetworkForDiscreteActionSpace(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction,int[] outActionSizes, out Tensor[] outActionLogits, out Tensor outValue)
     {
         Tensor encodedAllActor = null;
-        CreateCommonLayers(inVectorObs, inVisualObs, inMemery, inPrevAction, out outValue, out encodedAllActor);
+        CreateCommonLayers(inVectorObs, inVisualObs, inMemery, inPrevAction, out outValue, out encodedAllActor, shareEncoder);
 
         List<Tensor> policy_branches = new List<Tensor>();
         foreach(var size in outActionSizes)
@@ -64,92 +68,91 @@ public class RLNetworkSimpleAC : RLNetworkAC
     }
 
 
-
-
-    protected void CreateCommonLayers(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, out Tensor outValue, out Tensor encodedAllActor)
+    protected ValueTuple<Tensor, List<Tensor>> CreateObservationStream(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, string encoderName)
     {
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
         Debug.Assert(inPrevAction == null, "Currently previous action input is not supported by RLNetworkSimpleAC");
         Debug.Assert(!(inVectorObs == null && inVisualObs == null), "Network need at least one vector observation or visual observation");
 
-        criticWeights = new List<Tensor>();
-        actorWeights = new List<Tensor>();
-
+        List<Tensor>  allWeights = new List<Tensor>();
+        Tensor encodedAll = null;
         //visual encoders
-        Tensor encodedVisualActor = null;
-        Tensor encodedVisualCritic = null;
+        Tensor encodedVisual = null;
         if (inVisualObs != null)
         {
-            List<Tensor> visualEncodedActor = new List<Tensor>();
-            List<Tensor> visualEncodedCritic = new List<Tensor>();
+            List<Tensor> visualEncoded = new List<Tensor>();
             foreach (var v in inVisualObs)
             {
-                var ha = CreateVisualEncoder(v, actorHiddenLayers, "ActorVisualEncoder");
-                var hc = CreateVisualEncoder(v, criticHiddenLayers, "CriticVisualEncoder");
+                var ha = CreateVisualEncoder(v, actorHiddenLayers, encoderName + "VisualEncoder");
 
-                actorWeights.AddRange(ha.Item2);
-                visualEncodedActor.Add(ha.Item1);
-
-                criticWeights.AddRange(hc.Item2);
-                visualEncodedCritic.Add(hc.Item1);
+                allWeights.AddRange(ha.Item2);
+                visualEncoded.Add(ha.Item1);
             }
             if (inVisualObs.Count > 1)
             {
                 //Debug.LogError("Tensorflow does not have gradient for concat operation in C yet. Please only use one observation.");
-                encodedVisualActor = Current.K.stack(visualEncodedActor, 1);
-                encodedVisualActor = Current.K.batch_flatten(encodedVisualActor);
-                encodedVisualCritic = Current.K.stack(visualEncodedCritic, 1);
-                encodedVisualCritic = Current.K.batch_flatten(encodedVisualCritic);
+                encodedVisual = Current.K.stack(visualEncoded, 1);
+                encodedVisual = Current.K.batch_flatten(encodedVisual);
             }
             else
             {
-                encodedVisualActor = visualEncodedActor[0];
-                encodedVisualCritic = visualEncodedCritic[0];
+                encodedVisual = visualEncoded[0];
             }
-
-
         }
 
         //vector states encode
-        Tensor encodedVectorStateActor = null;
-        Tensor encodedVectorStateCritic = null;
+        Tensor encodedVectorState = null;
         if (inVectorObs != null)
         {
-            var output = BuildSequentialLayers(actorHiddenLayers, inVectorObs, "ActorStateEncoder");
-            encodedVectorStateActor = output.Item1;
-            actorWeights.AddRange(output.Item2);
-            output = BuildSequentialLayers(criticHiddenLayers, inVectorObs, "CriticStateEncoder");
-            encodedVectorStateCritic = output.Item1;
-            criticWeights.AddRange(output.Item2);
+            var output = BuildSequentialLayers(actorHiddenLayers, inVectorObs, encoderName + "StateEncoder");
+            encodedVectorState = output.Item1;
+            allWeights.AddRange(output.Item2);
         }
 
         //concat all inputs
-        encodedAllActor = null;
-        Tensor encodedAllCritic = null;
-
         if (inVisualObs == null && inVectorObs != null)
         {
-            encodedAllActor = encodedVectorStateActor;
-            encodedAllCritic = encodedVectorStateCritic;
+            encodedAll = encodedVectorState;
         }
         else if (inVisualObs != null && inVectorObs == null)
         {
-            encodedAllActor = encodedVisualActor;
-            encodedAllCritic = encodedVisualCritic;
+            encodedAll = encodedVisual;
         }
         else if (inVisualObs != null && inVectorObs != null)
         {
             //Debug.LogWarning("Tensorflow does not have gradient for concat operation in C yet. Please only use one type of observation if you need training.");
-            encodedAllActor = Current.K.concat(new List<Tensor>() { encodedVectorStateActor, encodedVisualActor }, 1);
-            encodedAllCritic = Current.K.concat(new List<Tensor>() { encodedVectorStateCritic, encodedVisualCritic }, 1);
+            encodedAll = Current.K.concat(new List<Tensor>() { encodedVectorState, encodedVisual }, 1);
         }
 
+        return ValueTuple.Create(encodedAll, allWeights);
+    }
 
+    protected void CreateCommonLayers(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, out Tensor outValue, out Tensor encodedAllActor, bool shareEncoder = false)
+    {
+
+        actorWeights = new List<Tensor>();
+        criticWeights = new List<Tensor>();
+
+        ValueTuple<Tensor, List<Tensor>> actorEncoded, criticEncoded;
+        if (!shareEncoder)
+        {
+            actorEncoded = CreateObservationStream(inVectorObs, inVisualObs, inMemery, inPrevAction, "Actor");
+            criticEncoded = CreateObservationStream(inVectorObs, inVisualObs, inMemery, inPrevAction, "Critic");
+        }
+        else
+        {
+            actorEncoded = CreateObservationStream(inVectorObs, inVisualObs, inMemery, inPrevAction, "ActorCritic");
+            criticEncoded = actorEncoded;
+        }
+
+        actorWeights.AddRange(actorEncoded.Item2);
+        criticWeights.AddRange(criticEncoded.Item2);
 
         var criticOutput = new Dense(units: 1, activation: null, use_bias: criticOutputLayerBias, kernel_initializer: new GlorotUniform(scale: criticOutputLayerInitialScale));
-        outValue = criticOutput.Call(encodedAllCritic)[0];
+        outValue = criticOutput.Call(criticEncoded.Item1)[0];
         criticWeights.AddRange(criticOutput.weights);
 
+        encodedAllActor = actorEncoded.Item1;
     }
 
 
@@ -191,7 +194,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     {
         var result = new List<Tensor>();
         result.AddRange(actorWeights);
-        result.AddRange(criticWeights);
+        result.AddRange(criticWeights.Where(x=>!actorWeights.Contains(x)));
         return result;
     }
 
