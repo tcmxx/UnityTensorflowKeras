@@ -60,7 +60,7 @@ public interface ITrainer
     /// </summary>
     /// <param name="agentInfos">the information of agents that need actions.</param>
     /// <returns>a disionary of agent and its action to take</returns>
-    Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
+    Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos);
 
     /// <summary>
     /// This will be called every loop when when training is enabled. You should record the infos of the agents based on the need of your algorithm.
@@ -68,14 +68,14 @@ public interface ITrainer
     /// <param name="currentInfo">infomation of the agents before the action taken.</param>
     /// <param name="newInfo">infomation of the agents after tha ction taken</param>
     /// <param name="actionOutput">the action taken</param>
-    void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
+    void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
 
     /// <summary>
     /// Same as AddExperience(), called every loop when training. You are supposed to process the collected data for episodes or something. You can do it in AddExperience as well...This method is called right after AddExperience().
     /// </summary>
     /// <param name="currentInfo">infomation of the agents before the action taken.</param>
     /// <param name="newInfo">infomation of the agents after tha ction taken</param>
-    void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
+    void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo);
 
     /// <summary>
     /// When this returns true, UpdateModel() will be called();
@@ -199,9 +199,9 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     }
 
 
-    public abstract Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos);
-    public abstract void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
-    public abstract void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo);
+    public abstract Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos);
+    public abstract void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
+    public abstract void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo);
     public abstract bool IsReadyUpdate();
     public abstract void UpdateModel();
 
@@ -276,49 +276,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     }
 
 
-    /// <summary>
-    /// return the 3D float array of the texture image.
-    /// </summary>
-    /// <param name="tex">texture</param>
-    /// <param name="blackAndWhite">whether return black and white</param>
-    /// <returns>HWC array of the image</returns>
-    public static float[,,] TextureToArray(Texture2D tex, bool blackAndWhite)
-    {
-        int width = tex.width;
-        int height = tex.height;
-        int pixels = 0;
-        if (blackAndWhite)
-            pixels = 1;
-        else
-            pixels = 3;
-        float[,,] result = new float[height, width, pixels];
-        float[] resultTemp = new float[height * width * pixels];
-        int wp = width * pixels;
 
-        Color32[] cc = tex.GetPixels32();
-        for (int h = height - 1; h >= 0; h--)
-        {
-            for (int w = 0; w < width; w++)
-            {
-                Color32 currentPixel = cc[(height - h - 1) * width + w];
-                if (!blackAndWhite)
-                {
-                    resultTemp[h * wp + w * pixels] = currentPixel.r / 255.0f;
-                    resultTemp[h * wp + w * pixels + 1] = currentPixel.g / 255.0f;
-                    resultTemp[h * wp + w * pixels + 2] = currentPixel.b / 255.0f;
-                }
-                else
-                {
-                    resultTemp[h * wp + w * pixels] =
-                    (currentPixel.r + currentPixel.g + currentPixel.b)
-                    / 3;
-                }
-            }
-        }
-
-        Buffer.BlockCopy(resultTemp, 0, result, 0, height * width * pixels * sizeof(float));
-        return result;
-    }
 
     /// <summary>
     /// Create the visual input batch that can be used directly to feed neural network for all agents's camera visual inputs.
@@ -327,23 +285,23 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     /// <param name="agentList">List of agents that needs to be included in the output</param>
     /// <param name="cameraResolutions">camera resolution data. Should be obtain from the Brain.</param>
     /// <returns>List of visual input batch data. Each item in the list is for item in cameraResolution parameter</returns>
-    public static List<float[,,,]> CreateVisualInputBatch(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList, resolution[] cameraResolutions)
+    public static List<float[,,,]> CreateVisualInputBatch(Dictionary<Agent, AgentInfoInternal> currentInfo, List<Agent> agentList, resolution[] cameraResolutions)
     {
         if (cameraResolutions == null || cameraResolutions.Length <= 0)
             return null;
         if (currentInfo.Count <= 0 || agentList.Count <= 0)
             return null;
         var observationMatrixList = new List<float[,,,]>();
-        var texturesHolder = new List<Texture2D>();
+        var dataHolder = new List<float[,,]>();
 
         for (int observationIndex = 0; observationIndex < cameraResolutions.Length; observationIndex++)
         {
-            texturesHolder.Clear();
+            dataHolder.Clear();
             foreach (Agent agent in agentList)
             {
-                texturesHolder.Add(currentInfo[agent].visualObservations[observationIndex]);
+                dataHolder.Add(currentInfo[agent].visualObservations[observationIndex]);
             }
-            observationMatrixList.Add(texturesHolder.BatchVisualObservations(cameraResolutions[observationIndex].blackAndWhite));
+            observationMatrixList.Add(dataHolder.Stack());
         }
 
         return observationMatrixList;
@@ -355,7 +313,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     /// <param name="currentInfo">Agents and their infomation with vector observation</param>
     /// <param name="agentList">List of agents that needs to be included in the output</param>
     /// <returns>bacth vector observation data.</returns>
-    public static float[,] CreateVectorInputBatch(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList)
+    public static float[,] CreateVectorInputBatch(Dictionary<Agent, AgentInfoInternal> currentInfo, List<Agent> agentList)
     {
         if (currentInfo.Count <= 0 || agentList.Count <= 0)
             return null;
@@ -375,7 +333,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     }
 
 
-    public static List<float[,]> CreateActionMasks(Dictionary<Agent, AgentInfo> currentInfo, List<Agent> agentList, int[] actionSizes)
+    public static List<float[,]> CreateActionMasks(Dictionary<Agent, AgentInfoInternal> currentInfo, List<Agent> agentList, int[] actionSizes)
     {
 
         if (currentInfo.Count <= 0 || agentList.Count <= 0)

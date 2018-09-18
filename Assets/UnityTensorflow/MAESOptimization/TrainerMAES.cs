@@ -32,7 +32,7 @@ public class TrainerMAES : MonoBehaviour, ITrainer
         return int.MaxValue;
     }
 
-    public Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos)
     {
         var result = new Dictionary<Agent, TakeActionOutput>();
         foreach (var a in agentInfos)
@@ -54,12 +54,12 @@ public class TrainerMAES : MonoBehaviour, ITrainer
         return new Dictionary<Agent, TakeActionOutput>();
     }
 
-    public void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
+    public void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         return;
     }
 
-    public void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
+    public void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo)
     {
         return;
     }

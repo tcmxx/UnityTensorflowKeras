@@ -72,7 +72,7 @@ public class TrainerMimic : Trainer
         }
     }
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent,TakeActionOutput> actionOutput)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -91,7 +91,7 @@ public class TrainerMimic : Trainer
                 for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
                 {
                     var res = BrainToTrain.brainParameters.cameraResolutions[i];
-                    Array arrayToAdd = TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite).ExpandDimensions(0);
+                    Array arrayToAdd = currentInfo[agent].visualObservations[i].ExpandDimensions(0);
                     dataToAdd.Add(ValueTuple.Create<string, Array>("VisualObservation" + i, arrayToAdd));
                 }
                 dataToAdd.Add(ValueTuple.Create<string, Array>("Reward", new float[] { newInfo[agent].reward}));
@@ -123,14 +123,14 @@ public class TrainerMimic : Trainer
         return parametersMimic.requiredDataBeforeTraining <= dataBuffer.CurrentCount;
     }
 
-    public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
+    public override void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo)
     {
         return;
     }
 
 
 
-    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos)
     {
         var result = new Dictionary<Agent, TakeActionOutput>();
 

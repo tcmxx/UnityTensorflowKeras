@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Name: GridWorldNetworkPPO
   m_EditorClassIdentifier: 
   actorHiddenLayers:
-  - size: 20
+  - size: 256
     initialScale: 1
     useBias: 1
     activationFunction: 3
   criticHiddenLayers:
-  - size: 20
+  - size: 256
     initialScale: 1
     useBias: 1
     activationFunction: 3

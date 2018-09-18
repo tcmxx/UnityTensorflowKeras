@@ -4,7 +4,7 @@ using MLAgents;
 using UnityEngine;
 
 public class PongAgentDecision : AgentDependentDecision {
-    public override float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> otherInfomation = null)
+    public override float[] Decide(List<float> vectorObs, List<float[,,]> visualObs, List<float> heuristicAction, List<float> otherInfomation = null)
     {
         if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.discrete)
         {

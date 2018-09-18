@@ -11,7 +11,7 @@ public class BilliardMAESDecisionWithLog : DecisionMAES
 
     protected StatsLogger logger = new StatsLogger();
     protected int logStep = 0;
-    public override float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
+    public override float[] Decide(List<float> vectorObs, List<float[,,]> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
         var result =  base.Decide(vectorObs, visualObs, heuristicAction, heuristicVariance);
         if (log)

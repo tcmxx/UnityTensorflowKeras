@@ -15,11 +15,11 @@ MonoBehaviour:
   maxTotalSteps: 500000
   saveModelInterval: 10000
   logInterval: 2000
-  rewardDiscountFactor: 0.99
+  rewardDiscountFactor: 0.9
   rewardGAEFactor: 0.95
   valueLossWeight: 0.5
-  timeHorizon: 3
-  entropyLossWeight: 0.01
+  timeHorizon: 5
+  entropyLossWeight: 0.005
   clipEpsilon: 0.2
   clipValueLoss: 0.2
   batchSize: 32

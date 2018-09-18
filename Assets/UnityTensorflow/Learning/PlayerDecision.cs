@@ -11,6 +11,7 @@ public class PlayerDecision : AgentDependentDecision
     [System.Serializable]
     private struct DiscretePlayerAction
     {
+        public int branch;
         public KeyCode key;
         public int value;
     }
@@ -58,7 +59,7 @@ public class PlayerDecision : AgentDependentDecision
         }
     }
 
-    public override float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
+    public override float[] Decide(List<float> vectorObs, List<float[,,]> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
         if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
         {
@@ -87,13 +88,12 @@ public class PlayerDecision : AgentDependentDecision
         }
         else
         {
-            Debug.Assert(agent.brain.brainParameters.vectorActionSize.Length <= 1, "Action branching is not supported yet");
             var action = new float[1] { defaultAction };
             foreach (DiscretePlayerAction dha in discretePlayerActions)
             {
                 if (Input.GetKey(dha.key))
                 {
-                    action[0] = (float)dha.value;
+                    action[dha.branch] = (float)dha.value;
                     break;
                 }
             }

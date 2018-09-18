@@ -705,8 +705,8 @@ MonoBehaviour:
   modelRef: {fileID: 1774820491}
   isTraining: 1
   parameters: {fileID: 11400000, guid: 9ac68691f040860429963bb7cf31c106, type: 2}
-  continueFromCheckpoint: 1
-  checkpointPath: Assets/UnityTensorflow/Examples/BananaCollectors/Data
+  continueFromCheckpoint: 0
+  checkpointPath: Assets/UnityTensorflow/Examples/GridWorld/Data
   checkpointFileName: Checkpoint.bytes
   steps: 0
 --- !u!4 &896104105

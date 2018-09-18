@@ -9,6 +9,57 @@ using UnityEditor;
 using System.Linq;
 using MLAgents;
 
+
+
+
+
+//agent info for internal training use
+public struct AgentInfoInternal
+{
+    public List<float> stackedVectorObservation;
+
+    /// <summary>
+    /// Agent camera observation converted into float array.
+    /// </summary>
+    public List<float[,,]> visualObservations;
+
+    /// <summary>
+    /// Most recent text observation.
+    /// </summary>
+    public string textObservation;
+    
+    /// <summary>
+    /// For discrete control, specifies the actions that the agent cannot take. Is true if
+    /// the action is masked.
+    /// </summary>
+    public bool[] actionMasks;
+
+    /// <summary>
+    /// Used by the Trainer to store information about the agent. This data
+    /// structure is not consumed or modified by the agent directly, they are
+    /// just the owners of their trainier's memory. Currently, however, the
+    /// size of the memory is in the Brain properties.
+    /// </summary>
+    public List<float> memories;
+
+    /// <summary>
+    /// Current agent reward.
+    /// </summary>
+    public float reward;
+
+    /// <summary>
+    /// Whether the agent is done or not.
+    /// </summary>
+    public bool done;
+
+    /// <summary>
+    /// Whether the agent has reached its max step count for this episode.
+    /// </summary>
+    public bool maxStepReached;
+    
+}
+
+
 /// CoreBrain which decides actions using internally embedded TensorFlow model.
 public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 {
@@ -17,7 +68,8 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     public GameObject trainer;
 
     protected ITrainer trainerInterface;
-    private Dictionary<Agent, AgentInfo> currentInfo;
+    private Dictionary<Agent, AgentInfoInternal> currentInfo;
+
     private Dictionary<Agent, TakeActionOutput> prevActionOutput;
 
 
@@ -48,11 +100,19 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 
     /// Uses the stored information to run the tensorflow graph and generate 
     /// the actions.
-    public void DecideAction(Dictionary<Agent, AgentInfo> newAgentInfos)
+    public void DecideAction(Dictionary<Agent, AgentInfo> newAgentInfoRaw)
     {
-        int currentBatchSize = newAgentInfos.Count();
-        List<Agent> newAgentList = newAgentInfos.Keys.ToList();
+        int currentBatchSize = newAgentInfoRaw.Count();
+        List<Agent> newAgentList = newAgentInfoRaw.Keys.ToList();
         List<Agent> recordableAgentList = newAgentList.Where((a) => currentInfo != null && currentInfo.ContainsKey(a) && prevActionOutput.ContainsKey(a)).ToList();
+
+        //clone the raw agent info into the agent info we need
+        Dictionary<Agent, AgentInfoInternal> newAgentInfo = new Dictionary<Agent, AgentInfoInternal>();
+        foreach(var a in newAgentList)
+        {
+            newAgentInfo[a] = CopyAgentInfo(newAgentInfoRaw[a], a.brain);
+        }
+
 
         if (currentBatchSize == 0)
         {
@@ -63,7 +123,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         //get the datas only for the agents in the agentInfo input
         var prevInfo = GetValueForAgents(currentInfo, recordableAgentList);    
         var prevActionActions = GetValueForAgents(prevActionOutput, recordableAgentList);
-        var newInfo = GetValueForAgents(newAgentInfos, recordableAgentList);
+        var newInfo = GetValueForAgents(newAgentInfo, recordableAgentList);
 
         if (recordableAgentList.Count > 0 && trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
         {
@@ -79,7 +139,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         }
 
         //update the info
-        UpdateInfos(ref currentInfo, newAgentInfos);
+        UpdateInfos(ref currentInfo, newAgentInfo);
 
         var actionOutputs = trainerInterface.TakeAction(GetValueForAgents(currentInfo, newAgentList));
         UpdateActionOutputs(ref prevActionOutput, actionOutputs);
@@ -101,7 +161,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         //clear the prev record if the agent is done
         foreach (Agent agent in newAgentList)
         {
-            if(newAgentInfos[agent].done || newAgentInfos[agent].maxStepReached)
+            if(newAgentInfo[agent].done || newAgentInfo[agent].maxStepReached)
             {
                 currentInfo.Remove(agent);
             }
@@ -140,24 +200,14 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         return result;
     }
 
-    protected static void UpdateInfos(ref Dictionary<Agent, AgentInfo> allInfos, Dictionary<Agent, AgentInfo> newInfos)
+    protected static void UpdateInfos(ref Dictionary<Agent, AgentInfoInternal> allInfos, Dictionary<Agent, AgentInfoInternal> newInfos)
     {
         if (allInfos == null)
-            allInfos = new Dictionary<Agent, AgentInfo>();
+            allInfos = new Dictionary<Agent, AgentInfoInternal>();
 
         foreach (var agent in newInfos.Keys)
         {
-
-            //TODO remove this once Unity fixed their texture not released bug
-            if (allInfos.ContainsKey(agent))
-            {
-                foreach (var v in allInfos[agent].visualObservations)
-                {
-                    Destroy(v);
-                }
-            }
-
-            allInfos[agent] = CopyAgentInfo(newInfos[agent]);
+            allInfos[agent] =newInfos[agent];
         }
     }
 
@@ -172,22 +222,18 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         }
     }
 
-    public static AgentInfo CopyAgentInfo(AgentInfo agentInfo)
+    public static AgentInfoInternal CopyAgentInfo(AgentInfo agentInfo, Brain brain)
     {
-        var result = new AgentInfo()
+        var result = new AgentInfoInternal()
         {
             actionMasks = (bool[])agentInfo.actionMasks?.Clone(),
-            vectorObservation = new List<float>(agentInfo.vectorObservation),
             stackedVectorObservation = new List<float>(agentInfo.stackedVectorObservation),
-            visualObservations = new List<Texture2D>(agentInfo.visualObservations),
+            visualObservations = agentInfo.visualObservations.Select((x,i)=>x.TextureToArray(brain.brainParameters.cameraResolutions[i].blackAndWhite)).ToList(),
             textObservation = (string)agentInfo.textObservation?.Clone(),
-            storedVectorActions = (float[])agentInfo.storedVectorActions.Clone(),
-            storedTextActions = (string)agentInfo.storedTextActions?.Clone(),
             memories = new List<float>(agentInfo.memories),
             reward = agentInfo.reward,
             done = agentInfo.done,
             maxStepReached = agentInfo.maxStepReached,
-            id = agentInfo.id
         };
 
         return result;

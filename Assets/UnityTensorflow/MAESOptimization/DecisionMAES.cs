@@ -21,7 +21,7 @@ public class DecisionMAES : AgentDependentDecision
 
     }
 
-    public override float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
+    public override float[] Decide(List<float> vectorObs, List<float[,,]> visualObs, List<float> heuristicAction, List<float> heuristicVariance = null)
     {
         
        

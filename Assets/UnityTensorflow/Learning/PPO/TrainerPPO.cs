@@ -140,7 +140,7 @@ public class TrainerPPO : Trainer
         }
     }
 
-    public override void AddExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -177,8 +177,7 @@ public class TrainerPPO : Trainer
             //add the visual observations
             for (int i = 0; i < BrainToTrain.brainParameters.cameraResolutions.Length; ++i)
             {
-                var res = BrainToTrain.brainParameters.cameraResolutions[i];
-                visualEpisodeHistory[agent][i].Add(TextureToArray(currentInfo[agent].visualObservations[i], res.blackAndWhite));
+                visualEpisodeHistory[agent][i].Add(currentInfo[agent].visualObservations[i]);
             }
 
             if (BrainToTrain.brainParameters.vectorActionSpaceType == SpaceType.discrete)
@@ -215,7 +214,7 @@ public class TrainerPPO : Trainer
         return dataBuffer.CurrentCount >= parametersPPO.bufferSizeForTrain;
     }
 
-    public override void ProcessExperience(Dictionary<Agent, AgentInfo> currentInfo, Dictionary<Agent, AgentInfo> newInfo)
+    public override void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo)
     {
         var agentList = currentInfo.Keys;
         foreach (var agent in agentList)
@@ -298,7 +297,7 @@ public class TrainerPPO : Trainer
         }
     }
 
-    public override Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfo> agentInfos)
+    public override Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos)
     {
         var result = new Dictionary<Agent, TakeActionOutput>();
         var agentList = new List<Agent>(agentInfos.Keys);
@@ -427,14 +426,14 @@ public class TrainerPPO : Trainer
             {
                 int startRow = j * parametersPPO.batchSize;
 
-                float[] losses = iModelPPO.TrainBatch(SubRows(vectorObservations, startRow, parametersPPO.batchSize),
-                    SubRows(visualObservations, startRow, parametersPPO.batchSize),
-                    SubRows(actions, startRow, parametersPPO.batchSize),
-                    SubRows(actionProbs, startRow, parametersPPO.batchSize),
-                    SubRows(targetValues, startRow, parametersPPO.batchSize).Flatten(),
-                    SubRows(oldValues, startRow, parametersPPO.batchSize).Flatten(),
+                float[] losses = iModelPPO.TrainBatch(vectorObservations.SubRows(startRow, parametersPPO.batchSize),
+                    visualObservations.SubRows( startRow, parametersPPO.batchSize),
+                    actions.SubRows(startRow, parametersPPO.batchSize),
+                    actionProbs.SubRows(startRow, parametersPPO.batchSize),
+                    targetValues.SubRows(startRow, parametersPPO.batchSize).Flatten(),
+                    oldValues.SubRows(startRow, parametersPPO.batchSize).Flatten(),
                     advantages.Get(startRow, (j + 1) * parametersPPO.batchSize),
-                    SubRows(actionMasks, startRow, parametersPPO.batchSize)
+                    actionMasks.SubRows(startRow, parametersPPO.batchSize)
                     );
                 /*var testSamples = dataBuffer.RandomSample(parametersPPO.batchSize, fetches.ToArray());
                 float[] losses = iModelPPO.TrainBatch((float[,])testSamples["VectorObservation"],null,
@@ -492,55 +491,5 @@ public class TrainerPPO : Trainer
         return result;
     }
 
-    private static T[,] SubRows<T>(T[,] data, int startRow, int rowCount)
-    {
-        if (data == null)
-            return null;
-        int rowLength = data.GetLength(1);
-        T[,] result = new T[rowCount, rowLength];
-        int typeSize = Marshal.SizeOf(typeof(T));
-        Buffer.BlockCopy(data, startRow * rowLength * typeSize, result, 0, rowCount * rowLength * typeSize);
-        //Array.Copy(data, index, result, 0, length);
-        return result;
-    }
 
-    private static List<T[,,,]> SubRows<T>(List<T[,,,]> data, int startRow, int rowCount)
-    {
-        if (data == null || data.Count == 0)
-            return null;
-        List<T[,,,]> result = new List<T[,,,]>();
-        for (int i = 0; i < data.Count; ++i)
-        {
-            int rowLength1 = data[i].GetLength(1);
-            int rowLength2 = data[i].GetLength(2);
-            int rowLength3 = data[i].GetLength(3);
-            int rowLengthTotal = rowLength1 * rowLength2 * rowLength3;
-
-            result.Add(new T[rowCount, rowLength1, rowLength2, rowLength3]);
-            int typeSize = Marshal.SizeOf(typeof(T));
-
-            Buffer.BlockCopy(data[i], startRow * rowLengthTotal * typeSize, result[i], 0, rowCount * rowLengthTotal * typeSize);
-        }
-
-        return result;
-    }
-
-    private static List<T[,]> SubRows<T>(List<T[,]> data, int startRow, int rowCount)
-    {
-        if (data == null || data.Count == 0)
-            return null;
-        List<T[,]> result = new List<T[,]>();
-        for (int i = 0; i < data.Count; ++i)
-        {
-            int rowLength1 = data[i].GetLength(1);
-            int rowLengthTotal = rowLength1;
-
-            result.Add(new T[rowCount, rowLength1]);
-            int typeSize = Marshal.SizeOf(typeof(T));
-
-            Buffer.BlockCopy(data[i], startRow * rowLengthTotal * typeSize, result[i], 0, rowCount * rowLengthTotal * typeSize);
-        }
-
-        return result;
-    }
 }
