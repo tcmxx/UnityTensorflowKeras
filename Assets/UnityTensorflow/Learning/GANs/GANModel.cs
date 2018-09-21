@@ -342,8 +342,7 @@ public class GANModel : LearningModelBase, ISupervisedLearningModel
         {
             Debug.LogError("Trainer params for GAN needs to be a TrainerParamsGAN type");
         }
-
-        Debug.Assert(ActionSizes.Length <= 1, "Action branching is not supported yet");
+        
         outputShape = new int[] { ActionSizes[0] };
         inputConditionShape = new int[] { StateSize };
 

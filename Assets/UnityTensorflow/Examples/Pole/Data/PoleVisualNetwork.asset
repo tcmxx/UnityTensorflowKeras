@@ -23,7 +23,7 @@ MonoBehaviour:
     activationFunction: 3
   actorOutputLayerInitialScale: 0.01
   actorOutputLayerBias: 1
-  criticOutputLayerInitialScale: 1
+  criticOutputLayerInitialScale: 0.01
   criticOutputLayerBias: 1
   visualEncoderInitialScale: 0.01
   visualEncoderBias: 1

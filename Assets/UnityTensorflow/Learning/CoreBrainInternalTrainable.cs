@@ -81,19 +81,22 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
     public void SetBrain(Brain b)
     {
         brain = b;
-        if (trainer)
-        {
-            trainerInterface = trainer.GetComponent<ITrainer>();
-            Debug.Assert(trainerInterface != null, "Please make sure your trainer has a monobehaviour that implement ITrainer interface attached!");
-            trainerInterface?.SetBrain(b);
-        }
+
     }
 
 
     public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
     {
-        Debug.Assert(trainer != null && trainerInterface != null, "Please specify a trainer in the Trainer field of your Brain!");
-        trainerInterface.Initialize();
+        if (trainer)
+        {
+            trainerInterface = trainer.GetComponent<ITrainer>();
+            Debug.Assert(trainerInterface != null, "Please make sure your trainer has a monobehaviour that implement ITrainer interface attached!");
+        }
+        else
+        {
+            Debug.LogError("Please assign a trainer to your corebrain!");
+        }
+        trainerInterface.Initialize(brain);
     }
 
 

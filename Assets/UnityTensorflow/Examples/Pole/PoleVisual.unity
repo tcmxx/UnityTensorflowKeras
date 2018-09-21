@@ -2032,9 +2032,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelRef: {fileID: 1831144743}
-  isTraining: 1
+  isTraining: 0
   parameters: {fileID: 11400000, guid: f53e6e37255e47b4aba38f20ac1ad06c, type: 2}
-  continueFromCheckpoint: 0
+  continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\Pole\Data
   checkpointFileName: PoleVisuaPPOlCheckpoint.bytes
   steps: 0
@@ -2051,7 +2051,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   overrides:
   - name: entropyLossWeight
-    method: 0
+    method: 1
     curve:
       serializedVersion: 2
       m_Curve:
@@ -2085,8 +2085,8 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 0
-    endValue: 0
-    power: 0
+    endValue: 0.00000001
+    power: 1
 --- !u!1 &1477102607
 GameObject:
   m_ObjectHideFlags: 0
@@ -3019,7 +3019,12 @@ MonoBehaviour:
   network: {fileID: 11400000, guid: cf07cc59ef1a4674a82466577ee57518, type: 2}
   optimizer:
     optimizerType: 0
-    parameterList: []
+    parameterList:
+    - 0.001
+    - 0.9
+    - 0.999
+    - 0.00000001
+    - 0
   useInputNormalization: 0
   mode: 0
 --- !u!1 &1841924384

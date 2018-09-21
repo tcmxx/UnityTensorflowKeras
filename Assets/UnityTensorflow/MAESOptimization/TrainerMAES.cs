@@ -16,7 +16,7 @@ public class TrainerMAES : MonoBehaviour, ITrainer
 
     
 
-    public void Initialize()
+    public void Initialize(Brain brain)
     {
     }
 

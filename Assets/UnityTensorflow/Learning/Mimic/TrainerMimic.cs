@@ -27,12 +27,14 @@ public class TrainerMimic : Trainer
 
     protected ISupervisedLearningModel modelSL;
     protected TrainerParamsMimic parametersMimic;
+    public Brain BrainToTrain { get; protected set; }
 
-    public override void Initialize()
+    public override void Initialize(Brain brain)
     {
         modelSL = modelRef as ISupervisedLearningModel;
         Debug.Assert(modelSL != null, "Please assign a ISupervisedLearningModel to modelRef");
-
+        BrainToTrain = brain;
+        Debug.Assert(BrainToTrain != null, "brain can not be null");
         parametersMimic = parameters as TrainerParamsMimic;
         Debug.Assert(parametersMimic != null, "Please Specify PPO Trainer Parameters");
         stats = new StatsLogger();

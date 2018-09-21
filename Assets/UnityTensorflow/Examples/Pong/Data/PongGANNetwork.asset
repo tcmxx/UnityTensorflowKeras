@@ -13,15 +13,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   generatorHiddenLayers:
   - size: 32
-    initialScale: 0.01
+    initialScale: 1
     useBias: 1
     activationFunction: 0
   discriminatorHiddenLayers:
   - size: 32
-    initialScale: 0.01
+    initialScale: 1
     useBias: 1
     activationFunction: 0
-  generatorOutputLayerInitialScale: 0.1
+  generatorOutputLayerInitialScale: 0.01
   generatorOutputLayerBias: 1
-  discriminatorOutputLayerInitialScale: 0.1
+  discriminatorOutputLayerInitialScale: 1
   discriminatorOutputLayerBias: 1

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   learningRate: 0.003
   maxTotalSteps: 100000000
-  saveModelInterval: 3000
+  saveModelInterval: 1000
+  logInterval: 500
   batchSize: 256
   numIterationPerTrain: 1
-  requiredDataBeforeTraining: 5000
+  requiredDataBeforeTraining: 10000
   maxBufferSize: -1
-  logInterval: 1000

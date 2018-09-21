@@ -191,7 +191,7 @@ public partial class Grapher : EditorWindow
     /// <summary>
     /// Reset Grapher.
     /// </summary>
-    private void Reset()
+    public static void Reset()
     {
         try
         {

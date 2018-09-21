@@ -25,9 +25,10 @@ public class RLNetworkSimpleAC : RLNetworkAC
     public float criticOutputLayerInitialScale = 1f;
     public bool criticOutputLayerBias = true;
 
-    public float visualEncoderInitialScale = 0.01f;
+    public float visualEncoderInitialScale = 1f;
     public bool visualEncoderBias = true;
 
+    [Tooltip("If shared, actor and critic will use the share the network weights.criticHiddenLayers will be ignored. ")]
     public bool shareEncoder = false;
 
     protected List<Tensor> criticWeights;
@@ -68,7 +69,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     }
 
 
-    protected ValueTuple<Tensor, List<Tensor>> CreateObservationStream(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, string encoderName)
+    protected ValueTuple<Tensor, List<Tensor>> CreateObservationStream(Tensor inVectorObs, List<SimpleDenseLayerDef> layerDefs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, string encoderName)
     {
         Debug.Assert(inMemery == null, "Currently recurrent input is not supported by RLNetworkSimpleAC");
         Debug.Assert(inPrevAction == null, "Currently previous action input is not supported by RLNetworkSimpleAC");
@@ -83,7 +84,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
             List<Tensor> visualEncoded = new List<Tensor>();
             foreach (var v in inVisualObs)
             {
-                var ha = CreateVisualEncoder(v, actorHiddenLayers, encoderName + "VisualEncoder");
+                var ha = CreateVisualEncoder(v, layerDefs, encoderName + "VisualEncoder");
 
                 allWeights.AddRange(ha.Item2);
                 visualEncoded.Add(ha.Item1);
@@ -104,7 +105,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         Tensor encodedVectorState = null;
         if (inVectorObs != null)
         {
-            var output = BuildSequentialLayers(actorHiddenLayers, inVectorObs, encoderName + "StateEncoder");
+            var output = BuildSequentialLayers(layerDefs, inVectorObs, encoderName + "StateEncoder");
             encodedVectorState = output.Item1;
             allWeights.AddRange(output.Item2);
         }
@@ -136,12 +137,12 @@ public class RLNetworkSimpleAC : RLNetworkAC
         ValueTuple<Tensor, List<Tensor>> actorEncoded, criticEncoded;
         if (!shareEncoder)
         {
-            actorEncoded = CreateObservationStream(inVectorObs, inVisualObs, inMemery, inPrevAction, "Actor");
-            criticEncoded = CreateObservationStream(inVectorObs, inVisualObs, inMemery, inPrevAction, "Critic");
+            actorEncoded = CreateObservationStream(inVectorObs, actorHiddenLayers, inVisualObs, inMemery, inPrevAction, "Actor");
+            criticEncoded = CreateObservationStream(inVectorObs, criticHiddenLayers,inVisualObs, inMemery, inPrevAction, "Critic");
         }
         else
         {
-            actorEncoded = CreateObservationStream(inVectorObs, inVisualObs, inMemery, inPrevAction, "ActorCritic");
+            actorEncoded = CreateObservationStream(inVectorObs, actorHiddenLayers, inVisualObs, inMemery, inPrevAction, "ActorCritic");
             criticEncoded = actorEncoded;
         }
 

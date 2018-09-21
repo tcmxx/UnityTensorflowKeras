@@ -29,18 +29,20 @@ public class TrainerPPO : Trainer
     public StatsLogger stats { get; protected set; }
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
+    public Brain BrainToTrain { get; protected set; }
 
 
     //casted modelRef from the base class for convenience
     protected IRLModelPPO iModelPPO;
 
-    public override void Initialize()
+    public override void Initialize(Brain brain)
     {
         iModelPPO = modelRef as IRLModelPPO;
         Debug.Assert(iModelPPO != null, "Please assign a model that implement interface IRLModelPPO to modelRef");
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
-        
+        BrainToTrain = brain;
+        Debug.Assert(BrainToTrain != null, "brain can not be null");
 
 
         //initialize all data buffers
@@ -285,8 +287,12 @@ public class TrainerPPO : Trainer
                 //update stats if the agent is not using heuristic
                 if (agentNewInfo.done || agentNewInfo.maxStepReached)
                 {
-                    stats.AddData("accumulatedRewards", accumulatedRewards[agent]);
-                    stats.AddData("episodeSteps", episodeSteps[agent]);
+                    var agentDecision = agent.GetComponent<AgentDependentDecision>();
+                    if (!(isTraining && agentDecision != null && agentDecision.useDecision))// && parametersPPO.useHeuristicChance > 0
+                    {
+                        stats.AddData("accumulatedRewards", accumulatedRewards[agent]);
+                        stats.AddData("episodeSteps", episodeSteps[agent]);
+                    }
 
 
                     accumulatedRewards[agent] = 0;
@@ -318,14 +324,15 @@ public class TrainerPPO : Trainer
         {
             var agentDecision = agent.GetComponent<AgentDependentDecision>();
 
-            if (isTraining && agentDecision != null && agentDecision.useDecision && UnityEngine.Random.Range(0, 1.0f) <= parametersPPO.useHeuristicChance)
+            if (isTraining && agentDecision != null && agentDecision.useDecision)// && UnityEngine.Random.Range(0, 1.0f) <= parametersPPO.useHeuristicChance
             {
                 //if this agent will use the decision, use it
                 var info = agentInfos[agent];
                 var action = agentDecision.Decide(info.stackedVectorObservation, info.visualObservations, new List<float>(actions.GetRow(i)));
                 float[,] vectorOb = CreateVectorInputBatch(agentInfos, new List<Agent>() { agent });
                 var visualOb = CreateVisualInputBatch(agentInfos, new List<Agent>() { agent }, BrainToTrain.brainParameters.cameraResolutions);
-                var probs = iModelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb, actionMasks);
+                var mask = CreateActionMasks(agentInfos, new List<Agent> { agent }, BrainToTrain.brainParameters.vectorActionSize);
+                var probs = iModelPPO.EvaluateProbability(vectorOb, action.Reshape(1, action.Length), visualOb, mask);
 
                 var temp = new TakeActionOutput();
                 temp.allProbabilities = probs.GetRow(0);

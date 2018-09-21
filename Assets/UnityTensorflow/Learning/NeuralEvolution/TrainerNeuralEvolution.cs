@@ -51,7 +51,7 @@ public class TrainerNeuralEvolution : Trainer
 
     public StatsLogger stats { get; protected set; }
 
-
+    public Brain BrainToTrain { get; protected set; }
 
 
 
@@ -81,14 +81,14 @@ public class TrainerNeuralEvolution : Trainer
 
 
 
-    /// Create the reference to the brain
-    public override void Initialize()
+    public override void Initialize(Brain brain)
     {
         modeNE = modelRef as INeuralEvolutionModel;
         Debug.Assert(modeNE != null, "Please assign a INeuralEvolutionModel to modelRef");
         parametersNE = parameters as TrainerParamsNeuralEvolution;
         Debug.Assert(parametersNE != null, "Please Specify TrainerNeuralEvolution Trainer Parameters");
-
+        BrainToTrain = brain;
+        Debug.Assert(BrainToTrain != null, "brain can not be null");
 
         modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);
 
@@ -143,9 +143,9 @@ public class TrainerNeuralEvolution : Trainer
 
         float[,] vectorObsAll = CreateVectorInputBatch(agentInfos, agentList);
         var visualObsAll = CreateVisualInputBatch(agentInfos, agentList, BrainToTrain.brainParameters.cameraResolutions);
-
+        var actionMasks = CreateActionMasks(agentInfos, agentList, BrainToTrain.brainParameters.vectorActionSize);
         float[,] actions = null;
-        actions = modeNE.EvaluateAction(vectorObsAll, visualObsAll);
+        actions = modeNE.EvaluateActionNE(vectorObsAll, visualObsAll, actionMasks);
 
         int i = 0;
         foreach (var agent in agentList)

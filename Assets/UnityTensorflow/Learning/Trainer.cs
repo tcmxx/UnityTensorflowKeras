@@ -23,15 +23,9 @@ public struct TakeActionOutput
 public interface ITrainer
 {
     /// <summary>
-    /// THis will be called to give you the reference to the Brain.
-    /// </summary>
-    /// <param name="brain"></param>
-    void SetBrain(Brain brain);
-
-    /// <summary>
     /// impelment all of your initialization here
     /// </summary>
-    void Initialize();
+    void Initialize(Brain brain);
 
     /// <summary>
     /// Return the max steps of the training.
@@ -128,7 +122,6 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     protected int steps = 0;
 
 
-    public Brain BrainToTrain { get; protected set; }
 
     private void Start()
     {
@@ -150,10 +143,6 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
     protected virtual void FixedUpdate()
     {
-        if (BrainToTrain == null)
-        {
-            Debug.LogError("Please assign this trainer to a Brain with CoreBrainInternalTrainable!");
-        }
         if (isTraining)
             modelRef.SetLearningRate(parameters.learningRate);
 
@@ -162,13 +151,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
             UpdateModel();
         }*/
     }
-
-    public virtual void SetBrain(Brain brain)
-    {
-        this.BrainToTrain = brain;
-    }
-
-    public abstract void Initialize();
+    
+    public abstract void Initialize(Brain brain);
 
     public virtual int GetMaxStep()
     {
@@ -338,14 +322,14 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
         if (currentInfo.Count <= 0 || agentList.Count <= 0)
             return null;
-        List<float[,]> masks  = new List<float[,]>();
+        List<float[,]> masks = new List<float[,]>();
         int agentCount = agentList.Count;
-        int currentActionIndex = 0;
+        int currentBranchStartIndex = 0;
         for (int b = 0; b < actionSizes.Length; b++)
         {
             float[,] mask = new float[agentList.Count, actionSizes[b]];
             int actionSize = actionSizes[b];
-            for(int i = 0; i < agentCount; ++i)
+            for (int i = 0; i < agentCount; ++i)
             {
                 var agentMasks = currentInfo[agentList[i]].actionMasks;
                 if (agentMasks == null)
@@ -353,18 +337,17 @@ public abstract class Trainer : MonoBehaviour, ITrainer
                     for (int j = 0; j < actionSize; ++j)
                     {
                         mask[i, j] = 1;
-                        currentActionIndex++;
                     }
                 }
                 else
                 {
                     for (int j = 0; j < actionSize; ++j)
                     {
-                        mask[i, j] = agentMasks[currentActionIndex] ? 0 : 1;
-                        currentActionIndex++;
+                        mask[i, j] = agentMasks[currentBranchStartIndex + j] ? 0 : 1;
                     }
                 }
             }
+            currentBranchStartIndex += actionSize;
             masks.Add(mask);
         }
 

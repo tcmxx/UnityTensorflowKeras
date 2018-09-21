@@ -47,25 +47,115 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
     protected bool hasVariance;
 
 
-    public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors,  TrainerParams trainerParams)
+    public override void InitializeInner(BrainParameters brainParameters, Tensor inputStateTensor, List<Tensor> inputVisualTensors, TrainerParams trainerParams)
     {
         //build the network
-        Debug.Assert(ActionSizes.Length <= 1, "Action branching is not supported yet");
-        var networkOutputs = network.BuildNetwork(inputStateTensor, inputVisualTensors, null, ActionSizes[0],ActionSpace);
+        if(ActionSpace == SpaceType.continuous)
+        {
+            InitializeSLStructureContinuousAction(inputStateTensor, inputVisualTensors, trainerParams);
+        }
+        else if(ActionSpace == SpaceType.discrete)
+        {
+            InitializeSLStructureDiscreteAction(inputStateTensor, inputVisualTensors, trainerParams);
+        }
+
+    }
+
+    protected void InitializeSLStructureDiscreteAction(Tensor vectorObs, List<Tensor> visualObs, TrainerParams trainerParams)
+    {
+
+        //all inputs list
+        List<Tensor> allObservationInputs = new List<Tensor>();
+        if (HasVectorObservation)
+        {
+            allObservationInputs.Add(vectorObs);
+        }
+        if (HasVisualObservation)
+        {
+            allObservationInputs.AddRange(visualObs);
+        }
+
+        //build basic network
+        List<Tensor> outputActionsLogits = network.BuildNetworkForDiscreteActionSpace(vectorObs, visualObs, null, ActionSizes);
+
+        //the action masks input placeholders
+        List<Tensor> actionMasksInputs = new List<Tensor>();
+        for (int i = 0; i < ActionSizes.Length; ++i)
+        {
+            actionMasksInputs.Add(UnityTFUtils.Input(new int?[] { ActionSizes[i] }, name: "AcionMask" + i)[0]);
+        }
+        //masking and normalized and get the final action tensor
+        Tensor[] outputActions, outputNormalizedLogits;
+        CreateDiscreteActionMaskingLayer(outputActionsLogits.ToArray(), actionMasksInputs.ToArray(), out outputActions, out outputNormalizedLogits);
+
+        //output tensors for discrete actions. Includes all action selected actions
+        var outputDiscreteActions = new List<Tensor>();
+        outputDiscreteActions.Add(K.identity(K.cast(ActionSizes.Length == 1 ? outputActions[0] : K.concat(outputActions.ToList(), 1), DataType.Float), "OutputAction"));
+        var actionFunctionInputs = new List<Tensor>();
+        actionFunctionInputs.AddRange(allObservationInputs);
+        actionFunctionInputs.AddRange(actionMasksInputs);
+        ActionFunction = K.function(actionFunctionInputs, outputDiscreteActions, null, "ActionFunction");
+
+
+        //build the parts for training
+        TrainerParamsMimic trainingParams = trainerParams as TrainerParamsMimic;
+        if (trainerParams != null && trainingParams == null)
+        {
+            Debug.LogError("Trainer params for Supervised learning mode needs to be a TrainerParamsMimic type");
+        }
+        if (trainingParams != null)
+        {
+            //training inputs
+            var inputActionLabels = UnityTFUtils.Input(new int?[] { ActionSizes.Length }, name: "InputAction", dtype: DataType.Int32)[0];
+            //split the input for each discrete branch
+            List<Tensor> inputActionsDiscreteSeperated = null, onehotInputActions = null;    //for discrete action space
+            var splits = new int[ActionSizes.Length];
+            for (int i = 0; i < splits.Length; ++i)
+            {
+                splits[i] = 1;
+            }
+            inputActionsDiscreteSeperated = K.split(inputActionLabels, K.constant(splits, dtype: DataType.Int32), K.constant(1, dtype: DataType.Int32), ActionSizes.Length);
+
+
+
+            //creat the loss
+            onehotInputActions = inputActionsDiscreteSeperated.Select((x, i) => K.reshape(K.one_hot(x, K.constant<int>(ActionSizes[i], dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f)), new int[] { -1, ActionSizes[i] })).ToList();
+
+            var losses = onehotInputActions.Select((x, i) => K.mean(K.categorical_crossentropy(x, outputNormalizedLogits[i], true))).ToList();
+            Tensor loss = losses.Aggregate((x, s) => x + s);
+
+            //add inputs, outputs and parameters to the list
+            List<Tensor> updateParameters = network.GetWeights();
+            List<Tensor> allInputs = new List<Tensor>();
+            allInputs.AddRange(actionFunctionInputs);
+            allInputs.Add(inputActionLabels);
+
+            //create optimizer and create necessary functions
+            var updates = AddOptimizer(updateParameters, loss, optimizer);
+            UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
+        }
+    }
+
+
+
+    protected void InitializeSLStructureContinuousAction(Tensor vectorObs, List<Tensor> visualObs, TrainerParams trainerParams)
+    {
+        //build the network
+        var networkOutputs = network.BuildNetworkForContinuousActionSapce(vectorObs, visualObs, null, ActionSizes[0]);
         Tensor outputAction = networkOutputs.Item1;
         Tensor outputVar = networkOutputs.Item2;
-        hasVariance = outputVar != null && brainParameters.vectorActionSpaceType == SpaceType.continuous;
+        hasVariance = outputVar != null;
 
         List<Tensor> observationInputs = new List<Tensor>();
         if (HasVectorObservation)
         {
-            observationInputs.Add(inputStateTensor);
+            observationInputs.Add(vectorObs);
         }
         if (HasVisualObservation)
         {
-            observationInputs.AddRange(inputVisualTensors);
+            observationInputs.AddRange(visualObs);
         }
-        if(hasVariance)
+        if (hasVariance)
             ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction, outputVar }, null, "ActionFunction");
         else
             ActionFunction = K.function(observationInputs, new List<Tensor> { outputAction }, null, "ActionFunction");
@@ -79,47 +169,32 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         if (trainingParams != null)
         {
             //training inputs
-            var inputActionLabel = UnityTFUtils.Input(new int?[] { ActionSpace == SpaceType.continuous ? ActionSizes[0] : 1 }, name: "InputAction", dtype: ActionSpace == SpaceType.continuous ? DataType.Float : DataType.Int32)[0];
+            var inputActionLabel = UnityTFUtils.Input(new int?[] {  ActionSizes[0]}, name: "InputAction", dtype:  DataType.Float)[0];
             //creat the loss
             Tensor loss = null;
-            if (ActionSpace == SpaceType.discrete)
+            if (hasVariance)
             {
-                Tensor actionOnehot = K.one_hot(inputActionLabel, K.constant(ActionSizes, dtype: DataType.Int32), K.constant(1.0f), K.constant(0.0f));
-                Tensor reshapedOnehot = K.reshape(actionOnehot, new int[] { -1, ActionSizes[0] });
-                loss = K.mean(K.categorical_crossentropy(reshapedOnehot, outputAction, false));
+                loss = K.mean(K.mean(0.5 * K.square(inputActionLabel - outputAction) / outputVar + 0.5 * K.log(outputVar)));
             }
             else
-            {
-                if (hasVariance)
-                {
-                    loss =K.mean( K.mean(0.5 * K.square(inputActionLabel - outputAction) / outputVar + 0.5 * K.log(outputVar)));
-                }
-                else
-                    loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
-            }
+                loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
+
             //add inputs, outputs and parameters to the list
             List<Tensor> updateParameters = network.GetWeights();
             List<Tensor> allInputs = new List<Tensor>();
-
-
-            if (HasVectorObservation)
-            {
-                allInputs.Add(inputStateTensor);
-                observationInputs.Add(inputStateTensor);
-            }
-            if (HasVisualObservation)
-            {
-                allInputs.AddRange(inputVisualTensors);
-                observationInputs.AddRange(inputVisualTensors);
-            }
+            allInputs.AddRange(observationInputs);
             allInputs.Add(inputActionLabel);
 
             //create optimizer and create necessary functions
             var updates = AddOptimizer(updateParameters, loss, optimizer);
             UpdateFunction = K.function(allInputs, new List<Tensor> { loss }, updates, "UpdateFunction");
         }
-        
     }
+
+
+
+
+
 
 
     /// <summary>
@@ -142,36 +217,30 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
             inputLists.AddRange(visualObservation);
         }
 
+        if(ActionSpace == SpaceType.discrete)
+        {
+            int batchSize = vectorObservation != null ? vectorObservation.GetLength(0) : visualObservation[0].GetLength(0);
+            int branchSize = ActionSizes.Length;
+            List<float[,]> masks = actionsMask;
+            //create all 1 mask if the input mask is null.
+            if (masks == null)
+            {
+                masks = CreateDummyMasks(ActionSizes, batchSize);
+            }
+            inputLists.AddRange(masks);
+        }
+
         var result = ActionFunction.Call(inputLists);
 
-        var outputAction = ((float[,])result[0].eval());
+        float[,] actions = ((float[,])result[0].eval());
         
-        float[,] actions = new float[outputAction.GetLength(0), ActionSpace == SpaceType.continuous ? outputAction.GetLength(1) : 1];
-        if (ActionSpace == SpaceType.continuous)
-        {
-            for (int j = 0; j < outputAction.GetLength(0); ++j)
-            {
-                for (int i = 0; i < outputAction.GetLength(1); ++i)
-                {
-                    actions[j, i] = outputAction[j, i];
-                }
-            }
-        }
-        else if (ActionSpace == SpaceType.discrete)
-        {
-            for (int j = 0; j < outputAction.GetLength(0); ++j)
-            {
-                actions[j, 0] = outputAction.GetRow(j).ArgMax();
-            }
-        }
-
         float[,] outputVar = null;
         if (hasVariance)
         {
             outputVar = (float[,])result[1].eval();
         }
 
-        return ValueTuple.Create(actions, outputVar) ;
+        return ValueTuple.Create(actions, outputVar);
     }
 
 
@@ -185,10 +254,22 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
             inputs.Add(vectorObservations);
         if (visualObservations != null)
             inputs.AddRange(visualObservations);
+
+
+
         if (ActionSpace == SpaceType.continuous)
             inputs.Add(actions);
         else if (ActionSpace == SpaceType.discrete)
         {
+            List<float[,]> masks = actionsMask;
+            int batchSize = actions.GetLength(0);
+            //create all 1 mask if the input mask is null.
+            if (masks == null)
+            {
+                masks = CreateDummyMasks(ActionSizes, batchSize);
+            }
+            inputs.AddRange(masks);
+
             int[,] actionsInt = actions.Convert(t => Mathf.RoundToInt(t));
             inputs.Add(actionsInt);
         }
@@ -207,7 +288,7 @@ public class SupervisedLearningModel : LearningModelBase, ISupervisedLearningMod
         return network.GetWeights();
     }
 
-    float[,] INeuralEvolutionModel.EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null)
+    float[,] INeuralEvolutionModel.EvaluateActionNE(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask)
     {
         return EvaluateAction(vectorObservation, visualObservation, actionsMask).Item1;
     }

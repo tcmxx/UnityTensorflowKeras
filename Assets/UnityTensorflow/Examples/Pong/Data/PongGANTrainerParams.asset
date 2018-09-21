@@ -11,15 +11,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e39ef6eb1bbf4ac40b1d105993f7c879, type: 3}
   m_Name: PongGANTrainerParams
   m_EditorClassIdentifier: 
-  learningRate: 0.0001
+  learningRate: 0.001
   maxTotalSteps: 100000000
-  lossLogInterval: 100
-  saveModelInterval: 2000
+  saveModelInterval: 1000
+  logInterval: 1000
   batchSize: 128
   numIterationPerTrain: 1
-  requiredDataBeforeTraining: 9999
-  maxBufferSize: 10000
-  actionDiffLogInterval: 100
+  requiredDataBeforeTraining: 10000
+  maxBufferSize: -1
   discriminatorTrainCount: 1
   generatorTrainCount: 1
   usePrediction: 1
