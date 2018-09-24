@@ -338,8 +338,8 @@ public abstract class LearningModelBase : MonoBehaviour
     /// Load the data s dictionary and set the model/optimizer weights using that.
     /// </summary>
     /// <param name="data"></param>
-    /// <param name="modelOnly"></param>
-    protected void RestoreCheckpoint(byte[] data, bool modelOnly = false)
+    /// <param name="modelOnly">if model only is true, optimzer data will not be loaded</param>
+    public void RestoreCheckpoint(byte[] data, bool modelOnly = false)
     {
         //deserialize the data
         var mStream = new MemoryStream(data);

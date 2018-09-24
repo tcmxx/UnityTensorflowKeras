@@ -113,94 +113,118 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &328161593
-MonoBehaviour:
+--- !u!1001 &354554054
+Prefab:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions: []
-  brain: {fileID: 516214005}
---- !u!1 &367178038
-GameObject:
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 9.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 18.13
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: -0.014054775
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_RootOrder
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1200585464137624, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_Name
+      value: PongArena (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 114678901926774596, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    - target: {fileID: 114600814296627532, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+  m_IsPrefabParent: 0
+--- !u!1001 &360503007
+Prefab:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 367178040}
-  - component: {fileID: 367178039}
-  - component: {fileID: 367178041}
-  m_Layer: 0
-  m_Name: PongAgentLeft
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &367178039
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 367178038}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
-  agentParameters:
-    agentCameras: []
-    maxStep: 2000
-    resetOnDone: 1
-    onDemandDecision: 0
-    numberOfActionsBetweenDecisions: 1
-  environment: {fileID: 0}
---- !u!4 &367178040
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 367178038}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.6856637, y: 11.320004, z: -0.014054775}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &367178041
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 367178038}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db89b60de97985046a47012cf5db11c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  useDecision: 1
-  toggleDecisionUsageKey: 117
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions:
-  - branch: 0
-    key: 119
-    value: 2
-  - branch: 0
-    key: 115
-    value: 0
-  defaultAction: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 16.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 11.320004
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: -0.014054775
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1200585464137624, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_Name
+      value: PongArena (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 114678901926774596, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    - target: {fileID: 114600814296627532, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &508170722
 GameObject:
   m_ObjectHideFlags: 0
@@ -217,7 +241,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &508170723
 Transform:
   m_ObjectHideFlags: 0
@@ -257,103 +281,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 508170722}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20d7a4d101811ac428e6ca8ec503cfcc, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e201b637a862b64288cf23a67b7fb8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  overrides:
-  - name: learningRate
-    method: 1
-    curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: -0.2825011
-        outSlope: -0.2825011
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.09593986
-      - serializedVersion: 3
-        time: 0.25816047
-        value: 0.11901257
-        inSlope: -0.39905706
-        outSlope: -0.39905706
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.115842
-      - serializedVersion: 3
-        time: 0.99450684
-        value: 0.008087158
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 0
-    endValue: 0.000000001
-    power: 1
-  - name: entropyLossWeight
-    method: 1
-    curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 0.9963607
-        value: 0.018866587
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 0
-    endValue: 0.0001
-    power: 1
-  - name: clipEpsilon
-    method: 1
-    curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 0.9963607
-        value: 0.018866587
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 0
-    endValue: 0.1
-    power: 1
+  sessionName: PongWithSLInit
+  directoryName: PlotsLog
+  index: 3
 --- !u!1 &516214003
 GameObject:
   m_ObjectHideFlags: 0
@@ -404,12 +337,12 @@ MonoBehaviour:
     vectorActionSpaceType: 0
   brainType: 4
   CoreBrains:
-  - {fileID: 328161593}
-  - {fileID: 1959295812}
-  - {fileID: 836653541}
-  - {fileID: 690322409}
-  - {fileID: 2042874984}
-  instanceID: 19208
+  - {fileID: 930621529}
+  - {fileID: 1697580543}
+  - {fileID: 1923723609}
+  - {fileID: 1434367889}
+  - {fileID: 1390415031}
+  instanceID: 21576
 --- !u!1 &672023160
 GameObject:
   m_ObjectHideFlags: 0
@@ -475,7 +408,92 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!114 &690322409
+--- !u!114 &930621529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  broadcast: 1
+  keyContinuousPlayerActions: []
+  axisContinuousPlayerActions: []
+  discretePlayerActions: []
+  brain: {fileID: 516214005}
+--- !u!1001 &1230188171
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0.85
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 18.13
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: -0.014054775
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_RootOrder
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1200585464137624, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_Name
+      value: PongArena (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 114678901926774596, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    - target: {fileID: 114600814296627532, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+  m_IsPrefabParent: 0
+--- !u!114 &1390415031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  brain: {fileID: 516214005}
+  trainer: {fileID: 508170722}
+--- !u!114 &1434367889
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -484,7 +502,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   broadcast: 1
   graphModel: {fileID: 0}
@@ -498,114 +516,6 @@ MonoBehaviour:
   ActionPlaceholderName: action
   PreviousActionPlaceholderName: prev_action
   brain: {fileID: 0}
---- !u!1 &757140133
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 757140134}
-  - component: {fileID: 757140135}
-  m_Layer: 0
-  m_Name: PongGameGraphic
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &757140134
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 757140133}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &757140135
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 757140133}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afc31bcbc38c6f64ca3646d13478c506, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pongGameToView: {fileID: 2012461097}
-  enableUpdate: 1
-  wallPref: {fileID: 1293932126161144, guid: d7d76c06369635045af004fdc5257797, type: 2}
-  ballPref: {fileID: 1201227418953210, guid: 22a16ae0ecbcf0449b025d8e6c4f2d29, type: 2}
-  racketPref: {fileID: 1975003033902114, guid: 0ed7a52445ab3c049a3a8f62991b2738, type: 2}
-  wallThickness: 0.05
-  racketThickness: 0.03
-  ballRadius: 0.02
---- !u!114 &836653541
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 0}
---- !u!1 &997886453
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 997886455}
-  - component: {fileID: 997886454}
-  m_Layer: 0
-  m_Name: PongAgentRight
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &997886454
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 997886453}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
-  agentParameters:
-    agentCameras: []
-    maxStep: 2000
-    resetOnDone: 1
-    onDemandDecision: 0
-    numberOfActionsBetweenDecisions: 1
-  environment: {fileID: 0}
---- !u!4 &997886455
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 997886453}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.6856637, y: 11.320004, z: -0.014054775}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1449003583
 GameObject:
   m_ObjectHideFlags: 0
@@ -666,7 +576,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1566701001
 GameObject:
@@ -700,7 +610,7 @@ MonoBehaviour:
     width: 80
     height: 80
     qualityLevel: 1
-    timeScale: 1
+    timeScale: 100
     targetFrameRate: 60
   inferenceConfiguration:
     width: 1280
@@ -725,8 +635,64 @@ Transform:
   - {fileID: 508170723}
   - {fileID: 1604954273}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1594533090
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 9.45
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 11.320004
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: -0.014054775
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_RootOrder
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1200585464137624, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_Name
+      value: PongArena (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 114678901926774596, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    - target: {fileID: 114600814296627532, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &1604954272
 GameObject:
   m_ObjectHideFlags: 0
@@ -782,6 +748,19 @@ MonoBehaviour:
     - 0
   useInputNormalization: 0
   mode: 1
+--- !u!114 &1697580543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  broadcast: 1
+  brain: {fileID: 0}
 --- !u!1 &1889973319
 GameObject:
   m_ObjectHideFlags: 0
@@ -797,7 +776,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1889973320
 Transform:
   m_ObjectHideFlags: 0
@@ -825,13 +804,25 @@ MonoBehaviour:
   modelRef: {fileID: 1604954274}
   isTraining: 1
   parameters: {fileID: 11400000, guid: fdd9249b4450b44449d2aa159e5bad1d, type: 2}
-  continueFromCheckpoint: 0
+  continueFromCheckpoint: 1
   checkpointPath: Assets\UnityTensorflow\Examples\Pong\Data
   checkpointFileName: PongRLWithSLInit_SLModel.bytes
   steps: 0
-  isCollectingData: 1
+  isCollectingData: 0
   trainingDataSaveFileName: PongRLWithSLInit_trainingdata.bytes
   dataBufferCount: 0
+--- !u!114 &1923723609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  brain: {fileID: 0}
 --- !u!1 &1924834452
 GameObject:
   m_ObjectHideFlags: 0
@@ -913,82 +904,111 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1959295812
-MonoBehaviour:
+--- !u!1001 &1965264479
+Prefab:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  brain: {fileID: 0}
---- !u!1 &2012461095
-GameObject:
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 3.6856637
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 11.320004
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: -0.014054775
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114600814296627532, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    - target: {fileID: 114678901926774596, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+  m_IsPrefabParent: 0
+--- !u!1001 &2072976812
+Prefab:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 2012461096}
-  - component: {fileID: 2012461097}
-  m_Layer: 0
-  m_Name: PongGameEnvironment
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2012461096
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2012461095}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 328.125, y: 100, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2012461097
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2012461095}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72cb54d5ddbeef2448cb472e2231a0c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  leftAgent: {fileID: 367178039}
-  rightAgent: {fileID: 997886454}
-  failureReward: -10
-  winReward: 15
-  hitBallReward: 10
-  racketSpeed: 0.01
-  ballSpeed: 0.017
-  racketWidth: 0.15
-  leftStartX: -0.8
-  rightStartX: 0.8
-  arenaSize: {x: 1.8, y: 1}
-  leftHitOrMiss: 0
-  rightHitOrMiss: 0
---- !u!114 &2042874984
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
-  trainer: {fileID: 1889973319}
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 16.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 18.13
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: -0.014054775
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4336908852927932, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 1200585464137624, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+      propertyPath: m_Name
+      value: PongArena (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 114678901926774596, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    - target: {fileID: 114600814296627532, guid: 66c63be35cf56ae42b1502655ff626cb,
+        type: 2}
+      propertyPath: brain
+      value: 
+      objectReference: {fileID: 516214005}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 66c63be35cf56ae42b1502655ff626cb, type: 2}
+  m_IsPrefabParent: 0

@@ -86,7 +86,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         
         //vector observation normalization
         Tensor normalizedVectorObs = vecotrObsTensor;
-        if (useInputNormalization && HasVectorObservation && mode == Mode.PPO)
+        if (useInputNormalization && HasVectorObservation)
         {
             normalizedVectorObs = CreateRunninngNormalizer(normalizedVectorObs, StateSize);
         }
@@ -115,9 +115,9 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         {
             mode = Mode.SupervisedLearning;
             if (ActionSpace == SpaceType.continuous)
-                InitializeSLStructureContinuousAction( vecotrObsTensor, visualTensors, trainerParams);
+                InitializeSLStructureContinuousAction( vecotrObsTensor, normalizedVectorObs, visualTensors, trainerParams);
             else
-                InitializeSLStructureDiscreteAction(vecotrObsTensor, visualTensors, trainerParams);
+                InitializeSLStructureDiscreteAction(vecotrObsTensor, normalizedVectorObs, visualTensors, trainerParams);
         }
     }
 
@@ -616,7 +616,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
     #region For SupervisedLearning
 
-    protected void InitializeSLStructureDiscreteAction(Tensor vectorObs, List<Tensor> visualObs, TrainerParams trainerParams)
+    protected void InitializeSLStructureDiscreteAction(Tensor vectorObs, Tensor normalizedVectorObs, List<Tensor> visualObs, TrainerParams trainerParams)
     {
 
         //all inputs list
@@ -633,7 +633,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         //build basic network
         Tensor[] outputActionsLogits = null;
         Tensor outputValue = null;
-        network.BuildNetworkForDiscreteActionSpace(vectorObs, visualObs, null, null,ActionSizes,out outputActionsLogits, out outputValue);
+        network.BuildNetworkForDiscreteActionSpace(normalizedVectorObs, visualObs, null, null,ActionSizes,out outputActionsLogits, out outputValue);
 
         //the action masks input placeholders
         List<Tensor> actionMasksInputs = new List<Tensor>();
@@ -680,7 +680,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
             Tensor loss = losses.Aggregate((x, s) => x + s);
 
             //add inputs, outputs and parameters to the list
-            List<Tensor> updateParameters = network.GetWeights();
+            List<Tensor> updateParameters = network.GetActorWeights();
             List<Tensor> allInputs = new List<Tensor>();
             allInputs.AddRange(actionFunctionInputs);
             allInputs.Add(inputActionLabels);
@@ -693,11 +693,11 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
 
 
 
-    protected void InitializeSLStructureContinuousAction(Tensor vectorObs, List<Tensor> visualObs, TrainerParams trainerParams)
+    protected void InitializeSLStructureContinuousAction(Tensor vectorObs, Tensor normalizedVectorObs, List<Tensor> visualObs, TrainerParams trainerParams)
     {
         //build the network
         Tensor outputValue = null; Tensor outputActionMean = null; Tensor outputLogVariance = null;
-        network.BuildNetworkForContinuousActionSapce(vectorObs, visualObs, null,null, ActionSizes[0],out outputActionMean, out outputValue, out outputLogVariance);
+        network.BuildNetworkForContinuousActionSapce(normalizedVectorObs, visualObs, null,null, ActionSizes[0],out outputActionMean, out outputValue, out outputLogVariance);
         Tensor outputAction = outputActionMean;
         Tensor outputVar = K.exp(outputLogVariance);
         SLHasVar = outputLogVariance != null;
@@ -736,7 +736,7 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
                 loss = K.mean(new MeanSquareError().Call(inputActionLabel, outputAction));
 
             //add inputs, outputs and parameters to the list
-            List<Tensor> updateParameters = network.GetWeights();
+            List<Tensor> updateParameters = network.GetActorWeights();
             List<Tensor> allInputs = new List<Tensor>();
             allInputs.AddRange(observationInputs);
             allInputs.Add(inputActionLabel);
@@ -795,6 +795,13 @@ public class RLModelPPO : LearningModelBase, IRLModelPPO, INeuralEvolutionModel,
         {
             outputVar = (float[,])result[1].eval();
         }
+
+        //normlaized the input observations in every calll of eval action
+        if (useInputNormalization && HasVectorObservation)
+        {
+            UpdateNormalizerFunction.Call(new List<Array>() { vectorObservation });
+        }
+
 
         return ValueTuple.Create(actions, outputVar);
     }
