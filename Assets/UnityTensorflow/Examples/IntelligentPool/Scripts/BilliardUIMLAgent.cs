@@ -21,6 +21,8 @@ public class BilliardUIMLAgent : MonoBehaviour {
     protected HeatMap heatmapRef;
     protected TrainerMimic trainerRef;
     protected DecisionMAES agentDecisionRef;
+    protected float defaultMAESInitStep;
+
     private void Awake()
     {
         agentRef = FindObjectOfType<BilliardAgent>();
@@ -28,15 +30,19 @@ public class BilliardUIMLAgent : MonoBehaviour {
         heatmapRef = FindObjectOfType<HeatMap>();
         trainerRef = FindObjectOfType<TrainerMimic>();
         agentDecisionRef = agentRef.GetComponent<DecisionMAES>();
+        if(agentDecisionRef && agentDecisionRef.GetComponent<ESOptimizer>())
+            defaultMAESInitStep = agentDecisionRef.GetComponent<ESOptimizer>().initialStepSize;
     }
 
     private void Start()
     {
-        populationSizeSliderRef.value = agentRef.Optimizer.populationSize;
-        maxItrSliderRef.value = agentRef.Optimizer.maxIteration;
-        populationSizeTextRef.text = "Population size: " + agentRef.Optimizer.populationSize.ToString();
-        maxItrTextRef.text = "Max Iter: " + agentRef.Optimizer.maxIteration;
-
+        if (agentDecisionRef)
+        {
+            populationSizeSliderRef.value = agentRef.Optimizer.populationSize;
+            maxItrSliderRef.value = agentRef.Optimizer.maxIteration;
+            populationSizeTextRef.text = "Population size: " + agentRef.Optimizer.populationSize.ToString();
+            maxItrTextRef.text = "Max Iter: " + agentRef.Optimizer.maxIteration;
+        }
         rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
         autoRequestToggleRef.isOn = agentRef.autoRequestDecision;
 
@@ -45,8 +51,11 @@ public class BilliardUIMLAgent : MonoBehaviour {
 
     private void Update()
     {
-        populationSizeSliderRef.value = agentRef.Optimizer.populationSize;
-        maxItrSliderRef.value = agentRef.Optimizer.maxIteration;
+        if (agentDecisionRef)
+        {
+            populationSizeSliderRef.value = agentRef.Optimizer.populationSize;
+            maxItrSliderRef.value = agentRef.Optimizer.maxIteration;
+        }
         rewardShapingToggleRef.isOn = gameSystemRef.defaultArena.rewardShaping;
 
         predictedScoreTextRef.text = "Predicted score: " + gameSystemRef.bestScore;
@@ -103,8 +112,10 @@ public class BilliardUIMLAgent : MonoBehaviour {
         {
             agentDecisionRef.useHeuristic = false;
             agentDecisionRef.useDecision = true;
+            agentDecisionRef.GetComponent<ESOptimizer>().initialStepSize = defaultMAESInitStep;
            // trainerRef.isTraining = false;
-        }else if(mode == 1)
+        }
+        else if(mode == 1)
         {
             //trainerRef.isTraining = true;
             agentDecisionRef.useDecision = false;

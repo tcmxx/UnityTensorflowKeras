@@ -11,6 +11,7 @@ public class BilliardGameSystem : MonoBehaviour {
 
     public BilliardArena defaultArena;
 
+    protected float prevBounceThreshold;
     // Use this for initialization
     void Start()
     {
@@ -18,6 +19,8 @@ public class BilliardGameSystem : MonoBehaviour {
         {
             var newA = Instantiate(defaultArena, defaultArena.transform.position + Vector3.right * 5 * i, defaultArena.transform.rotation);
         }*/
+        prevBounceThreshold = Physics.bounceThreshold;
+        Physics.bounceThreshold = 0.01f;
         
     }
 
@@ -176,5 +179,10 @@ public class BilliardGameSystem : MonoBehaviour {
         
         
         return resultScores;
+    }
+
+    private void OnDestroy()
+    {
+        Physics.bounceThreshold = prevBounceThreshold;
     }
 }

@@ -14,8 +14,8 @@ MonoBehaviour:
   learningRate: 0.0004
   maxTotalSteps: 100000000
   saveModelInterval: 50
+  logInterval: 2
   batchSize: 256
   numIterationPerTrain: 1
   requiredDataBeforeTraining: 20000
-  maxBufferSize: 20000
-  logInterval: 2
+  maxBufferSize: -1
