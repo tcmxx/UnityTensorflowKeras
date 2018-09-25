@@ -19,7 +19,11 @@ In the examples diretories provided by Unity ML-Agents, find the scene 3DBall an
 
 ### 2. Change the Brain Type to InternalTrainable
 Go to the Ball3DBrain and change ites BrainType to Internal Trainable in inspector. If the Internal Trainable does not show up, make sure you follow this [installation step](https://github.com/tcmxx/UnityTensorflowKeras/blob/master/Documents/Installation.md#modify-braincs-to-add-support-for-training-inside-unity).
-
+<p align="center">
+    <img src="Images/Getting-Started-with-Balance-Ball/ChangeBrainType.png" 
+        alt="TrainerLookLike" 
+        width="500" border="10" />
+</p>
 There will be a Trainer field showing up. You will create a Trainer in the next step and assign it to this field.
 
 ### 3. Create the Trainer and Trainer Parameters in the Scene
@@ -62,7 +66,7 @@ Assign this just created RL Netowrk Simple AC scriptable object to the Network f
 </p>
 
 ## Click Play and Start!
-You can click Window/Grapher from menu to monitor your training process.(It is a modified version of old Grapher, when it was still free. It seems to be not free nor opensource anymore...I will remove it if it is causing any problem.). The parameters are not well tuned, but the agent should be able to learn something at least within a couple of minutes.
+You can click Window/Grapher from menu to monitor your training process.(It is a modified version of old Grapher, when it was still free. It seems to be not free nor opensource anymore...I will remove it if it is causing any problem.). The parameters are not well tuned, but the agent should be able to learn something at least within a minute.
 
 You can also toggle the IsTraining field on Ball3DTrainer in inspector to enable/disable training.
 
