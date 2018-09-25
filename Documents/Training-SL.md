@@ -4,16 +4,16 @@ This algorithm is basically trying to train the neural network to remember what 
 
 The example scene `UnityTensorflow/Examples/Pong/PongSL` shows how to use supervised learning to train the neural network from how you are playing the game yourself. 
 
-## Overall Steps
+## Overall Steps to Setup
 1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md)
 3. Change the BrainType of your brain to `InternalTrainable` in inspector.
 2. Create a Trainer
 	1. Attach a `TrainerMimic.cs` to any GameObject.
-    2. Create a `TrainerParamsMimic` scriptable object with proper parameters in your project and assign it to the Params field in `TrainerMimic.cs`.
+    2. Create a `TrainerParamsMimic` scriptable object with proper parameters in your project(in project window selelct `Create/ml-agent/ppo/TrainerParamsMimic`), and assign it to the Params field in `TrainerMimic.cs`.
     3. Assign the Trainer to the `Trainer` field of your Brain.
 3. Create a Model
 	1. Attach a `SupervisedLearningModel.cs` to any GameObject.
-    2. Create a `SupervisedLearningNetworkSimple` scriptable object in your project and assign it to the Network field in `SupervisedLearningModel.cs`.
+    2. Create a `SupervisedLearningNetworkSimple` scriptable object in your project(in project window selelct `Create/ml-agent/ppo/SupervisedLearningNetworkSimple`), and assign it to the Network field in `SupervisedLearningModel.cs`.
     3. Assign the created Model to the `modelRef` field of in `TrainerMimic.cs`
     
 4. Create a Decision
@@ -30,15 +30,18 @@ The example scene `UnityTensorflow/Examples/Pong/PongSL` shows how to use superv
 * `isTraining`: Toggle this to switch between training and inference mode. Note that if isTraining if false when the game starts, the training part of the PPO model will not be initialize and you won't be able to train it in this run. Also,
 * `parameters`: You need to assign this field with a TrainerParamsMimic scriptable object. 
 * `continueFromCheckpoint`: If true, when the game starts, the trainer will try to load the saved checkpoint file to resume previous training.
-* `checkpointPath`: the path of the checkpoint, including the file name. 
+* `checkpointPath`:  The path of the checkpoint directory. 
+* `checkpointFileName`: The name of the checkpoint file 
 * `steps`: Just to show you the current step of the training.
-* 'isCollectingData': If the training is collecting training data from Agents with Decision.
-* `dataBufferCount`: Current collected data count.
+* `isCollectingData`: If the training is collecting training data from Agents with Decision.
+* `trainingDataSaveFileName`:  The name of the training data file. The collected training data is saved/loaded from here. 
+* `dataBufferCount`: Shows the current collected data count.
 
 #### TrainerParamsMimic
 * `learningRate`: Learning rate used to train the neural network.
 * `maxTotalSteps`: Max steps the trainer will be training.
 * `saveModelInterval`: The trained model will be saved every this amount of steps.
+* `logInterval`: How many traing steps between each logging.
 * `batchSize`: Mini batch size when training.
 * `numIterationPerTrain`: How many batches to train for each step(fixed update).
 * `requiredDataBeforeTraining`: How many collected data count is needed before it start to traing the neural network.
@@ -46,6 +49,8 @@ The example scene `UnityTensorflow/Examples/Pong/PongSL` shows how to use superv
 
 #### SupervisedLearningModel.cs
 * `checkpointToLoad`: If you assign a model's saved checkpoint file to it, this will be loaded when model is initialized, regardless of the trainer's loading. Might be used when you are not using a trainer.
+* `modelName`: The name of the model. It is used for the namescope When buliding the neural network. Can be empty by default.
+* `weightSaveMode`: This decides the names of the weights of neural network when saving to checkpoints as serialized dictionary. No need to changes this ususally. 
 * `Network`: You need to assign this field with a scriptable object that implements RLNetworkPPO.cs. 
 * `optimizer`: The optimizer to use for this model when training. You can also set its parameters here.
 
@@ -66,7 +71,7 @@ You can also use a [conditional GAN](https://arxiv.org/abs/1411.1784) model inst
 
 Note that currently the GAN network we made does not support visual observation.
 
-#### Steps
+#### Steps to Setup
 Most the same steps as using regular [supervised learning](Overall Steps) as before, but change step 3 to create a GAN model, and change the `TrainerParamsMimic` in step 2-2 to `TrainerParamsGAN` instead.
 
 - Create a GAN model:
@@ -76,6 +81,8 @@ Most the same steps as using regular [supervised learning](Overall Steps) as bef
     
 #### GANModel.cs
 * `checkpointToLoad`: If you assign a model's saved checkpoint file to it, this will be loaded when model is initialized, regardless of the trainer's loading. Might be used when you are not using a trainer.
+* `modelName`: The name of the model. It is used for the namescope When buliding the neural network. Can be empty by default.
+* `weightSaveMode`: This decides the names of the weights of neural network when saving to checkpoints as serialized dictionary. No need to changes this ususally. 
 * `Network`: You need to assign this field with a scriptable object that implements RLNetworkPPO.cs. 
 * `generatorL2LossWeight`: L2 loss weight of the generator. Usually 0 is fine. 
 * `outputShape`: Output shape of GAN. For ML-Agent, you can keep it unmodified, and the trainer will set it for you.
