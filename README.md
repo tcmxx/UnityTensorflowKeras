@@ -15,7 +15,7 @@
 * Evolution Strategy (using Covariance Matrix Adaption Evolution Strategy(CMA-ES))
 * Examples provided.
 
-# Requirements: 
+## Requirements: 
 - [Unity ML agent v0.5](https://github.com/Unity-Technologies/ml-agents) 
 - Unity 2018.1.6f1(Should be working with some of the newer versions as well).
 
