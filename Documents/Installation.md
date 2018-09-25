@@ -7,10 +7,10 @@ This repo uses source codes from two other repos:
 KerasSharp uses [TensorflowSharp](https://github.com/migueldeicaza/TensorFlowSharp) plugin built for Unity. 
 
 ## Install Unity.
-Unity 2018 will probably work.
+Unity 2018.1.6f1 will most likely be working.
 
 ## Clone the Unity MLAgent
-The repo in Github is at: https://github.com/Unity-Technologies/ml-agents. You can clone it anyway you want. All we need is the Assets/ML-Agents folder in its Unity project. All other python stuff is not needed.
+The repo in Github is at: https://github.com/Unity-Technologies/ml-agents. You can clone it anyway you want. All we need is the UnitySDK/Assets/ML-Agents folder in its Unity project. All other python stuff is not needed.
 
 If you already have a ML-Agents project with environment implemented, you can just skip this part.
 
@@ -36,7 +36,7 @@ If you don't what to clone with submodule, you can also clone the  [KerasSharp](
 ## Copy the folders into your project.
 You need to copy the necessary folders from this repo to your ML-Agents project:
 
-It the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder, and you need to put it into your Unity MLAgent's /Assets folder. 
+Copy the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder, and put it into your Unity MLAgent's /Assets folder. 
 
 ## Modify Brain.cs to Add Support For Training inside Unity
 
