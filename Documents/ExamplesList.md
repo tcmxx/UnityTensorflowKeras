@@ -30,61 +30,19 @@ This is just a copy of the Unity ML-Agents' [3DBall environment](https://github.
 * Scenes:
 	- 3DBall: Basic PPO example used by [Getting Started with Balance Ball](Getting-Started-with-Balance-Ball.md) tutorial. 
 	- 3DBallNE: Basic Neural Evolution example. 
+	
+## BananaCollectors
 
-## Pong
 <p align="center">
-    <img src="Images/ExampleList/Pong.png" 
-        alt="Pong" 
+    <img src="Images/ExampleList/BananaCollectors.png" 
+        alt="BananaCollectors" 
         width="600" border="10" />
 </p>
 
+This is just a copy of the Unity ML-Agents' [Banana Collectors](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#banana-collector), with modifications for in editor training tutorial. 
 
-Classic Pong game. Two agents play with each other in this game.
-
-* Observation: Vector of size 6. the y positions of the agent itself and the opponent. Position and velocity of the ball. The observations are transformed so that each agent feels they are the agent at the left. 
 * Scenes:
-	- PongRL: 
-    	- Use PPO algorithm. 
-        - Discrete action space: up, stay, down. 
-    - PongRLWithHeuristic: 
-    	- Use PPO with heuristic.  The left agent collects extra training data from manual designed AI decisions and it is added to the regular PPO data collected from right agent for training.
-        - Discrete action space: up, stay, down. 
-    - PongSL: 
-    	- Use supervised learning. The left agent uses manual control for collecting data. Once enough data is collected, it will start to supervised learning to train the brain.
-        - Discrete action space: up, stay, down. 
-    - PongSLGAN: 
-    	- Use supervised learning. But the learning model is GAN instead of regular one. 
-        - Continuous action space: vertical velocity. 
-        
-## Pole
-<p align="center">
-    <img src="Images/ExampleList/Pole.png" 
-        alt="Pole" 
-        width="600" border="10" />
-</p>
-A 2D physcis based game where the agent need to give a torque to the pole to keep it up.
-
-* Continuous action space: torque.
-* Algorithm: PPO.
-* Scenes:
-	- Pole: Vector Observation of size 2. Angular velocity and curren angle.
-    - PoleVisual: Visual Observation. Game is modified so that the graphics shows the angular velocity.
-    
-    
-## Maze
-<p align="center">
-    <img src="Images/ExampleList/Maze.png" 
-        alt="Maze" 
-        width="600" border="10" />
-</p>
-
-A game where the agent(yellow) has to reach to the destination(green) and avoid the obstables(red).
-
-* Discrete action space: Up, Down, Left, Right.
-* Algorithm: PPO.
-* Scenes:
-	- MazePPO: Vector Observation with size of the map(36 by default). Each color has different value.
-    - MazePPOVisual: Visual Observation of size 32x32, colored. 
+	- Banana: Basic PPO example. It is also an example of using discrete action branching. 
 
 ## GAN2DPlane
 <p align="center">
@@ -99,25 +57,70 @@ Click StartTraining to generate training data and start training.
 
 Click UseGAN to generate data from GAN(blue).
 
-## Crawler
+## GridWorld
+
 <p align="center">
-    <img src="Images/ExampleList/Crawler.png" 
-        alt="Crawler" 
+    <img src="Images/ExampleList/GridWorld.png" 
+        alt="GridWorld" 
         width="600" border="10" />
 </p>
 
-This is just a copy of the Unity ML-Agents' [3DBall environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#3dball-3d-balance-ball), with modifications.
+This is just a copy of the Unity ML-Agents' [GridWorld](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#gridworld), with modifications for in editor training tutorial. 
 
-* Scenes: 
-	- CrawlerNE: Neural Evolution example.
-	- Crawler??: Experiemental scene  for hybrid training(Similiar to Evolved Policy Gradient.)
-	
+* Scenes:
+	- GridWorld: Basic PPO example. It uses visual observation and discrete action space with [masking](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Design-Agents.md#masking-discrete-actions).
 
-## Walker
+## Maze
 <p align="center">
-    <img src="Images/ExampleList/Walker.png" 
-        alt="Walker" 
+    <img src="Images/ExampleList/Maze.png" 
+        alt="Maze" 
+        width="600" border="10" />
+</p>
+A game where the agent(yellow) has to reach to the destination(green) and avoid the obstables(red).
+
+* Discrete action space: Up, Down, Left, Right.
+* Algorithm: PPO.
+* Scenes:
+	- MazePPO: Vector Observation with size of the map(36 by default). Each color has different value.
+    - MazePPOVisual: Visual Observation of size 32x32, colored. 
+    
+## Pole
+<p align="center">
+    <img src="Images/ExampleList/Pole.png" 
+        alt="Pole" 
+        width="600" border="10" />
+</p>
+A 2D physcis based game where the agent need to give a torque to the pole to keep it up.
+
+* Continuous action space: torque.
+* Algorithm: PPO.
+* Scenes:
+	- Pole: Vector Observation of size 2. Angular velocity and curren angle.
+    - PoleVisual: Visual Observation. Game is modified so that the graphics shows the angular velocity.
+    
+      
+## Pong
+<p align="center">
+    <img src="Images/ExampleList/Pong.png" 
+        alt="Pong" 
         width="600" border="10" />
 </p>
 
-A copy of Unity MLAgent's Walker example. A test scene for hybrid training. Not working at all. Don't use it.
+
+Classic Pong game. Two agents play with each other in this game.
+
+* Observation: Vector of size 6. the y positions of the agent itself and the opponent. Position and velocity of the ball. The observations are transformed so that each agent feels they are the agent at the left. 
+* Scenes:
+	- PongRL: 
+    		- Use PPO algorithm. 
+        	- Discrete action space: up, stay, down. 
+	- PongRLWithSLInit: 
+    		- Use PPO algorithm. However, the PPO model is initailize with weights trained from Supervised Learning. This might make the training faster to reach the best result.
+        	- Discrete action space: up, stay, down. 
+    - PongSL: 
+    	- Use supervised learning. The left agent uses manual control for collecting data. Once enough data is collected, it will start to supervised learning to train the brain.
+        - Discrete action space: up, stay, down. 
+    - PongSLGAN: 
+    	- Use supervised learning. But the learning model is GAN instead of regular one. 
+        - Continuous action space: vertical velocity. 
+
