@@ -24,10 +24,10 @@ namespace NWH
         // Colors
         public static Color32 windowBackgroundColor = new Color32(162, 162, 162, 255);
         public static Color32 borderBackgroundColor = new Color32(194, 194, 194, 255);
-        public static Color32 graphBackgroundColor = new Color32(80, 100, 100, 255);
+        public static Color32 graphBackgroundColor = new Color32(255, 255, 255, 255);
         public static Color32 graphStatColor = new Color(0, 0, 0, 0.4f);
         public static Color32 ruleLineColor = new Color32(255, 255, 255, 100);
-        public static Color32 gridLineColor = new Color32(255, 255, 255, 80);
+        public static Color32 gridLineColor = new Color32(0, 0, 0, 200);
 
         public static Color32 panelBackgroundColor = new Color32(240, 240, 240, 255);
         public static Color32 panelHeaderColor = new Color32(220, 220, 220, 255);

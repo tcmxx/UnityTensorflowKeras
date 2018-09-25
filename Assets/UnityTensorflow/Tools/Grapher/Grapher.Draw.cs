@@ -160,7 +160,7 @@ public partial class Grapher : EditorWindow
                         // Draw polyline (fastest)
                         if (GraphSettings.GraphLineStyle == 0)
                         {
-                            Handles.DrawAAPolyLine(points.ToArray());
+                            Handles.DrawAAPolyLine(2f,points.ToArray());
                         }
                         // Draw dots
                         else if (GraphSettings.GraphLineStyle == 1)
