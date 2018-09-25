@@ -11,11 +11,11 @@ The example [Getting Started with the 3D Balance Ball Environment](Getting-Start
 3. Change the BrainType of your brain to `InternalTrainable` in inspector.
 2. Create a Trainer
 	1. Attach a `TrainerPPO.cs` to any GameObject.
-    2. Create a `TrainerParamsPPO` scriptable object with proper parameters in your project and assign it to the Params field in `TrainerPPO.cs`.
+    2. Create a `TrainerParamsPPO` scriptable object with proper parameters in your project(in project window selelct `Create/ml-agent/ppo/TrainerParamsPPO`), and assign it to the Params field in `TrainerPPO.cs`.
     3. Assign the Trainer to the `Trainer` field of your Brain.
 3. Create a Model
 	1. Attach a `RLModelPPO.cs` to any GameObject.
-    2. Create a `RLNetworkSimpleAC` scriptable with proper object in your project and assign it to the Network field in `RLModelPPO.cs`.
+    2. Create a `RLNetworkSimpleAC` scriptable with proper parameters in your project(in project window selelct `Create/ml-agent/ppo/RLNetworkSimpleAC`), and assign it to the Network field in `RLModelPPO.cs`.
     3. Assign the created Model to the `modelRef` field of in `TrainerPPO.cs`
     
 4. Play and see how it works.
@@ -27,28 +27,35 @@ We use similar parameters as in Unity ML-Agents. If something is confusing, read
 * `isTraining`: Toggle this to switch between training and inference mode. Note that if isTraining if false when the game starts, the training part of the PPO model will not be initialize and you won't be able to train it in this run. Also,
 * `parameters`: You need to assign this field with a TrainerParamsPPO scriptable object. 
 * `continueFromCheckpoint`: If true, when the game starts, the trainer will try to load the saved checkpoint file to resume previous training.
-* `checkpointPath`: the path of the checkpoint, including the file name. 
-* `steps`: Just to show you the current step of the training.
+* `checkpointPath`:  The path of the checkpoint directory. 
+* `checkpointFileName`: The name of the checkpoint file
+* `steps`: Just to show you the current step of the training. You can also change it in the training if you want.
 
 #### TrainerParamsPPO
 * `learningRate`: Learning rate used to train the neural network.
 * `maxTotalSteps`: Max steps the trainer will be training.
 * `saveModelInterval`: The trained model will be saved every this amount of steps.
+* `logInterval`: How many traing steps between each logging.
 * `rewardDiscountFactor`: Gamma. See PPO algorithm for details.
 * `rewardGAEFactor`: Lambda. See PPO algorithm for details.
 * `valueLossWeight`: Weight of the value loss compared with the policy loss in PPO.
 * `timeHorizon`: Max steps when the PPO trainer will calculate the advantages using the collected data.
 * `entropyLossWeight`: Weight of the entropy loss.
 * `clipEpsilon`: See PPO algorithm for details. The default value is usually fine.
+* `clipValueLoss`: Clipping factor in value loss. The default value is usually fine.
 * `batchSize`: Mini batch size when training.
 * `bufferSizeForTrain`: PPO will train the model once when the buffer size reaches this.
-* `numEpochPerTrain`: For each training, the data in the buffer will be used repeatedly this amount of times.
-* `useHeuristicChance`: See [Training with Heuristics](#training-with-heuristics).
+* `numEpochPerTrain`: For each training, the data in the buffer will be used repeatedly this amount of times. Unity uses 3 by default.
+* `finalActionClip`: The final action passed to the agents will be clipped based on this value. Unity uses 3 by default.
+* `finalActionDownscale`: The final action passed to the agents will be downscaled based on this value. Unity uses 3 by default.
 
 #### RLModelPPO.cs
 * `checkpointToLoad`: If you assign a model's saved checkpoint file to it, this will be loaded when model is initialized, regardless of the trainer's loading. Might be used when you are not using a trainer.
+* `modelName`: The name of the model. It is used for the namescope When buliding the neural network. Can be empty by default.
+* `weightSaveMode`: This decides the names of the weights of neural network when saving to checkpoints as serialized dictionary. No need to changes this ususally. 
 * `Network`: You need to assign this field with a scriptable object that implements RLNetworkPPO.cs. 
 * `optimizer`: The time of optimizer to use for this model when training. You can also set its parameters here.
+* `useInputNormalization`: Whether automatically normalize vector observations.(See Unity's [Doc](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-ML-Agents.md#training-config-file))
 
 #### RLNetworkSimpleAC
 This is a simple implementation of RLNetworkAC that you can create a plug it in as a neural network definition for any RLModelPPO. PPO uses actor/critic structure(See PPO algorithm).
@@ -59,15 +66,7 @@ This is a simple implementation of RLNetworkAC that you can create a plug it in 
     - activationFunction: Which activation function to use. Usually Relu.
 - `actorOutputLayerInitialScale`/`criticOutputLayerInitialScale`/`visualEncoderInitialScale`: Initial scale of the weights of the output layers.
 - `actorOutputLayerBias`/`criticOutputLayerBias`/`visualEncoderBias`: Whether use bias.
-
-## Training with Heuristics
-If you already know some policy that is better than random policy, you might give it as a hint to PPO to increase the training a bit. 
-
-1. Implement the [AgentDependentDeicision](AgentDependentDeicision.md) for your policy and attach it to the agents that you want them to occasionally use this policy.
-2. In your trainer parameters, set `useHeuristicChance` to larger than 0.
-3. Use [TrainerParamOverride](TrainerParamOverride.md) to decrease the `useHeuristicChance` over time during the training.
-
-Note that your AgentDependentDeicision is only used in training mode. The chance of using it in each step for agent with the script attached depends on `useHeuristicChance`.
+- `shareEncoder`: Whether the actior/critic network shares the encoded weights. In Unity ML-Agents, this is set to be true for discrete actions space and true for continuous action space. 
 
 ## Create your own neural network architecture
 If you want to have your own neural network architecture instead of the one provided by [`RLNetworkSimpleAC`](#rlnetworksimpleac), you can inherit `RLNetworkAC` class to build your own neural network. See the [sourcecode](https://github.com/tcmxx/UnityTensorflowKeras/blob/tcmxx/docs/Assets/UnityTensorflow/Learning/PPO/TrainerPPO.cs) of `RLNetworkAC.cs` for documentation.
