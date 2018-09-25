@@ -24,12 +24,22 @@ using KerasSharp.Backends;
 public interface ISupervisedLearningModel
 {
     /// <summary>
-    /// 
+    /// Evaluate the desired actions of current states.
     /// </summary>
-    /// <param name="vectorObservation"></param>
-    /// <param name="visualObservation"></param>
+    /// <param name="vectorObservation">Batched vector observations.</param>
+    /// <param name="visualObservation">List of batched visual observations.</param>
+    /// <param name="actionsMask">Action masks for discrete action space. Each element in the list is for one branch of the actions. Can be null if no mask.</param>
     /// <returns>(means,vars). If the supervised learning model does not support var, the second can be null</returns>
     ValueTuple<float[,], float[,]> EvaluateAction(float[,] vectorObservation, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null);
+
+    /// <summary>
+    /// Train a batch for Supervised learning
+    /// </summary>
+    /// <param name="vectorObservation">Batched vector observations.</param>
+    /// <param name="visualObservation">List of batched visual observations.</param>
+    /// <param name="actions">Desired actions under input states.</param>
+    /// <param name="actionsMask">Action masks for discrete action space. Each element in the list is for one branch of the actions. Can be null if no mask.</param>
+    /// <returns></returns>
     float TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, List<float[,]> actionsMask = null);
 }
 

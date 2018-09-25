@@ -28,14 +28,66 @@ using KerasSharp.Losses;
 
 public interface IRLModelPPO
 {
+    /// <summary>
+    /// The entropy loss weight
+    /// </summary>
     float EntropyLossWeight { get; set; }
+
+    /// <summary>
+    /// The value loss weight
+    /// </summary>
     float ValueLossWeight { get; set; }
+
+    /// <summary>
+    /// The clip epsilon for PPO actor loss
+    /// </summary>
     float ClipEpsilon { get; set; }
+
+    /// <summary>
+    /// The value loss clip
+    /// </summary>
     float ClipValueLoss { get; set; }
 
+    /// <summary>
+    /// Evaluate the values of current states
+    /// </summary>
+    /// <param name="vectorObservation">Batched vector observations.</param>
+    /// <param name="visualObservation">List of batched visual observations.</param>
+    /// <returns>Values of the input batched states</returns>
     float[] EvaluateValue(float[,] vectorObservation, List<float[,,,]> visualObservation);
+
+    /// <summary>
+    /// Evaluate the desired actions of current states
+    /// </summary>
+    /// <param name="vectorObservation">Batched vector observations.</param>
+    /// <param name="actionProbs">Output action probabilities of the output actions. Used for PPO training.</param>
+    /// <param name="visualObservation">List of batched visual observations.</param>
+    /// <param name="actionsMask">Action masks for discrete action space. Each element in the list is for one branch of the actions. Can be null if no mask.</param>
+    /// <returns>The desired actions of the batched input states.</returns>
     float[,] EvaluateAction(float[,] vectorObservation, out float[,] actionProbs, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null);
+
+    /// <summary>
+    /// Evaluate the input actions' probabilities of current states
+    /// </summary>
+    /// <param name="vectorObservation">Batched vector observations.</param>
+    /// <param name="actions">The batched actions that need the probabilies</param>
+    /// <param name="visualObservation">List of batched visual observations.</param>
+    /// <param name="actionsMask">Action masks for discrete action space. Each element in the list is for one branch of the actions. Can be null if no mask.</param>
+    /// <returns>Output action probabilities of the output actions. Used for PPO training.</returns>
     float[,] EvaluateProbability(float[,] vectorObservation, float[,] actions, List<float[,,,]> visualObservation, List<float[,]> actionsMask = null);
+
+    /// <summary>
+    /// Train a batch for PPO
+    /// </summary>
+    /// <param name="vectorObservations">Batched vector observations.</param>
+    /// <param name="visualObservations">List of batched visual observations.</param>
+    /// <param name="actions">The old actions taken in those input states.</param>
+    /// <param name="actionProbs">The old probabilities of old actions taken in those input states.</param>
+    /// <param name="targetValues">Target values.</param>
+    /// <param name="oldValues">Old values evaluated from the neural network from those input states.</param>
+    /// <param name="advantages">Advantages.</param>
+    /// <param name="actionsMask">Action masks for discrete action space. Each element in the list is for one branch of the actions. Can be null if no mask.</param>
+    /// <returns></returns>
     float[] TrainBatch(float[,] vectorObservations, List<float[,,,]> visualObservations, float[,] actions, float[,] actionProbs, float[] targetValues, float[] oldValues, float[] advantages, List<float[,]> actionsMask = null);
 }
 
