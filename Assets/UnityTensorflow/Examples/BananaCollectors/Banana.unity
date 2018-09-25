@@ -385,6 +385,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   checkpointToLoad: {fileID: 0}
   modelName: 
+  weightSaveMode: 0
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 94a8c5dd1c162754f83d9bc2614be87d, type: 2}
   optimizer:
