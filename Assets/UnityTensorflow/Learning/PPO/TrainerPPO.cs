@@ -291,7 +291,7 @@ public class TrainerPPO : Trainer
                     if (!(isTraining && agentDecision != null && agentDecision.useDecision))// && parametersPPO.useHeuristicChance > 0
                     {
                         stats.AddData("accumulatedRewards", accumulatedRewards[agent]);
-                        stats.AddData("episodeSteps", episodeSteps[agent]);
+                        stats.AddData("episodeSteps", episodeSteps.ContainsKey(agent) ? episodeSteps[agent] : 0);
                     }
 
 
