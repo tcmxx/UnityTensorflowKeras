@@ -14,7 +14,7 @@ This repo provides or plans to provide following tools for game AI and machine l
 	* It is called imitation learning in ML-Agents. Here it is called supervised learning or mimic(I am too lazy to unify the name). (basically you show the correct action under different circumstances and let the neural network remember it.)
     * The correct action data can be collected from human playing or others, such as CMAES.
 
-4. Neural Evolution(work in progess)
+4. Neural Evolution(Not gonna have for now)
 	* Evolve the neural network's weights using MAES instead of gradien descent.
 	* Currently only works for not very deep neural network.
 ### Other tools
