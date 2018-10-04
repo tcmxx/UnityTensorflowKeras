@@ -17,7 +17,7 @@ For ML-Agents or related machine learning knowledge, see ML-Agents [documentatio
  * [Training with Proximal Policy Optimization(PPO)](Training-PPO.md) 
  * [Training with Imitation(Supervised Learning)](Training-SL.md) 
  * [Use Neural Evolution to optimize Neural Network](Neural-Evolution.md)
- 
+ * [Training a Generative Adversarial Network(GAN)](Training-GAN.md)
 ## MAES Optimization
  * [Use MAES Optimization to Find the Best Solution](MAES.md)
  
