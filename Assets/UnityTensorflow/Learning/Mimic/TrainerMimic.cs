@@ -15,6 +15,7 @@ public class TrainerMimic : Trainer
 
     [Tooltip("Whether collect data from Decision for supervised learning?")]
     public bool isCollectingData = true;
+    public bool loadTrainingDataFromCheckpoint = true;
     public string trainingDataSaveFileName = @"trainingData.bytes";
     StatsLogger stats;
 
@@ -70,6 +71,10 @@ public class TrainerMimic : Trainer
         if (continueFromCheckpoint)
         {
             LoadModel();
+            
+        }
+        if (loadTrainingDataFromCheckpoint)
+        {
             LoadTrainingData();
         }
     }

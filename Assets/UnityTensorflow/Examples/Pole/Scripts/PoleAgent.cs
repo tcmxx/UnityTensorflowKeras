@@ -71,8 +71,8 @@ public class PoleAgent : Agent
 
     public override void AgentReset()
     {
-        angleR = Random.Range(-Mathf.PI / 2, Mathf.PI / 2);
-        velR = Random.Range(0, 0);
+        angleR = Random.Range(-Mathf.PI, Mathf.PI);
+        velR = Random.Range(-1, 1);
 
     }
 

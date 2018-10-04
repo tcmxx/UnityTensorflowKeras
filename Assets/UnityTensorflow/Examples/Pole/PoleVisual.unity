@@ -1111,7 +1111,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &754623998
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3015,6 +3015,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   checkpointToLoad: {fileID: 0}
   modelName: 
+  weightSaveMode: 0
   trainingEnabled: 0
   network: {fileID: 11400000, guid: cf07cc59ef1a4674a82466577ee57518, type: 2}
   optimizer:
