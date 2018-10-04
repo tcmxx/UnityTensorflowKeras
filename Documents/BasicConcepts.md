@@ -20,10 +20,10 @@ This repo provides or plans to provide following tools for game AI and machine l
 ### Other tools
 1. GAN(Generative adversarial network)
 	* Including [Traning with Prediction to Stableize](https://www.semanticscholar.org/paper/Stabilizing-Adversarial-Nets-With-Prediction-Yadav-Shah/ec25504486d8751e00e613ca6fa64b256e3581c8).
-	* [Improved Training of Wasserstein GANs with gradient penalty](http://papers.nips.cc/paper/7159-improved-training-of-wasserstein-gans.pdf)(future plan).
+	* [Improved Training of Wasserstein GANs with gradient penalty](http://papers.nips.cc/paper/7159-improved-training-of-wasserstein-gans.pdf)(Not gonna have for now).
 2. Heat map rendering tool
-3. [Artistic Style Transfer](https://arxiv.org/abs/1705.08086)(future plan)
-4. In editor progress visualization tool(future plan)
+3. [Artistic Style Transfer](https://arxiv.org/abs/1705.08086)(Not gonna have for now)
+4. In editor progress visualization tool(Not gonna have for now)
 ### Features Not Have
 1. Curriculum Training
 	* It is pretty easy to implement curriculum learning by yourself because there is not communication between programs.
