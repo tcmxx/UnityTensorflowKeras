@@ -52,7 +52,7 @@ public class GANTrainHelper : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Train both generator and discriminator with batches from current data buffers
     /// </summary>
     /// <param name="batchSize"></param>
     /// <param name="generatorTrainCount"></param>
@@ -152,13 +152,13 @@ public class GANTrainHelper : MonoBehaviour
         return ganReference.TrainGeneratorBatch(conditions, noise, targets);
     }
 
-    public void SetGeneratorLR()
+    public void SetGeneratorLR(float lr)
     {
-        throw new NotImplementedException();
+        ganReference.GeneratorLR = lr;
     }
 
-    public void SetDiscriminatorLR()
+    public void SetDiscriminatorLR(float lr)
     {
-        throw new NotImplementedException();
+        ganReference.DiscriminatorLR = lr;
     }
 }
