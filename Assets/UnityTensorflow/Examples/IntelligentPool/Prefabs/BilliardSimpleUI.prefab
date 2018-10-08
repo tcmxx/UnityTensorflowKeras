@@ -924,6 +924,8 @@ MonoBehaviour:
   optimizerRef: {fileID: 0}
   gameSystemRef: {fileID: 0}
   heatmapRef: {fileID: 0}
+  startOptButtonRef: {fileID: 0}
+  endOptButtonRef: {fileID: 0}
 --- !u!114 &114265614086785272
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1064,7 +1066,7 @@ MonoBehaviour:
     m_FontSize: 18
     m_FontStyle: 0
     m_BestFit: 1
-    m_MinSize: 10
+    m_MinSize: 4
     m_MaxSize: 40
     m_Alignment: 1
     m_AlignByGeometry: 0

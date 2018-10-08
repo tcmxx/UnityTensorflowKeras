@@ -15,7 +15,7 @@ public class SimpleDenseLayerDefPropertyDrawer : PropertyDrawer
         // prefab override logic works on the entire property.
         EditorGUI.BeginProperty(position, label, property);
         var layer = EditorUtils.GetActualObjectForSerializedProperty<UnityNetwork.SimpleDenseLayerDef>(fieldInfo, property) ;
-        if (layer.initialScale == 0)
+        if (layer != null && layer.initialScale == 0)
         {
             layer.Reinitialize();
         }

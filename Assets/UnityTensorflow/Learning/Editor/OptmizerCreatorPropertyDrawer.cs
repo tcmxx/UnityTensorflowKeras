@@ -46,7 +46,7 @@ public class OptmizerCreatorPropertyDrawer : PropertyDrawer
         Type type = OptimizerCreator.TypeFromEnum(opt.optimizerType);
         var ctors = type.GetConstructors();
         var ctor = ctors[0];    //assume there is only one constructor
-        var paramInfos = ctor.GetParameters();
+        //var paramInfos = ctor.GetParameters();
         int i = 0;
         foreach (var param in ctor.GetParameters())
         {

@@ -68,6 +68,44 @@ public class RLNetworkSimpleAC : RLNetworkAC
         outActionLogits = policy_branches.ToArray();
     }
 
+    /// <summary>
+    /// Create the layers that are common for discrete and continuous action space
+    /// </summary>
+    /// <param name="inVectorObs"></param>
+    /// <param name="inVisualObs"></param>
+    /// <param name="inMemery"></param>
+    /// <param name="inPrevAction"></param>
+    /// <param name="outValue"></param>
+    /// <param name="encodedAllActor"></param>
+    /// <param name="shareEncoder"></param>
+    protected void CreateCommonLayers(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, out Tensor outValue, out Tensor encodedAllActor, bool shareEncoder = false)
+    {
+
+        actorWeights = new List<Tensor>();
+        criticWeights = new List<Tensor>();
+
+        ValueTuple<Tensor, List<Tensor>> actorEncoded, criticEncoded;
+        if (!shareEncoder)
+        {
+            actorEncoded = CreateObservationStream(inVectorObs, actorHiddenLayers, inVisualObs, inMemery, inPrevAction, "Actor");
+            criticEncoded = CreateObservationStream(inVectorObs, criticHiddenLayers, inVisualObs, inMemery, inPrevAction, "Critic");
+        }
+        else
+        {
+            actorEncoded = CreateObservationStream(inVectorObs, actorHiddenLayers, inVisualObs, inMemery, inPrevAction, "ActorCritic");
+            criticEncoded = actorEncoded;
+        }
+
+        actorWeights.AddRange(actorEncoded.Item2);
+        criticWeights.AddRange(criticEncoded.Item2);
+
+        var criticOutput = new Dense(units: 1, activation: null, use_bias: criticOutputLayerBias, kernel_initializer: new GlorotUniform(scale: criticOutputLayerInitialScale));
+        outValue = criticOutput.Call(criticEncoded.Item1)[0];
+        criticWeights.AddRange(criticOutput.weights);
+
+        encodedAllActor = actorEncoded.Item1;
+    }
+
 
     protected ValueTuple<Tensor, List<Tensor>> CreateObservationStream(Tensor inVectorObs, List<SimpleDenseLayerDef> layerDefs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, string encoderName)
     {
@@ -128,33 +166,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
         return ValueTuple.Create(encodedAll, allWeights);
     }
 
-    protected void CreateCommonLayers(Tensor inVectorObs, List<Tensor> inVisualObs, Tensor inMemery, Tensor inPrevAction, out Tensor outValue, out Tensor encodedAllActor, bool shareEncoder = false)
-    {
 
-        actorWeights = new List<Tensor>();
-        criticWeights = new List<Tensor>();
-
-        ValueTuple<Tensor, List<Tensor>> actorEncoded, criticEncoded;
-        if (!shareEncoder)
-        {
-            actorEncoded = CreateObservationStream(inVectorObs, actorHiddenLayers, inVisualObs, inMemery, inPrevAction, "Actor");
-            criticEncoded = CreateObservationStream(inVectorObs, criticHiddenLayers,inVisualObs, inMemery, inPrevAction, "Critic");
-        }
-        else
-        {
-            actorEncoded = CreateObservationStream(inVectorObs, actorHiddenLayers, inVisualObs, inMemery, inPrevAction, "ActorCritic");
-            criticEncoded = actorEncoded;
-        }
-
-        actorWeights.AddRange(actorEncoded.Item2);
-        criticWeights.AddRange(criticEncoded.Item2);
-
-        var criticOutput = new Dense(units: 1, activation: null, use_bias: criticOutputLayerBias, kernel_initializer: new GlorotUniform(scale: criticOutputLayerInitialScale));
-        outValue = criticOutput.Call(criticEncoded.Item1)[0];
-        criticWeights.AddRange(criticOutput.weights);
-
-        encodedAllActor = actorEncoded.Item1;
-    }
 
 
 

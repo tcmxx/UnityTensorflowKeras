@@ -22,7 +22,7 @@ public class TrainerParamsPPO : TrainerParams
     public int bufferSizeForTrain = 2048;
     public int numEpochPerTrain = 3;
 
-    [Range(0,1)]
+    //[Range(0,1)]
     //public float useHeuristicChance = 0.4f;
 
     [Tooltip(" Unity's impelemntation does clip the normalize the final acion for continuous space before sending to agents: clip(action,-3,3)/3.")]

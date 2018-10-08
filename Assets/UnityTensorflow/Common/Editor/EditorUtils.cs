@@ -68,11 +68,21 @@ public static class EditorUtils
         if (obj.GetType().IsArray)
         {
             var index = Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
-            actualObject = ((T[])obj)[index];
+            var array = ((T[])obj);
+            if (array == null || array.Length <= index)
+                actualObject = null;
+            else
+                actualObject = ((T[])obj)[index];
         }else if (obj.GetType() == typeof(List<T>))
         {
             var index = Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
-            actualObject = ((List<T>)obj)[index];
+
+            var list = ((List<T>)obj);
+            if (list == null || list.Count <= index)
+                actualObject = null;
+            else
+                actualObject = ((List<T>)obj)[index];
+
         }
         else
         {

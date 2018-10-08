@@ -12,28 +12,36 @@ MonoBehaviour:
   m_Name: GANNetworkDense2DPlane
   m_EditorClassIdentifier: 
   generatorHiddenLayers:
-  - size: 64
+  - size: 128
     initialScale: 0.7
     useBias: 1
     activationFunction: 0
-  - size: 64
+  - size: 128
     initialScale: 0.7
     useBias: 1
     activationFunction: 0
-  - size: 64
+  - size: 128
+    initialScale: 0.7
+    useBias: 1
+    activationFunction: 0
+  - size: 128
     initialScale: 0.7
     useBias: 1
     activationFunction: 0
   discriminatorHiddenLayers:
-  - size: 64
+  - size: 128
     initialScale: 0.7
     useBias: 1
     activationFunction: 0
-  - size: 64
+  - size: 128
     initialScale: 0.7
     useBias: 1
     activationFunction: 0
-  - size: 64
+  - size: 128
+    initialScale: 0.7
+    useBias: 1
+    activationFunction: 0
+  - size: 128
     initialScale: 0.7
     useBias: 1
     activationFunction: 0
