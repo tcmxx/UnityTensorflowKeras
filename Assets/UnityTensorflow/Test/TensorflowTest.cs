@@ -25,7 +25,7 @@ public class TensorflowTest : MonoBehaviour {
     void Start() {
 
 
-        //TestBasicBackendAndOptimizerAndExportGraph();
+        TestBasicBackendAndOptimizerAndExportGraph();
         //TestLayer();
 
         //TestConv2D();
@@ -35,7 +35,7 @@ public class TensorflowTest : MonoBehaviour {
 
         //TestModelCompileAndFit();
 
-        TestDataBuffer();
+        //TestDataBuffer();
 
         //print(Path.GetFullPath("Set/setset/set.ser"));
 
@@ -136,6 +136,7 @@ public class TensorflowTest : MonoBehaviour {
         var input = K.placeholder(new int?[] { -1, 3 });
         var target = K.placeholder(new int?[] { -1, 1 });
         var weight = K.variable((new Constant(1)).Call(new int[] { 3, 1 }, DataType.Float));
+        //var normalizedWeight = K.spectral_norm(weight);
         var output = K.dot(input, weight);
         output = K.reshape(output, new int[] { -1 });
         target = K.reshape(target, new int[] { -1 });

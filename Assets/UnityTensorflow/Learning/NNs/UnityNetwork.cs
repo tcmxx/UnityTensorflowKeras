@@ -19,6 +19,7 @@ public abstract class UnityNetwork : ScriptableObject
         public int size = 32;
         public float initialScale = 1f;
         public bool useBias = true;
+        //public bool useSpectralNormalization = false;
         public Activation.ActivationFunction activationFunction;
         public SimpleDenseLayerDef()
         {

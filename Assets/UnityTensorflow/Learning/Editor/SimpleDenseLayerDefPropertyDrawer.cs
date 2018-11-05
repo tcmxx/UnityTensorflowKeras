@@ -41,6 +41,9 @@ public class SimpleDenseLayerDefPropertyDrawer : PropertyDrawer
         EditorGUI.PropertyField(initScaleRect, property.FindPropertyRelative("initialScale"), new GUIContent("InitialScale"));
         
         EditorGUI.PropertyField(activationRect, property.FindPropertyRelative("activationFunction"), new GUIContent("Activation"));
+
+        //var testRect = new Rect(position.x, activationRect.y + EditorGUIUtility.standardVerticalSpacing + standardSpacing, position.width, standardSpacing);
+        //EditorGUI.PropertyField(testRect, property.FindPropertyRelative("useSpectralNormalization"), new GUIContent("UseSpectralNormalization"));
         // Set indent back to what it was
         EditorGUI.indentLevel = indent;
         EditorGUI.EndProperty();

@@ -294,7 +294,7 @@ public abstract class LearningModelBase : MonoBehaviour
                 continue;
             }
 
-            if ((w.int_shape.Length == 0 && values[saveKey].Length == 1) || w.int_shape.Aggregate((x, y) => x * y) == values[saveKey].Length)
+            if ((w.shape.Length == 0 && values[saveKey].Length == 1) || w.shape.Aggregate((x, y) => x * y) == values[saveKey].Length)
             {
                 Current.K.set_value(w, values[saveKey]);
             }
@@ -320,7 +320,7 @@ public abstract class LearningModelBase : MonoBehaviour
                 continue;
             }
 
-            if ((w.int_shape.Length == 0 && values[saveKey].Length == 1) || w.int_shape.Aggregate((x, y) => x * y) == values[saveKey].Length)
+            if ((w.shape.Length == 0 && values[saveKey].Length == 1) || w.shape.Aggregate((x, y) => x * y) == values[saveKey].Length)
             {
                 Current.K.set_value(w, values[saveKey]);
             }

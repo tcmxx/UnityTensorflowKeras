@@ -122,6 +122,23 @@ public class DataBuffer : ISerializable
         CurrentCount = (int)info.GetValue("CurrentCount", typeof(int));
         dataset = (Dictionary<string, DataContainer>)info.GetValue("dataset", typeof(Dictionary<string, DataContainer>));
     }
+
+
+    /// <summary>
+    /// Add data off one buffer to another buffer. The data in those buffers must be the same types and names
+    /// </summary>
+    /// <param name="bufferToAdd"></param>
+    public void AddData(DataBuffer dataToAdd)
+    {
+        List<ValueTuple<string, Array>> datas = new List<ValueTuple<string, Array>>();
+        foreach(var k in dataToAdd.dataset.Keys)
+        {
+            datas.Add(ValueTuple.Create(k, dataToAdd.dataset[k].dataList));
+        }
+
+        AddData(datas.ToArray());
+    }
+
     /// <summary>
     /// Add data to the buffer
     /// </summary>

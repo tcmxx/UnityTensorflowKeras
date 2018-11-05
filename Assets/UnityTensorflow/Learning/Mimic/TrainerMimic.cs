@@ -16,6 +16,7 @@ public class TrainerMimic : Trainer
     [Tooltip("Whether collect data from Decision for supervised learning?")]
     public bool isCollectingData = true;
     public bool loadTrainingDataFromCheckpoint = true;
+    public bool saveTrainingData = true;
     public string trainingDataSaveFileName = @"trainingData.bytes";
     StatsLogger stats;
 
@@ -112,7 +113,7 @@ public class TrainerMimic : Trainer
     {
         base.IncrementStep();
         dataBufferCount = dataBuffer.CurrentCount;
-        if (GetStep() % parametersMimic.saveModelInterval == 0 && GetStep() != 0)
+        if (saveTrainingData && GetStep() % parametersMimic.saveModelInterval == 0 && GetStep() != 0)
         {
             SaveTrainingData();
         }
@@ -282,9 +283,21 @@ public class TrainerMimic : Trainer
         //deserialize the data
         var mStream = new MemoryStream(bytes);
         var binFormatter = new BinaryFormatter();
-        dataBuffer = (DataBuffer)binFormatter.Deserialize(mStream);
 
-        Debug.Log("Loaded training data from " + fullPath);
+        object deserialized = binFormatter.Deserialize(mStream);
+
+        if (deserialized is DataBuffer)
+        {
+            dataBuffer = (DataBuffer)binFormatter.Deserialize(mStream);
+            Debug.Log("Loaded training data from " + fullPath);
+        }else if(deserialized is HPPORawHistory)
+        {
+            dataBuffer = ((HPPORawHistory)deserialized).AddToDataBuffer(BrainToTrain.brainParameters);
+        }
+        else
+        {
+            Debug.LogError("Training data format not supported");
+        }
     }
 
 }

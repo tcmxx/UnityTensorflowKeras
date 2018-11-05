@@ -36,7 +36,16 @@ public static class ConversionExtensions {
         
     }
 
+    public static T[,] Reshape<T>(this List<T> data, int colSize)
+    {
+        if (colSize == 0)
+            return null;
+        var result = new T[data.Count / colSize, colSize];
+        int typeSize = Marshal.SizeOf(typeof(T));
+        Buffer.BlockCopy(data.ToArray(), 0, result, 0, data.Count * typeSize);
 
+        return result;
+    }
 
     public static T[,,,] Stack<T>(this List<T[,,]> data)
     {

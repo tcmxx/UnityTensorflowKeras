@@ -7,6 +7,7 @@ using MLAgents;
 using System.IO;
 using KerasSharp.Backends;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.InteropServices;
 
 public struct TakeActionOutput
 {
@@ -291,6 +292,27 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         return observationMatrixList;
     }
 
+    public static List<float[,,,]> CreateVisualInputBatch(List<List<float[,,]>> episodeHistory, resolution[] cameraResolutions)
+    {
+        if (cameraResolutions == null || cameraResolutions.Length <= 0)
+            return null;
+        var observationMatrixList = new List<float[,,,]>();
+        var dataHolder = new List<float[,,]>();
+
+        for (int observationIndex = 0; observationIndex < cameraResolutions.Length; observationIndex++)
+        {
+            dataHolder.Clear();
+            foreach (var o in episodeHistory[observationIndex])
+            {
+                dataHolder.Add(o);
+            }
+            observationMatrixList.Add(dataHolder.Stack());
+        }
+
+        return observationMatrixList;
+    }
+
+
     /// <summary>
     /// Create vector observation batch data  that can be used directly to feed neural network.
     /// </summary>
@@ -315,6 +337,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
         return result;
     }
+
+
 
 
     public static List<float[,]> CreateActionMasks(Dictionary<Agent, AgentInfoInternal> currentInfo, List<Agent> agentList, int[] actionSizes)
@@ -348,6 +372,26 @@ public abstract class Trainer : MonoBehaviour, ITrainer
                 }
             }
             currentBranchStartIndex += actionSize;
+            masks.Add(mask);
+        }
+
+        return masks;
+    }
+
+
+    public static List<float[,]> CreateActionMasks(List<List<float>> actionMasksHistory, int[] actionSizes)
+    {
+        if (actionMasksHistory == null || actionMasksHistory.Count <= 0 || actionMasksHistory[0].Count <= 0)
+            return null;
+        List<float[,]> masks = new List<float[,]>();
+        int dataCount = actionMasksHistory[0].Count / actionSizes[0];
+
+        for (int b = 0; b < actionSizes.Length; b++)
+        {
+            float[,] mask = new float[dataCount, actionSizes[b]];
+
+            int typeSize = Marshal.SizeOf(typeof(float));
+            Buffer.BlockCopy(actionMasksHistory[b].ToArray(), 0, mask, 0, actionMasksHistory[b].Count * typeSize);
             masks.Add(mask);
         }
 
