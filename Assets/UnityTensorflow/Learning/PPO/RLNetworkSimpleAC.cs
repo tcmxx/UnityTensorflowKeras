@@ -12,7 +12,7 @@ using System.Linq;
 
 using static KerasSharp.Backends.Current;
 
-[CreateAssetMenu(menuName = "ml-agent/ppo/RLNetworkSimpleAC")]
+[CreateAssetMenu(menuName = "ML-Agents/InternalLearning/ppo/RLNetworkSimpleAC")]
 public class RLNetworkSimpleAC : RLNetworkAC
 {
 
@@ -25,7 +25,7 @@ public class RLNetworkSimpleAC : RLNetworkAC
     public float criticOutputLayerInitialScale = 1f;
     public bool criticOutputLayerBias = true;
 
-    public float visualEncoderInitialScale = 1f;
+    public float visualEncoderInitialScale = 0.01f;
     public bool visualEncoderBias = true;
 
     [Tooltip("If shared, actor and critic will use the share the network weights.criticHiddenLayers will be ignored. ")]

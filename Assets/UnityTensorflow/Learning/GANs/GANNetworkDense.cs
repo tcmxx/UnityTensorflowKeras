@@ -9,7 +9,7 @@ using UnityEngine;
 using static KerasSharp.Backends.Current;
 using KerasSharp.Activations;
 
-[CreateAssetMenu(menuName = "ml-agent/GAN/GANNetworkDense")]
+[CreateAssetMenu(menuName = "ML-Agents/InternalLearning/GAN/GANNetworkDense")]
 public class GANNetworkDense : GANNetwork
 {
 

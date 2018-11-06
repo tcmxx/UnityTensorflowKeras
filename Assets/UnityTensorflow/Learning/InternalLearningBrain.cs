@@ -27,7 +27,7 @@ public struct AgentInfoInternal
     /// Most recent text observation.
     /// </summary>
     public string textObservation;
-    
+
     /// <summary>
     /// For discrete control, specifies the actions that the agent cannot take. Is true if
     /// the action is masked.
@@ -56,62 +56,49 @@ public struct AgentInfoInternal
     /// Whether the agent has reached its max step count for this episode.
     /// </summary>
     public bool maxStepReached;
-    
+
 }
 
-
-/// CoreBrain which decides actions using internally embedded TensorFlow model.
-public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
+[CreateAssetMenu(fileName = "NewInternalLearningBrain", menuName = "ML-Agents/Internal Learning Brain")]
+/// which decides actions using internally embedded TensorFlow model.
+public class InternalLearningBrain : Brain
 {
-    /// Reference to the brain that uses this CoreBrainInternal
-    public Brain brain;
-    public GameObject trainer;
-
-    protected ITrainer trainerInterface;
+    public TrainerBase trainerBase;
     private Dictionary<Agent, AgentInfoInternal> currentInfo;
 
     private Dictionary<Agent, TakeActionOutput> prevActionOutput;
 
 
 
-
-
-
-    /// Create the reference to the brain
-    public void SetBrain(Brain b)
+    /// <inheritdoc/>
+    protected override void Initialize()
     {
-        brain = b;
-
-    }
-
-
-    public void InitializeCoreBrain(MLAgents.Batcher brainBatcher)
-    {
-        if (trainer)
+        if (trainerBase)
         {
-            trainerInterface = trainer.GetComponent<ITrainer>();
-            Debug.Assert(trainerInterface != null, "Please make sure your trainer has a monobehaviour that implement ITrainer interface attached!");
+
         }
         else
         {
-            Debug.LogError("Please assign a trainer to your corebrain!");
+            
+            Debug.LogError("NO TrainerBased is assigned to this internal learning brain. Make sure there is a trainer that uses this brain in the scene.");
         }
-        trainerInterface.Initialize(brain);
+        trainerBase.Initialize();
     }
-
-
+    
 
     /// Uses the stored information to run the tensorflow graph and generate 
     /// the actions.
-    public void DecideAction(Dictionary<Agent, AgentInfo> newAgentInfoRaw)
+    protected override void DecideAction()
     {
+        var newAgentInfoRaw = agentInfos;
+
         int currentBatchSize = newAgentInfoRaw.Count();
         List<Agent> newAgentList = newAgentInfoRaw.Keys.ToList();
         List<Agent> recordableAgentList = newAgentList.Where((a) => currentInfo != null && currentInfo.ContainsKey(a) && prevActionOutput.ContainsKey(a)).ToList();
 
         //clone the raw agent info into the agent info we need
         Dictionary<Agent, AgentInfoInternal> newAgentInfo = new Dictionary<Agent, AgentInfoInternal>();
-        foreach(var a in newAgentList)
+        foreach (var a in newAgentList)
         {
             newAgentInfo[a] = CopyAgentInfo(newAgentInfoRaw[a], a.brain);
         }
@@ -124,69 +111,56 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 
 
         //get the datas only for the agents in the agentInfo input
-        var prevInfo = GetValueForAgents(currentInfo, recordableAgentList);    
+        var prevInfo = GetValueForAgents(currentInfo, recordableAgentList);
         var prevActionActions = GetValueForAgents(prevActionOutput, recordableAgentList);
         var newInfo = GetValueForAgents(newAgentInfo, recordableAgentList);
 
-        if (recordableAgentList.Count > 0 && trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
+        if (recordableAgentList.Count > 0 && trainerBase.IsTraining() && trainerBase.GetStep() <= trainerBase.GetMaxStep())
         {
-            trainerInterface.AddExperience(prevInfo, newInfo, prevActionActions);
-            trainerInterface.ProcessExperience(prevInfo, newInfo);
+            trainerBase.AddExperience(prevInfo, newInfo, prevActionActions);
+            trainerBase.ProcessExperience(prevInfo, newInfo);
         }
 
 
 
-        if (trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
+        if (trainerBase.IsTraining() && trainerBase.GetStep() <= trainerBase.GetMaxStep())
         {
-            trainerInterface.IncrementStep();
+            trainerBase.IncrementStep();
         }
 
         //update the info
         UpdateInfos(ref currentInfo, newAgentInfo);
 
-        var actionOutputs = trainerInterface.TakeAction(GetValueForAgents(currentInfo, newAgentList));
+        var actionOutputs = trainerBase.TakeAction(GetValueForAgents(currentInfo, newAgentList));
         UpdateActionOutputs(ref prevActionOutput, actionOutputs);
 
         //TODO Update the agent's other info if there is
         foreach (Agent agent in newAgentList)
         {
             if (actionOutputs.ContainsKey(agent) && actionOutputs[agent].outputAction != null)
-                agent.UpdateVectorAction(trainerInterface.PostprocessingAction(actionOutputs[agent].outputAction));
+            {
+                agent.UpdateVectorAction(trainerBase.PostprocessingAction(actionOutputs[agent].outputAction));
+            }
         }
 
 
 
-        if (trainerInterface.IsReadyUpdate() && trainerInterface.IsTraining() && trainerInterface.GetStep() <= trainerInterface.GetMaxStep())
+        if (trainerBase.IsReadyUpdate() && trainerBase.IsTraining() && trainerBase.GetStep() <= trainerBase.GetMaxStep())
         {
-            trainerInterface.UpdateModel();
+            trainerBase.UpdateModel();
         }
 
         //clear the prev record if the agent is done
         foreach (Agent agent in newAgentList)
         {
-            if(newAgentInfo[agent].done || newAgentInfo[agent].maxStepReached)
+            if (newAgentInfo[agent].done || newAgentInfo[agent].maxStepReached)
             {
                 currentInfo.Remove(agent);
             }
         }
 
-    }
+        agentInfos.Clear();
 
-    /// Displays the parameters of the CoreBrainInternal in the Inspector 
-    public void OnInspector()
-    {
-#if UNITY_EDITOR
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-
-        var serializedBrain = new SerializedObject(this);
-
-
-
-        var trainerProperty = serializedBrain.FindProperty("trainer");
-        serializedBrain.Update();
-        EditorGUILayout.PropertyField(trainerProperty, true);
-        serializedBrain.ApplyModifiedProperties();
-#endif
     }
 
 
@@ -210,7 +184,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
 
         foreach (var agent in newInfos.Keys)
         {
-            allInfos[agent] =newInfos[agent];
+            allInfos[agent] = newInfos[agent];
         }
     }
 
@@ -231,7 +205,7 @@ public class CoreBrainInternalTrainable : ScriptableObject, CoreBrain
         {
             actionMasks = (bool[])agentInfo.actionMasks?.Clone(),
             stackedVectorObservation = new List<float>(agentInfo.stackedVectorObservation),
-            visualObservations = agentInfo.visualObservations.Select((x,i)=>x.TextureToArray(brain.brainParameters.cameraResolutions[i].blackAndWhite)).ToList(),
+            visualObservations = agentInfo.visualObservations.Select((x, i) => x.TextureToArray(brain.brainParameters.cameraResolutions[i].blackAndWhite)).ToList(),
             textObservation = (string)agentInfo.textObservation?.Clone(),
             memories = new List<float>(agentInfo.memories),
             reward = agentInfo.reward,

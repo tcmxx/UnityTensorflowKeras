@@ -29,13 +29,11 @@ public class TrainerMimic : Trainer
 
     protected ISupervisedLearningModel modelSL;
     protected TrainerParamsMimic parametersMimic;
-    public Brain BrainToTrain { get; protected set; }
 
-    public override void Initialize(Brain brain)
+    public override void Initialize()
     {
         modelSL = modelRef as ISupervisedLearningModel;
         Debug.Assert(modelSL != null, "Please assign a ISupervisedLearningModel to modelRef");
-        BrainToTrain = brain;
         Debug.Assert(BrainToTrain != null, "brain can not be null");
         parametersMimic = parameters as TrainerParamsMimic;
         Debug.Assert(parametersMimic != null, "Please Specify PPO Trainer Parameters");
@@ -290,9 +288,9 @@ public class TrainerMimic : Trainer
         {
             dataBuffer = (DataBuffer)binFormatter.Deserialize(mStream);
             Debug.Log("Loaded training data from " + fullPath);
-        }else if(deserialized is HPPORawHistory)
+        }else if(deserialized is SortedRawHistory)
         {
-            dataBuffer = ((HPPORawHistory)deserialized).AddToDataBuffer(BrainToTrain.brainParameters);
+            dataBuffer = ((SortedRawHistory)deserialized).AddToDataBuffer(BrainToTrain.brainParameters);
         }
         else
         {

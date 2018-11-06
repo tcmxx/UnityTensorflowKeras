@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-[CreateAssetMenu(menuName = "ml-agent/sl/TrainerParamsMimic")]
+[CreateAssetMenu(menuName = "ML-Agents/InternalLearning/sl/TrainerParamsMimic")]
 public class TrainerParamsMimic : TrainerParams
 {
 

@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "ml-agent/ppo-cma/RLNetworkACSeperateVar")]
+[CreateAssetMenu(menuName = "ML-Agents/InternalLearning/ppo-cma/RLNetworkACSeperateVar")]
 public class RLNetworkACSeperateVar : RLNetworkSimpleAC
 {
     public bool useSoftclipForMean = false;

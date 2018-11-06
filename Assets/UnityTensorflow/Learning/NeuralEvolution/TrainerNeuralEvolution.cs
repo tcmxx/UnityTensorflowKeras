@@ -50,9 +50,7 @@ public class TrainerNeuralEvolution : Trainer
     protected List<float> rewardsOfCurrentChild = null;
 
     public StatsLogger stats { get; protected set; }
-
-    public Brain BrainToTrain { get; protected set; }
-
+    
 
 
     public override void Update()
@@ -81,13 +79,12 @@ public class TrainerNeuralEvolution : Trainer
 
 
 
-    public override void Initialize(Brain brain)
+    public override void Initialize()
     {
         modeNE = modelRef as INeuralEvolutionModel;
         Debug.Assert(modeNE != null, "Please assign a INeuralEvolutionModel to modelRef");
         parametersNE = parameters as TrainerParamsNeuralEvolution;
         Debug.Assert(parametersNE != null, "Please Specify TrainerNeuralEvolution Trainer Parameters");
-        BrainToTrain = brain;
         Debug.Assert(BrainToTrain != null, "brain can not be null");
 
         modelRef.Initialize(BrainToTrain.brainParameters, isTraining, parameters);

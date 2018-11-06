@@ -19,43 +19,56 @@ public struct TakeActionOutput
 }
 
 /// <summary>
-/// Inplement this interface on any MonoBehaviour for your own trainer that can be used on CoreBrainInteralTrainable as a Trainer.
+/// Interface for trainer
 /// </summary>
-public interface ITrainer
+/// 
+[DefaultExecutionOrder(-1000)]
+public abstract class TrainerBase:MonoBehaviour
 {
+
+    protected Academy academyRef;
+    public InternalLearningBrain BrainToTrain;
+
+    protected virtual void Awake()
+    {
+        academyRef = FindObjectOfType<Academy>();
+        Debug.Assert(academyRef != null, "No Academy in this scene!");
+        BrainToTrain.trainerBase = this;
+    }
+    
     /// <summary>
     /// impelment all of your initialization here
     /// </summary>
-    void Initialize(Brain brain);
+    public abstract void Initialize();
 
     /// <summary>
     /// Return the max steps of the training.
     /// </summary>
     /// <returns>max steps</returns>
-    int GetMaxStep();
+    public abstract int GetMaxStep();
 
     /// <summary>
     /// return current steps.
     /// </summary>
     /// <returns>curren steps</returns>
-    int GetStep();
+    public abstract int GetStep();
 
     /// <summary>
     /// This will be called every fixed update when training is enabled.
     /// </summary>
-    void IncrementStep();
+    public abstract void IncrementStep();
 
     /// <summary>
     /// Reset your trainer
     /// </summary>
-    void ResetTrainer();
+    public abstract void ResetTrainer();
 
     /// <summary>
     /// This will be called when an action on a agent is requested. Implement your logic to return the actions to take based on agent's current states.
     /// </summary>
     /// <param name="agentInfos">the information of agents that need actions.</param>
     /// <returns>a disionary of agent and its action to take</returns>
-    Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos);
+    public abstract Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos);
 
     /// <summary>
     /// This will be called every loop when when training is enabled. You should record the infos of the agents based on the need of your algorithm.
@@ -63,48 +76,48 @@ public interface ITrainer
     /// <param name="currentInfo">infomation of the agents before the action taken.</param>
     /// <param name="newInfo">infomation of the agents after tha ction taken</param>
     /// <param name="actionOutput">the action taken</param>
-    void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
+    public abstract void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
 
     /// <summary>
     /// Same as AddExperience(), called every loop when training. You are supposed to process the collected data for episodes or something. You can do it in AddExperience as well...This method is called right after AddExperience().
     /// </summary>
     /// <param name="currentInfo">infomation of the agents before the action taken.</param>
     /// <param name="newInfo">infomation of the agents after tha ction taken</param>
-    void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo);
+    public abstract void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo);
 
     /// <summary>
     /// When this returns true, UpdateModel() will be called();
     /// </summary>
     /// <returns>Whether it is ready to udpate the model.</returns>
-    bool IsReadyUpdate();
+    public abstract bool IsReadyUpdate();
 
     /// <summary>
     /// Put all of your logic for training the model. This is called when IsReadyUpdate()  returns true.
     /// </summary>
-    void UpdateModel();
+    public abstract void UpdateModel();
 
     /// <summary>
     /// Return whether training is enabled. AddExperience(), ProcessExperience() and UpdateModel() will not be called if it returns false.
     /// </summary>
     /// <returns></returns>
-    bool IsTraining();
+    public abstract bool IsTraining();
 
 
     /// <summary>
     /// The final action received by Agent will be post processed by this. The experience record will not be processed by this. Just return the input if you dont need any processing
     /// </summary>
     /// <returns>processed action</returns>
-    float[] PostprocessingAction(float[] rawAction);
+    public abstract float[] PostprocessingAction(float[] rawAction);
 }
 
 
 /// <summary>
-/// A abstract class for trainer if you want to save some time impelmenting ITrainer...It provides some helper functions and stuff..., you can use this as based class instead of ITrainer.
+/// A abstract class for trainer if you want to save some time impelmenting ITrainer...It provides some helper functions and stuff..., you can use this as based class instead of TrainerBase.
 /// </summary>
-public abstract class Trainer : MonoBehaviour, ITrainer
+public abstract class Trainer : TrainerBase
 {
 
-    protected Academy academyRef;
+    
     public LearningModelBase modelRef;
     public bool isTraining;
     protected bool prevIsTraining;
@@ -124,10 +137,8 @@ public abstract class Trainer : MonoBehaviour, ITrainer
 
 
 
-    private void Start()
+    protected void Start()
     {
-        academyRef = FindObjectOfType<Academy>();
-        Debug.Assert(academyRef != null, "No Academy in this scene!");
         prevIsTraining = isTraining;
         academyRef.SetIsInference(!isTraining);
     }
@@ -153,18 +164,16 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         }*/
     }
     
-    public abstract void Initialize(Brain brain);
-
-    public virtual int GetMaxStep()
+    public override int GetMaxStep()
     {
         return parameters.maxTotalSteps;
     }
 
-    public virtual int GetStep()
+    public override int GetStep()
     {
         return steps;
     }
-    public virtual void IncrementStep()
+    public override void IncrementStep()
     {
         steps++;
         if (steps % parameters.saveModelInterval == 0)
@@ -173,22 +182,22 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         }
     }
 
-    public virtual void ResetTrainer()
+    public override void ResetTrainer()
     {
         steps = 0;
     }
 
-    public virtual float[] PostprocessingAction(float[] rawAction)
+    public override float[] PostprocessingAction(float[] rawAction)
     {
         return rawAction;
     }
 
 
-    public abstract Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos);
-    public abstract void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
-    public abstract void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo);
-    public abstract bool IsReadyUpdate();
-    public abstract void UpdateModel();
+    //public abstract Dictionary<Agent, TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos);
+    //public abstract void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput);
+    //public abstract void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo);
+    //public abstract bool IsReadyUpdate();
+    //public abstract void UpdateModel();
 
 
     /// <summary>
@@ -270,7 +279,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     /// <param name="agentList">List of agents that needs to be included in the output</param>
     /// <param name="cameraResolutions">camera resolution data. Should be obtain from the Brain.</param>
     /// <returns>List of visual input batch data. Each item in the list is for item in cameraResolution parameter</returns>
-    public static List<float[,,,]> CreateVisualInputBatch(Dictionary<Agent, AgentInfoInternal> currentInfo, List<Agent> agentList, resolution[] cameraResolutions)
+    public static List<float[,,,]> CreateVisualInputBatch(Dictionary<Agent, AgentInfoInternal> currentInfo, List<Agent> agentList, MLAgents.Resolution[] cameraResolutions)
     {
         if (cameraResolutions == null || cameraResolutions.Length <= 0)
             return null;
@@ -292,7 +301,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
         return observationMatrixList;
     }
 
-    public static List<float[,,,]> CreateVisualInputBatch(List<List<float[,,]>> episodeHistory, resolution[] cameraResolutions)
+    public static List<float[,,,]> CreateVisualInputBatch(List<List<float[,,]>> episodeHistory, MLAgents.Resolution[] cameraResolutions)
     {
         if (cameraResolutions == null || cameraResolutions.Length <= 0)
             return null;
@@ -399,7 +408,7 @@ public abstract class Trainer : MonoBehaviour, ITrainer
     }
 
 
-    public bool IsTraining()
+    public override bool IsTraining()
     {
         return isTraining;
     }

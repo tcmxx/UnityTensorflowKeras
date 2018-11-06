@@ -8,7 +8,7 @@ using UnityEditor;
 #endif
 
 
-[CreateAssetMenu(menuName = "ml-agent/neural evolution/TrainerParamsNeuralEvolution")]
+[CreateAssetMenu(menuName = "ML-Agents/InternalLearning/neural evolution/TrainerParamsNeuralEvolution")]
 public class TrainerParamsNeuralEvolution : TrainerParams
 {
     [Header("Optimization")]

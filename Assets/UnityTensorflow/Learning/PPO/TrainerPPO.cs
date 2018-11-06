@@ -29,19 +29,17 @@ public class TrainerPPO : Trainer
     public StatsLogger stats { get; protected set; }
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
-    public Brain BrainToTrain { get; protected set; }
 
 
     //casted modelRef from the base class for convenience
     protected IRLModelPPO iModelPPO;
 
-    public override void Initialize(Brain brain)
+    public override void Initialize()
     {
         iModelPPO = modelRef as IRLModelPPO;
         Debug.Assert(iModelPPO != null, "Please assign a model that implement interface IRLModelPPO to modelRef");
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
-        BrainToTrain = brain;
         Debug.Assert(BrainToTrain != null, "brain can not be null");
 
 

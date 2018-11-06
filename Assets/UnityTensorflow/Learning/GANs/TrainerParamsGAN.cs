@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-[CreateAssetMenu(menuName = "ml-agent/GAN/TrainerParamsGAN")]
+[CreateAssetMenu(menuName = "ML-Agents/InternalLearning/GAN/TrainerParamsGAN")]
 public class TrainerParamsGAN : TrainerParamsMimic
 {
     [Header("GAN")]

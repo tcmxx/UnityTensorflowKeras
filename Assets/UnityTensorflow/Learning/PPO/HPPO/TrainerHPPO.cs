@@ -19,8 +19,8 @@ public class TrainerHPPO : Trainer
     protected DataBuffer policyTrainBuffer;
     protected DataBuffer tempGoodTrainBuffer;
 
-    protected HPPORawHistory policyTrainEpisodeHistory;
-    protected HPPORawHistory goodEpisodeHistory;
+    protected SortedRawHistory policyTrainEpisodeHistory;
+    protected SortedRawHistory goodEpisodeHistory;
     public int goodHistoryCount = 20;
     public int goodHistoryRepeat = 1;
     public bool trainPolicy = true;
@@ -42,20 +42,19 @@ public class TrainerHPPO : Trainer
     public StatsLogger stats { get; protected set; }
     protected Dictionary<Agent, float> accumulatedRewards;
     protected Dictionary<Agent, int> episodeSteps;
-    public Brain BrainToTrain { get; protected set; }
+    
 
     //protected bool nextTrainingPolicy = false;
 
     //casted modelRef from the base class for convenience
     protected IRLModelHPPO iModelHPPO;
 
-    public override void Initialize(Brain brain)
+    public override void Initialize()
     {
         iModelHPPO = modelRef as IRLModelHPPO;
         Debug.Assert(iModelHPPO != null, "Please assign a model that implement interface IRLModelHPPO to modelRef");
         parametersPPO = parameters as TrainerParamsPPO;
         Debug.Assert(parametersPPO != null, "Please Specify PPO Trainer Parameters");
-        BrainToTrain = brain;
         Debug.Assert(BrainToTrain != null, "brain can not be null");
 
 
@@ -109,8 +108,8 @@ public class TrainerHPPO : Trainer
         dataBuffer = new DataBuffer(allBufferData.ToArray());
         policyTrainBuffer = new DataBuffer(allBufferData.ToArray());
         tempGoodTrainBuffer = new DataBuffer(allBufferData.ToArray());
-        policyTrainEpisodeHistory = new HPPORawHistory();
-        goodEpisodeHistory = new HPPORawHistory(goodHistoryCount);
+        policyTrainEpisodeHistory = new SortedRawHistory();
+        goodEpisodeHistory = new SortedRawHistory(goodHistoryCount);
         //exampleHistory = null;
 
         if(exampleEpisodes != null)
@@ -647,7 +646,7 @@ public class TrainerHPPO : Trainer
 
     }
     
-    public void SaveHistory(HPPORawHistory history, string savefilename)
+    public void SaveHistory(SortedRawHistory history, string savefilename)
     {
         if (string.IsNullOrEmpty(savefilename))
         {
@@ -668,14 +667,14 @@ public class TrainerHPPO : Trainer
         Debug.Log("history saved to " + fullPath);
     }
 
-    public HPPORawHistory LoadHistory( byte[] data)
+    public SortedRawHistory LoadHistory( byte[] data)
     {
         var mStream = new MemoryStream(data);
         var binFormatter = new BinaryFormatter();
         var deserializedData = binFormatter.Deserialize(mStream);
-        if (deserializedData is HPPORawHistory)
+        if (deserializedData is SortedRawHistory)
         {
-            return deserializedData as HPPORawHistory;
+            return deserializedData as SortedRawHistory;
         }
         else
             return null;

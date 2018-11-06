@@ -10,7 +10,7 @@ using MLAgents;
 [Serializable]
 public class EpisodeData : IComparable<EpisodeData>
 {
-    public float score;
+    public float score; //the score of this episode. Usually the total rewards
     public bool isDone = false;
     public List<float> vectorObsHistory = null;
     public List<float> rewardsHistory = null;
@@ -51,7 +51,7 @@ public class EpisodeData : IComparable<EpisodeData>
     }
 }
 [Serializable]
-public class HPPORawHistory
+public class SortedRawHistory
 {
 
     protected SortedSet<EpisodeData> episodesHistory;
@@ -65,12 +65,12 @@ public class HPPORawHistory
     protected List<List<float>> finalVectorObsHistory = null;
     protected List<List<float[,,]>> finalVisualObsHistory = null;
     protected List<bool> isDoneHistory = null;*/
-    public HPPORawHistory(int maxSize)
+    public SortedRawHistory(int maxSize)
     {
         this.maxSize = maxSize;
         episodesHistory = new SortedSet<EpisodeData>();
     }
-    public HPPORawHistory()
+    public SortedRawHistory()
     {
         episodesHistory = new SortedSet<EpisodeData>();
         //episodesHistory.Add(n)

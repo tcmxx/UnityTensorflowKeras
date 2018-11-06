@@ -6,33 +6,27 @@ using UnityEngine;
 using MLAgents;
 using System;
 
-public class TrainerMAES : MonoBehaviour, ITrainer
+public class TrainerMAES : TrainerBase
 {
-
-    /// Reference to the brain that uses this CoreBrainInternal
-    protected Brain brain;
-    
     public bool debugVisualization = true;
 
     
 
-    public void Initialize(Brain brain)
+    public override void Initialize()
     {
     }
 
-
-
-    public int GetStep()
+    public override int GetStep()
     {
         return 0;
     }
 
-    public int GetMaxStep()
+    public override int GetMaxStep()
     {
         return int.MaxValue;
     }
 
-    public Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos)
+    public override Dictionary<Agent,TakeActionOutput> TakeAction(Dictionary<Agent, AgentInfoInternal> agentInfos)
     {
         var result = new Dictionary<Agent, TakeActionOutput>();
         foreach (var a in agentInfos)
@@ -54,47 +48,44 @@ public class TrainerMAES : MonoBehaviour, ITrainer
         return new Dictionary<Agent, TakeActionOutput>();
     }
 
-    public void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
+    public override void AddExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo, Dictionary<Agent, TakeActionOutput> actionOutput)
     {
         return;
     }
 
-    public void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo)
+    public override void ProcessExperience(Dictionary<Agent, AgentInfoInternal> currentInfo, Dictionary<Agent, AgentInfoInternal> newInfo)
     {
         return;
     }
 
-    public bool IsReadyUpdate()
+    public override bool IsReadyUpdate()
     {
         return false;
     }
 
-    public void UpdateModel()
+    public override void UpdateModel()
     {
         return;
     }
 
-    public void IncrementStep()
+    public override void IncrementStep()
     {
         return;
     }
 
-    public void SetBrain(Brain brain)
-    {
-        this.brain = brain; ;
-    }
 
-    public void ResetTrainer()
+
+    public override void ResetTrainer()
     {
         return;
     }
 
-    public bool IsTraining()
+    public override bool IsTraining()
     {
         return false;
     }
 
-    public float[] PostprocessingAction(float[] rawAction)
+    public override float[] PostprocessingAction(float[] rawAction)
     {
         return rawAction;
     }
