@@ -120,8 +120,8 @@ public abstract class LearningModelBase : MonoBehaviour
         InitializeInner(brainParameters, inputStateTensor, inputVisualTensors, enableTraining ? trainerParams : null);
 
         //test
-        Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/" + name + ".pb");
-        ((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/" + name + ".pb");
+        //Debug.LogWarning("Tensorflow Graph is saved for test purpose at: SavedGraph/" + name + ".pb");
+        //((UnityTFBackend)Current.K).ExportGraphDef("SavedGraph/" + name + ".pb");
 
         Current.K.try_initialize_variables(true);
 
@@ -326,7 +326,7 @@ public abstract class LearningModelBase : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("Value of " + saveKey + " does not match Tensor shape. Set optimizer weights failed.");
+                Debug.LogWarning("Value of " + saveKey + " does not match Tensor shape. Set model weights failed.");
                 continue;
             }
             //Current.K.set_value(w, values[saveKey]);

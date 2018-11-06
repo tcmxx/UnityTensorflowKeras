@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d99c8458226607a4bb1b2196d603c1b6, type: 3}
+  m_Name: PongPPOWithInitNetwork
+  m_EditorClassIdentifier: 
+  actorHiddenLayers:
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 3
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 3
+  criticHiddenLayers:
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 3
+  - size: 64
+    initialScale: 1
+    useBias: 1
+    activationFunction: 3
+  actorOutputLayerInitialScale: 0.01
+  actorOutputLayerBias: 1
+  criticOutputLayerInitialScale: 1
+  criticOutputLayerBias: 1
+  visualEncoderInitialScale: 0.01
+  visualEncoderBias: 1
+  shareEncoder: 1

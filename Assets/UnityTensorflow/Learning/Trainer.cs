@@ -137,7 +137,7 @@ public abstract class Trainer : TrainerBase
 
 
 
-    protected void Start()
+    protected virtual void Start()
     {
         prevIsTraining = isTraining;
         academyRef.SetIsInference(!isTraining);
@@ -155,7 +155,7 @@ public abstract class Trainer : TrainerBase
 
     protected virtual void FixedUpdate()
     {
-        if (isTraining)
+        if (isTraining && modelRef.Initialized)
             modelRef.SetLearningRate(parameters.learningRate);
 
         /*if (IsReadyUpdate() && isTraining && GetStep() <= GetMaxStep())   //moved into CoreBrainInternalTrainable

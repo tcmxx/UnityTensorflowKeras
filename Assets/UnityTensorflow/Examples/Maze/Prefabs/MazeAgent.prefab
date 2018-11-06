@@ -118,7 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4489ca5e08ea2824d8ac1255bf3e4264, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 0}
+  brain: {fileID: 11400000, guid: f3cd614afb005a34e9644efb61b8a8da, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 20013555564121794}
@@ -150,8 +150,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49ca709d8583b3b41a2ac12e72e2eb8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mazeEnvironment: {fileID: 114554479768388630}
-  enableUpdate: 1
   blockDimension: 1
   blockPrefab: {fileID: 1703424236563172, guid: e7eeed6412190fa4199630885d87c19e,
     type: 2}

@@ -105,18 +105,21 @@ public class TrainerPPOCMA : Trainer
 
     protected override void FixedUpdate()
     {
-        iModelPPO.ClipEpsilonValue = parametersPPO.clipValueLoss;
+        if (iModelPPO != null)
+        {
+            iModelPPO.ClipEpsilonValue = parametersPPO.clipValueLoss;
+            if (BrainToTrain == null)
+            {
+                Debug.LogError("Please assign this trainer to a Brain with CoreBrainInternalTrainable!");
+            }
+            if (isTraining)
+            {
+                modelRef.SetLearningRate(parameters.learningRate, 0);
+                modelRef.SetLearningRate(parameters.learningRate, 1);
+                modelRef.SetLearningRate(parameters.learningRate, 2);
+            }
+        }
 
-        if (BrainToTrain == null)
-        {
-            Debug.LogError("Please assign this trainer to a Brain with CoreBrainInternalTrainable!");
-        }
-        if (isTraining)
-        {
-            modelRef.SetLearningRate(parameters.learningRate, 0);
-            modelRef.SetLearningRate(parameters.learningRate, 1);
-            modelRef.SetLearningRate(parameters.learningRate, 2);
-        }
     }
 
     public override void IncrementStep()

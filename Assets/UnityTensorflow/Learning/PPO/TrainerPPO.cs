@@ -104,10 +104,13 @@ public class TrainerPPO : Trainer
 
     protected override void FixedUpdate()
     {
-        iModelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
-        iModelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
-        iModelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
-        iModelPPO.ClipValueLoss = parametersPPO.clipValueLoss;
+        if (iModelPPO != null)
+        {
+            iModelPPO.ValueLossWeight = parametersPPO.valueLossWeight;
+            iModelPPO.EntropyLossWeight = parametersPPO.entropyLossWeight;
+            iModelPPO.ClipEpsilon = parametersPPO.clipEpsilon;
+            iModelPPO.ClipValueLoss = parametersPPO.clipValueLoss;
+        }
         base.FixedUpdate();
     }
 

@@ -113,18 +113,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &26104903
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 0}
 --- !u!1 &48126599
 GameObject:
   m_ObjectHideFlags: 0
@@ -248,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 1503875967}
@@ -1010,29 +998,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
---- !u!114 &557422084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  graphModel: {fileID: 0}
-  graphScope: 
-  graphPlaceholders: []
-  BatchSizePlaceholderName: batch_size
-  VectorObservationPlacholderName: vector_observation
-  RecurrentInPlaceholderName: recurrent_in
-  RecurrentOutPlaceholderName: recurrent_out
-  VisualObservationPlaceholderName: []
-  ActionPlaceholderName: action
-  PreviousActionPlaceholderName: prev_action
-  brain: {fileID: 0}
 --- !u!1 &633344548
 GameObject:
   m_ObjectHideFlags: 0
@@ -1227,7 +1192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 367144103}
@@ -1363,22 +1328,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
---- !u!114 &1086122071
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions: []
-  brain: {fileID: 1290122114}
 --- !u!1 &1096792403
 GameObject:
   m_ObjectHideFlags: 0
@@ -1406,7 +1355,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 1320980498}
@@ -1464,7 +1413,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 1185443842}
@@ -1588,6 +1537,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1dffdf2b948b4849b3dee6c124a2468, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  broadcastHub:
+    broadcastingBrains:
+    - {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
+    _brainsToControl: []
   maxSteps: 0
   trainingConfiguration:
     width: 80
@@ -1614,74 +1567,10 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 5, y: 0.19999993, z: 5}
   m_Children:
-  - {fileID: 1290122116}
   - {fileID: 1389237091}
   - {fileID: 1831144742}
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1290122113
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 1518777817328868, guid: 00a1ebe742cf2394d8c21484e3a02412,
-    type: 2}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1290122116}
-  - component: {fileID: 1290122114}
-  m_Layer: 0
-  m_Name: PoleBrain
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1290122114
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 114938382745838118, guid: 00a1ebe742cf2394d8c21484e3a02412,
-    type: 2}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1290122113}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c676a8ddf5a5f4f64b35e9ed5028679d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  brainParameters:
-    vectorObservationSize: 0
-    numStackedVectorObservations: 1
-    vectorActionSize: 02000000
-    cameraResolutions:
-    - width: 82
-      height: 82
-      blackAndWhite: 1
-    vectorActionDescriptions:
-    - 
-    - 
-    vectorActionSpaceType: 1
-  brainType: 4
-  CoreBrains:
-  - {fileID: 1086122071}
-  - {fileID: 1876053447}
-  - {fileID: 26104903}
-  - {fileID: 557422084}
-  - {fileID: 1623843091}
-  instanceID: 16740
---- !u!4 &1290122116
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 4244963715435272, guid: 00a1ebe742cf2394d8c21484e3a02412,
-    type: 2}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1290122113}
-  m_LocalRotation: {x: -0, y: -0, z: 0.00000000273576, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1247528339}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1309090683
 GameObject:
@@ -2018,7 +1907,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1247528339}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1389237092
 MonoBehaviour:
@@ -2031,6 +1920,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d491f9276717f244b7c13d65e0cb335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BrainToTrain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   modelRef: {fileID: 1831144743}
   isTraining: 0
   parameters: {fileID: 11400000, guid: f53e6e37255e47b4aba38f20ac1ad06c, type: 2}
@@ -2560,19 +2450,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
---- !u!114 &1623843091
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
-  trainer: {fileID: 1389237090}
 --- !u!1 &1746325439
 GameObject:
   m_ObjectHideFlags: 0
@@ -2736,7 +2613,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 48126600}
@@ -2868,7 +2745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 1841924385}
@@ -3000,7 +2877,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1247528339}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1831144743
 MonoBehaviour:
@@ -3124,19 +3001,6 @@ Transform:
   m_Father: {fileID: 800505335}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1876053447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  brain: {fileID: 0}
 --- !u!1 &1879675717
 GameObject:
   m_ObjectHideFlags: 0
@@ -3482,7 +3346,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 1969638040}
@@ -3540,7 +3404,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf464f77a03b3af4cb5aed3ee00aa691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 1290122114}
+  brain: {fileID: 11400000, guid: 05fd6f26618f33440b36c79650b9293a, type: 2}
   agentParameters:
     agentCameras:
     - {fileID: 2112917012}

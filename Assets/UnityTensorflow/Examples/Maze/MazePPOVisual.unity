@@ -113,22 +113,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &91157304
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions: []
-  brain: {fileID: 1109835115}
 --- !u!1 &240015114
 GameObject:
   m_ObjectHideFlags: 0
@@ -155,7 +139,6 @@ Transform:
   m_LocalPosition: {x: 298.5, y: 186.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1109835114}
   - {fileID: 2104784859}
   - {fileID: 383050328}
   m_Father: {fileID: 0}
@@ -172,6 +155,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63614f516fa891f4694d6bd845e120cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  broadcastHub:
+    broadcastingBrains:
+    - {fileID: 11400000, guid: 9ffcd16cfed561b468ddec9286781ab3, type: 2}
+    _brainsToControl: []
   maxSteps: 0
   trainingConfiguration:
     width: 80
@@ -214,7 +201,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 240015115}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &383050329
 MonoBehaviour:
@@ -229,6 +216,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   checkpointToLoad: {fileID: 0}
   modelName: 
+  weightSaveMode: 0
   trainingEnabled: 0
   network: {fileID: 11400000, guid: 5bc335624be75ec4a9a8a532b93b9b27, type: 2}
   optimizer:
@@ -284,7 +272,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1109835115}
+      objectReference: {fileID: 11400000, guid: 9ffcd16cfed561b468ddec9286781ab3,
+        type: 2}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
       value: MazeAgentVisual (3)
@@ -359,7 +348,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1109835115}
+      objectReference: {fileID: 11400000, guid: 9ffcd16cfed561b468ddec9286781ab3,
+        type: 2}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
       value: MazeAgentVisual
@@ -452,78 +442,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1109835113
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1109835114}
-  - component: {fileID: 1109835115}
-  m_Layer: 0
-  m_Name: Brain
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1109835114
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1109835113}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 240015115}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1109835115
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1109835113}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c676a8ddf5a5f4f64b35e9ed5028679d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  brainParameters:
-    vectorObservationSize: 0
-    numStackedVectorObservations: 1
-    vectorActionSize: 04000000
-    cameraResolutions:
-    - width: 32
-      height: 32
-      blackAndWhite: 0
-    vectorActionDescriptions:
-    - 
-    vectorActionSpaceType: 0
-  brainType: 4
-  CoreBrains:
-  - {fileID: 91157304}
-  - {fileID: 1431359060}
-  - {fileID: 1601487759}
-  - {fileID: 1663124161}
-  - {fileID: 1701228815}
-  instanceID: 15114
---- !u!114 &1431359060
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  brain: {fileID: 0}
 --- !u!1 &1577744296
 GameObject:
   m_ObjectHideFlags: 0
@@ -586,18 +504,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1601487759
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 0}
 --- !u!1001 &1604401099
 Prefab:
   m_ObjectHideFlags: 0
@@ -641,7 +547,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1109835115}
+      objectReference: {fileID: 11400000, guid: 9ffcd16cfed561b468ddec9286781ab3,
+        type: 2}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
       value: MazeAgentVisual (1)
@@ -649,42 +556,6 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &1663124161
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  graphModel: {fileID: 0}
-  graphScope: 
-  graphPlaceholders: []
-  BatchSizePlaceholderName: batch_size
-  VectorObservationPlacholderName: vector_observation
-  RecurrentInPlaceholderName: recurrent_in
-  RecurrentOutPlaceholderName: recurrent_out
-  VisualObservationPlaceholderName: []
-  ActionPlaceholderName: action
-  PreviousActionPlaceholderName: prev_action
-  brain: {fileID: 0}
---- !u!114 &1701228815
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 1109835115}
-  trainer: {fileID: 2104784858}
 --- !u!1 &1715640920
 GameObject:
   m_ObjectHideFlags: 0
@@ -809,7 +680,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1109835115}
+      objectReference: {fileID: 11400000, guid: 9ffcd16cfed561b468ddec9286781ab3,
+        type: 2}
     - target: {fileID: 1232519403051400, guid: 156daa748550a414fabe3af09c5e5b89, type: 2}
       propertyPath: m_Name
       value: MazeAgentVisual (2)
@@ -869,7 +741,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 240015115}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2104784860
 MonoBehaviour:
@@ -882,6 +754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d491f9276717f244b7c13d65e0cb335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BrainToTrain: {fileID: 11400000, guid: 9ffcd16cfed561b468ddec9286781ab3, type: 2}
   modelRef: {fileID: 383050329}
   isTraining: 0
   parameters: {fileID: 11400000, guid: 2abb9a36292a32e4c8e7d2ec9e3d65b3, type: 2}
