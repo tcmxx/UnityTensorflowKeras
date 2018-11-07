@@ -286,7 +286,7 @@ public class TrainerMimic : Trainer
 
         if (deserialized is DataBuffer)
         {
-            dataBuffer = (DataBuffer)binFormatter.Deserialize(mStream);
+            dataBuffer = (DataBuffer)deserialized;
             Debug.Log("Loaded training data from " + fullPath);
         }else if(deserialized is SortedRawHistory)
         {

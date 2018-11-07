@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -201,7 +201,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -321,7 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -382,7 +382,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -417,7 +417,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1566701003}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &508170724
 MonoBehaviour:
@@ -430,6 +430,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d491f9276717f244b7c13d65e0cb335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BrainToTrain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   modelRef: {fileID: 1604954274}
   isTraining: 0
   parameters: {fileID: 11400000, guid: ceae9610b797404448805d039594796b, type: 2}
@@ -437,62 +438,6 @@ MonoBehaviour:
   checkpointPath: Assets\UnityTensorflow\Examples\Pong\Data
   checkpointFileName: PongRLcheckpoint.bytes
   steps: 0
---- !u!1 &516214003
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 516214004}
-  - component: {fileID: 516214005}
-  m_Layer: 0
-  m_Name: Brain
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &516214004
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 516214003}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1566701003}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &516214005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 516214003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c676a8ddf5a5f4f64b35e9ed5028679d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  brainParameters:
-    vectorObservationSize: 6
-    numStackedVectorObservations: 1
-    vectorActionSize: 03000000
-    cameraResolutions: []
-    vectorActionDescriptions:
-    - 
-    vectorActionSpaceType: 0
-  brainType: 4
-  CoreBrains:
-  - {fileID: 548350080}
-  - {fileID: 1775303414}
-  - {fileID: 1952325069}
-  - {fileID: 596883971}
-  - {fileID: 926929205}
-  instanceID: 23004
 --- !u!1 &535243909
 GameObject:
   m_ObjectHideFlags: 0
@@ -586,7 +531,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -594,45 +539,6 @@ MonoBehaviour:
     onDemandDecision: 0
     numberOfActionsBetweenDecisions: 1
   environment: {fileID: 0}
---- !u!114 &548350080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions: []
-  brain: {fileID: 516214005}
---- !u!114 &596883971
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  graphModel: {fileID: 0}
-  graphScope: 
-  graphPlaceholders: []
-  BatchSizePlaceholderName: batch_size
-  VectorObservationPlacholderName: vector_observation
-  RecurrentInPlaceholderName: recurrent_in
-  RecurrentOutPlaceholderName: recurrent_out
-  VisualObservationPlaceholderName: []
-  ActionPlaceholderName: action
-  PreviousActionPlaceholderName: prev_action
-  brain: {fileID: 0}
 --- !u!1 &672023160
 GameObject:
   m_ObjectHideFlags: 0
@@ -895,19 +801,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &926929205
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
-  trainer: {fileID: 508170722}
 --- !u!1 &977111757
 GameObject:
   m_ObjectHideFlags: 0
@@ -948,7 +841,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -1031,7 +924,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -1092,7 +985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -1452,7 +1345,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -1487,6 +1380,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4535838ccd55325409c505742a7d6f0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  broadcastHub:
+    broadcastingBrains:
+    - {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
+    _brainsToControl: []
   maxSteps: 0
   trainingConfiguration:
     width: 80
@@ -1512,7 +1409,6 @@ Transform:
   m_LocalPosition: {x: 3.6856637, y: 11.320004, z: -0.014054775}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 516214004}
   - {fileID: 508170723}
   - {fileID: 1604954273}
   m_Father: {fileID: 0}
@@ -1545,7 +1441,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1566701003}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1604954274
 MonoBehaviour:
@@ -1621,19 +1517,6 @@ MonoBehaviour:
   wallThickness: 0.05
   racketThickness: 0.03
   ballRadius: 0.02
---- !u!114 &1775303414
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  brain: {fileID: 0}
 --- !u!1 &1786636294
 GameObject:
   m_ObjectHideFlags: 0
@@ -1738,7 +1621,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -1827,18 +1710,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1952325069
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 0}
 --- !u!1 &1993894776
 GameObject:
   m_ObjectHideFlags: 0
@@ -1879,7 +1750,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000
@@ -1980,7 +1851,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf9af70eb61cae41ab738fbfc41d5d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 516214005}
+  brain: {fileID: 11400000, guid: 149949fe13fb2934b9032399a1ebf643, type: 2}
   agentParameters:
     agentCameras: []
     maxStep: 2000

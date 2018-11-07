@@ -146,7 +146,7 @@ public class DataBuffer : ISerializable
     public void AddData(params ValueTuple<string, Array>[] data)
     {
         //check whether the input data are correct
-        Debug.Assert(data.Length == dataset.Count, "Input data number is not the same as the buffer required");
+        Debug.Assert(data.Length >= dataset.Count, "Input data does not have enough data as the buffer required");
         int size = data[0].Item2.Length / dataset[data[0].Item1].info.unitLength;
         foreach (var k in dataset.Keys)
         {
@@ -180,6 +180,8 @@ public class DataBuffer : ISerializable
 
         foreach (var k in data)
         {
+            if (!dataset.ContainsKey(k.Item1))
+                continue;
             //resize the data container if needed
             int currentSize = dataset[k.Item1].CurrentSize();
             if(CurrentCount > currentSize * 2)

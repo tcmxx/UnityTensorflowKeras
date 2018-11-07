@@ -208,7 +208,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -451,7 +452,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -692,7 +694,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1415431051}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &791075477
 MonoBehaviour:
@@ -782,35 +784,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &835113405
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  keyContinuousPlayerActions: []
-  axisContinuousPlayerActions: []
-  discretePlayerActions: []
-  brain: {fileID: 0}
---- !u!114 &852270792
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  brain: {fileID: 0}
 --- !u!1 &865594976 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1140438680430356, guid: 21bdff36071a0444eae34d1a5f0211ba,
@@ -1171,7 +1144,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -1209,29 +1183,6 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 21bdff36071a0444eae34d1a5f0211ba, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &1216099436
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  graphModel: {fileID: 0}
-  graphScope: 
-  graphPlaceholders: []
-  BatchSizePlaceholderName: batch_size
-  VectorObservationPlacholderName: vector_observation
-  RecurrentInPlaceholderName: recurrent_in
-  RecurrentOutPlaceholderName: recurrent_out
-  VisualObservationPlaceholderName: []
-  ActionPlaceholderName: action
-  PreviousActionPlaceholderName: prev_action
-  brain: {fileID: 0}
 --- !u!1001 &1220909687
 Prefab:
   m_ObjectHideFlags: 0
@@ -1275,7 +1226,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -1318,63 +1270,6 @@ Transform:
   m_PrefabParentObject: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba,
     type: 2}
   m_PrefabInternal: {fileID: 1363941755}
---- !u!1 &1327012118
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1327012120}
-  - component: {fileID: 1327012119}
-  m_Layer: 0
-  m_Name: BilliardBrain
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1327012119
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1327012118}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c676a8ddf5a5f4f64b35e9ed5028679d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  brainParameters:
-    vectorObservationSize: 9
-    numStackedVectorObservations: 1
-    vectorActionSize: 02000000
-    cameraResolutions: []
-    vectorActionDescriptions:
-    - 
-    - 
-    vectorActionSpaceType: 1
-  brainType: 4
-  CoreBrains:
-  - {fileID: 835113405}
-  - {fileID: 852270792}
-  - {fileID: 2044784791}
-  - {fileID: 1216099436}
-  - {fileID: 1989058796}
-  instanceID: 39458
---- !u!4 &1327012120
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1327012118}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1415431051}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1363941755
 Prefab:
   m_ObjectHideFlags: 0
@@ -1418,7 +1313,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -1483,7 +1379,6 @@ Transform:
   m_LocalPosition: {x: 0.71938086, y: 0.27357092, z: 4.1970553}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1327012120}
   - {fileID: 791075476}
   - {fileID: 1485033537}
   m_Father: {fileID: 0}
@@ -1500,6 +1395,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6450033353cd5954c85f572e5101ef14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  broadcastHub:
+    broadcastingBrains:
+    - {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72, type: 2}
+    _brainsToControl: []
   maxSteps: 0
   trainingConfiguration:
     width: 80
@@ -1558,7 +1457,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -1623,7 +1523,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1415431051}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1485033538
 MonoBehaviour:
@@ -1636,6 +1536,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d491f9276717f244b7c13d65e0cb335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BrainToTrain: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72, type: 2}
   modelRef: {fileID: 791075477}
   isTraining: 1
   parameters: {fileID: 11400000, guid: 063d746d40cfc3f4fa8e859ecf679eda, type: 2}
@@ -1691,7 +1592,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -1829,7 +1731,8 @@ Prefab:
         type: 2}
       propertyPath: brain
       value: 
-      objectReference: {fileID: 1327012119}
+      objectReference: {fileID: 11400000, guid: 62a05bb4c94705643a01a7bae9fb1c72,
+        type: 2}
     - target: {fileID: 114924759199247932, guid: 21bdff36071a0444eae34d1a5f0211ba,
         type: 2}
       propertyPath: autoRequestDecision
@@ -1938,31 +1841,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!114 &1989058796
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c70bae3b443c3743a743c3b2837676b, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 1327012119}
-  trainer: {fileID: 1485033536}
---- !u!114 &2044784791
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 0}
 --- !u!4 &2052555801 stripped
 Transform:
   m_PrefabParentObject: {fileID: 4491882495942122, guid: 21bdff36071a0444eae34d1a5f0211ba,
