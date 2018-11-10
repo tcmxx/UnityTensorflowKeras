@@ -7,12 +7,11 @@ Here, we are only going to tell how to use our existing code to train your ML-Ag
 The example [Getting Started with the 3D Balance Ball Environment](Getting-Started-with-Balance-Ball.md) briefly shows how to use PPO to train an existing ML-Agent environment in editor. Here we are going to cover a little more details. 
 
 ## Overall Steps
-1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md)
-3. Change the BrainType of your brain to `InternalTrainable` in inspector.
+1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md). When creae the brain scripable object, create an Internal Learning Brain(Create/ML-Agents/InternalLearningBrain) instead of others and set the correct brain parameters.
 2. Create a Trainer
 	1. Attach a `TrainerPPO.cs` to any GameObject.
     2. Create a `TrainerParamsPPO` scriptable object with proper parameters in your project(in project window selelct `Create/ml-agent/ppo/TrainerParamsPPO`), and assign it to the Params field in `TrainerPPO.cs`.
-    3. Assign the Trainer to the `Trainer` field of your Brain.
+    3. Assign the Internal Learning Brain created previously to the brainToTrain field in `TrainerPPO.cs`.
 3. Create a Model
 	1. Attach a `RLModelPPO.cs` to any GameObject.
     2. Create a `RLNetworkSimpleAC` scriptable with proper parameters in your project(in project window selelct `Create/ml-agent/ppo/RLNetworkSimpleAC`), and assign it to the Network field in `RLModelPPO.cs`.

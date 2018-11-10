@@ -12,19 +12,18 @@ can usually be evalutad independently. But again, we are not doing this neither 
 ## Overall Steps
 The steps are similiar to using other training method. See the scene `UnityTensorflow/Examples/3DBall/3DBallNE` for a simple example.
 
-1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md)
-2. Change the BrainType of your brain to `InternalTrainable` in inspector.
-3. Create a Trainer
+1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md). When creae the brain scripable object, create an Internal Learning Brain(`Create/ML-Agents/InternalLearningBrain`) instead of others and set the correct brain parameters.
+2. Create a Trainer
 	1. Attach a `TrainerNeuralEvolution.cs` to any GameObject.
     2. Create a `TrainerParamsNeuralEvolution` scriptable object with proper parameters in your project and assign it to the Params field in `TrainerNeuralEvolution.cs`.
-    3. Assign the Trainer to the `Trainer` field of your Brain.
+    3. Assign the Internal Learning Brain created previously to the brainToTrain field in `TrainerPPO.cs`.
 3. Create a Model
 	1. Any model that implements INeuralEvolutionModel can be used as a model for neural evolution trainer. Currently both `RLModelPPO.cs`
   and `SupervisedLearningModel.cs` have that. Attach a one of those two to any GameObject.
     2. Create a Network scriptable object in your project for your model and attach it to the model.(See [Training with Proximal Policy Optimization(PPO)](https://github.com/tcmxx/UnityTensorflowKeras/blob/tcmxx/docs/Documents/Training-PPO.md) if you don't know how)
     3. Assign the created Model to the `modelRef` field of in `TrainerNeuralEvolution.cs`
     
-5. Play! 
+4. Play! 
 
 ## Explanation of fields in the inspector
 ### TrainerNeuralEvolution.cs

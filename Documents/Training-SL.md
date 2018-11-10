@@ -1,16 +1,15 @@
-# Training with Imitation(Supervised Learning)
+# Training with Behaviour Cloning(Supervised Learning)
 
 This algorithm is basically trying to train the neural network to remember what the correct action is in different states. See [Unity's document](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-Imitation-Learning.md) for more explanation.
 
 The example scene `UnityTensorflow/Examples/Pong/PongSL` shows how to use supervised learning to train the neural network from how you are playing the game yourself. 
 
 ## Overall Steps to Setup
-1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md)
-3. Change the BrainType of your brain to `InternalTrainable` in inspector.
+1. Create a environment using ML-Agent API. See the [instruction from Unity](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Create-New.md). When creae the brain scripable object, create an Internal Learning Brain `(Create/ML-Agents/InternalLearningBrain)` instead of others and set the correct brain parameters.
 2. Create a Trainer
 	1. Attach a `TrainerMimic.cs` to any GameObject.
     2. Create a `TrainerParamsMimic` scriptable object with proper parameters in your project(in project window selelct `Create/ml-agent/ppo/TrainerParamsMimic`), and assign it to the Params field in `TrainerMimic.cs`.
-    3. Assign the Trainer to the `Trainer` field of your Brain.
+    3. Assign the Internal Learning Brain created previously to the brainToTrain field in `TrainerMimic.cs`.
 3. Create a Model
 	1. Attach a `SupervisedLearningModel.cs` to any GameObject.
     2. Create a `SupervisedLearningNetworkSimple` scriptable object in your project(in project window selelct `Create/ml-agent/ppo/SupervisedLearningNetworkSimple`), and assign it to the Network field in `SupervisedLearningModel.cs`.
