@@ -38,23 +38,6 @@ You need to copy the necessary folders from this repo to your ML-Agents project:
 
 Copy the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder, and put it into your Unity MLAgent's /Assets folder. 
 
-## Modify Brain.cs to Add Support For Training inside Unity
-
-Finally,  you need to modify Brain.cs by a little so that there is a option to select InternalTrainable brain  as external brain type and enable training in Unity:
-
-Add one line'InternalTrainable' to the BrainType enum:
-
-```    
-    public enum BrainType
-    {
-        Player,
-        Heuristic,
-        External,
-        Internal,
-        InternalTrainable
-    }
-```
-
 ## ValueTuple.dll
 Delete the System.ValueTuple.dll in Unity MLAgent's /Assets/ML-Agents/Plugins folder if it is still there and you have updated Unity with .net 4.71 support. 
 
