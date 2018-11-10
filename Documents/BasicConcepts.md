@@ -9,9 +9,10 @@ This repo provides or plans to provide following tools for game AI and machine l
     
 2. CMA-ES[(Covariance Matrix Adaptation - Evolution Strategy)](https://en.wikipedia.org/wiki/CMA-ES)
 	* A genetic algorithm to find the best solution.
+	* We have integrate MA-ES and LM-MA-ES.
     * Can be used with or without ML-Agents.
 3. Training with Supervise Learning
-	* It is called imitation learning in ML-Agents. Here it is called supervised learning or mimic(I am too lazy to unify the name). (basically you show the correct action under different circumstances and let the neural network remember it.)
+	* It is called behavior cloning in ML-Agents. Here it is called supervised learning or mimic(I am too lazy to unify the name). (basically you show the correct action under different circumstances and let the neural network remember it.)
     * The correct action data can be collected from human playing or others, such as CMAES.
 
 4. Neural Evolution(Need improvements)
@@ -32,8 +33,8 @@ This repo provides or plans to provide following tools for game AI and machine l
 3. Training on mobile device
 	* Not unless tensorflow start to include training on mobile build, or CNTK can be used as backend and it support mobile device.
 However, you can still use inference on mobile device.
-4. Curiosity Module. 
-	* I don't have time to implement it yet.
+4. Curiosity Module and GAIL. 
+	* I don't have time to implement those yet.
 	
 ## Concepts
 You don't have to read the folowing if you just want to use this repository as it is.
