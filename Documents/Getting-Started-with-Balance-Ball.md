@@ -17,20 +17,21 @@ In the examples diretories provided by Unity ML-Agents, find the scene 3DBall an
         width="400" border="10" />
 </p>
 
-### 2. Change the Brain Type to InternalTrainable
-Go to the Ball3DBrain and change ites BrainType to Internal Trainable in inspector. If the Internal Trainable does not show up, make sure you follow this [installation step](https://github.com/tcmxx/UnityTensorflowKeras/blob/master/Documents/Installation.md#modify-braincs-to-add-support-for-training-inside-unity).
+### 2. Create an Internal Learning Brain
+We added a new type of brain called Internal Learning Brain, which should be used for training in game/editor instead of Heuristic Brain, Player Brain or Learning Brain.  
+Create a new Internal Learning Brain scriptable object like how you create other type of brains, and copy the brain parameters from other brains provided by Unity ML-Agents for 3DBall environment.
 <p align="center">
-    <img src="Images/Getting-Started-with-Balance-Ball/ChangeBrainType.png" 
+    <img src="Images/Getting-Started-with-Balance-Ball/CreateInternalLearningBrain.png" 
         alt="TrainerLookLike" 
         width="500" border="10" />
 </p>
-There will be a Trainer field showing up. You will create a Trainer in the next step and assign it to this field.
 
 ### 3. Create the Trainer and Trainer Parameters in the Scene
-A trainer is something that handles the training process. It is based on the Unity ML-Agents' python script.
+A trainer is something that handles the training process. 
 
-Add a new GameObject at any place, and attach a script called TrainerPPO.cs to it. Assign this script to the Trainer field in your Brain.
-In the tutorial, we add it under Ball3DAcademy and name it Ball3DTrainer.
+Add a new GameObject at any place, and attach a script called TrainerPPO.cs to it. In the tutorial, we add it under Ball3DAcademy and name it Ball3DTrainer.
+
+A trainer needs to know which brain to train. Drag the just created Internal Learning Brain to the TrainerPPO's brainToTrain field in the editor.
 
 A trainer ususally needs a set of hyperparameters. Here for TrainerPPO, you need to create a scriptable object called TrainerParamsPPO and assign it to the Parameters field in TrainerPPO. You can also just use the one already created called "3DBallTrainingParams", which has better parameter values than the default one when you create it.
 <p align="center">
@@ -38,7 +39,7 @@ A trainer ususally needs a set of hyperparameters. Here for TrainerPPO, you need
         alt="CreateTrainerParams" 
         width="600" border="10" />
 </p>
-Finally check the Is Trainer field in the Trainer. The Trainer in the inspector should look like following. You can adjust the hyper parameters in it if you know what they mean.
+Finally check the Is Trainer field in the Trainer. The Trainer in the inspector should look like following. You can adjust the hyper parameters in it if you know what they mean. The trainer should look like below:
 <p align="center">
     <img src="Images/Getting-Started-with-Balance-Ball/TrainerWithParameters.png" 
         alt="TrainerLookLike" 
