@@ -485,7 +485,9 @@ public partial class Grapher{
     public static void Log(object obj, string name, Color color, float x)
     {
     }
-
+    public static void SaveToFiles(string x, string y){
+}
+     public static void Reset(){}
 }
 
 #endif

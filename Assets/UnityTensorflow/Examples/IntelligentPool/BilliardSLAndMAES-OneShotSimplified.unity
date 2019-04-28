@@ -244,12 +244,12 @@ Prefab:
     - target: {fileID: 114647183792634274, guid: 61c28c3b413277a48bd7a8243798695a,
         type: 2}
       propertyPath: textureDimension.x
-      value: 100
+      value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 114647183792634274, guid: 61c28c3b413277a48bd7a8243798695a,
         type: 2}
       propertyPath: textureDimension.y
-      value: 100
+      value: 128
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 61c28c3b413277a48bd7a8243798695a, type: 2}
@@ -579,6 +579,11 @@ Prefab:
         type: 2}
       propertyPath: targetValue
       value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 114440804119060818, guid: 516fb5a9405a3b141b40831dd2ba3441,
+        type: 2}
+      propertyPath: logInterval
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 516fb5a9405a3b141b40831dd2ba3441, type: 2}

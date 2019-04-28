@@ -122,6 +122,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2047664}
   - component: {fileID: 2047663}
+  - component: {fileID: 2047665}
   m_Layer: 0
   m_Name: GridAcademy
   m_TagString: Untagged
@@ -155,7 +156,7 @@ MonoBehaviour:
     width: 1280
     height: 720
     qualityLevel: 5
-    timeScale: 1
+    timeScale: 100
     targetFrameRate: 60
   resetParameters:
     resetParameters:
@@ -188,6 +189,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2047665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2047662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bccb4da75cc8df4b919de7eff71709e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  recordInterval: 500
+  save: 0
+  savePath: visualTimePerStep.csv
+  maxReccord: 10
+  numOfRecord: -1
 --- !u!1 &87755817
 GameObject:
   m_ObjectHideFlags: 0
@@ -619,7 +636,7 @@ MonoBehaviour:
   modelRef: {fileID: 1774820491}
   isTraining: 0
   parameters: {fileID: 11400000, guid: 9ac68691f040860429963bb7cf31c106, type: 2}
-  continueFromCheckpoint: 1
+  continueFromCheckpoint: 0
   checkpointPath: Assets/UnityTensorflow/Examples/GridWorld/Data
   checkpointFileName: Checkpoint.bytes
   steps: 0

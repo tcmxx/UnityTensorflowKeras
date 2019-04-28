@@ -8,6 +8,8 @@ using UnityEditor;
 
 using System.Linq;
 using MLAgents;
+using System.IO;
+using System;
 
 
 
@@ -68,8 +70,10 @@ public class InternalLearningBrain : Brain
 
     private Dictionary<Agent, TakeActionOutput> prevActionOutput;
 
-
-
+    protected List<float> secondUpdate = new List<float>();
+    protected int maxReccord = 20;
+    protected int numOfRecord = -1;
+    protected string savePath = "SecPerUpdate.csv";
     /// <inheritdoc/>
     protected override void Initialize()
     {
@@ -79,12 +83,14 @@ public class InternalLearningBrain : Brain
         }
         else
         {
-            
+
             Debug.LogError("NO TrainerBased is assigned to this internal learning brain. Make sure there is a trainer that uses this brain in the scene.");
         }
         trainerBase.Initialize();
+        numOfRecord = -1;
+        secondUpdate = new List<float>();
     }
-    
+
 
     /// Uses the stored information to run the tensorflow graph and generate 
     /// the actions.
@@ -147,7 +153,19 @@ public class InternalLearningBrain : Brain
 
         if (trainerBase.IsReadyUpdate() && trainerBase.IsTraining() && trainerBase.GetStep() <= trainerBase.GetMaxStep())
         {
+            float t = Time.realtimeSinceStartup;
             trainerBase.UpdateModel();
+            if (numOfRecord >= 0)
+            {
+                float dt = Time.realtimeSinceStartup - t;
+                secondUpdate.Add(dt);
+                Debug.Log(dt + ":"+numOfRecord);
+            }
+            numOfRecord++;
+            if (numOfRecord == maxReccord)
+            {
+                SaveToFile(savePath);
+            }
         }
 
         //clear the prev record if the agent is done
@@ -163,7 +181,10 @@ public class InternalLearningBrain : Brain
 
     }
 
-
+    protected void SaveToFile(string path)
+    {
+        File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), path), string.Join(Environment.NewLine, secondUpdate));
+    }
 
     protected static Dictionary<Agent, T> GetValueForAgents<T>(Dictionary<Agent, T> allInfos, List<Agent> agents)
     {

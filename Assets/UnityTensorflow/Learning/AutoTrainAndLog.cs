@@ -11,7 +11,7 @@ public class AutoTrainAndLog : MonoBehaviour
     public string sessionName;
     public string directoryName;
     public int index = 1;
-
+    public int stopIndex = -1;
     private void Awake()
     {
         trainerRef = GetComponent<Trainer>();
@@ -40,6 +40,16 @@ public class AutoTrainAndLog : MonoBehaviour
                 trainerRef.modelRef.RestoreCheckpoint(trainerRef.modelRef.checkpointToLoad.bytes, true);
             }
             index++;
+            if (index == stopIndex)
+            {
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#else
+         Application.Quit();
+#endif
+            }
         }
+
+
     }
 }
