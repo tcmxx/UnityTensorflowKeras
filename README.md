@@ -16,8 +16,8 @@
 * Examples provided.
 
 ## Requirements: 
-- [Unity ML agent v0.6](https://github.com/Unity-Technologies/ml-agents) 
-- Unity 2018.1.6f1(Should be working with some of the newer versions as well).
+- [Unity ML agent v0.8](https://github.com/Unity-Technologies/ml-agents) 
+- Unity 2018.1.9(Should be working with some of the newer versions as well).
 
 ## Platforms:
 - Windows is almost fully supported. If you want to use GPU, CUDA and cuDNN are needed(Please google CUDA v9.0 and cudnn v7 and install them). 
