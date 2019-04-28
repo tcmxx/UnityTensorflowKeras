@@ -7,7 +7,7 @@ This repo uses source codes from two other repos:
 KerasSharp uses [TensorflowSharp](https://github.com/migueldeicaza/TensorFlowSharp) plugin built for Unity. 
 
 ## Install Unity.
-Unity 2018.1.6f1 will most likely be working.
+Unity 2018.1.9 will most likely be working.
 
 ## Clone the Unity MLAgent
 The repo in Github is at: https://github.com/Unity-Technologies/ml-agents. You can clone it anyway you want. All we need is the UnitySDK/Assets/ML-Agents folder in its Unity project. All other python stuff is not needed.
@@ -36,7 +36,7 @@ If you don't what to clone with submodule, you can also clone the  [KerasSharp](
 ## Copy the folders into your project.
 You need to copy the necessary folders from this repo to your ML-Agents project:
 
-Copy the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder, and put it into your Unity MLAgent's /Assets folder. 
+Copy the /UnityTensorflow folder under UnityTensorflowKeras's /Assets folder, and put it into your Unity MLAgent SDK's /Assets folder. 
 
 ## ValueTuple.dll
 Delete the System.ValueTuple.dll in Unity MLAgent's /Assets/ML-Agents/Plugins folder if it is still there and you have updated Unity with .net 4.71 support. 
