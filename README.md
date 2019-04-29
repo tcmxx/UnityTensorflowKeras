@@ -6,8 +6,6 @@
 
 - This repo is made for Aalto University's [Intellicent Computational Media](https://aaltoicmcourse.github.io/) course. The course includes two parts: Audio(Python) and Games(Unity and Python), and this repo contains the main materials for the Unity part of the course. This repo is a remake based on [the original materials](https://github.com/tcmxx/CNTKUnityTools), which are made with [CNTK](https://github.com/Microsoft/CNTK). It will also be part of my master's thesis.
 
-- Note: This project is still in development. Don't use this unless you know that you have time to check the sourcecodes!
-
 
 ## Features:
 * Use your already made Unity ML-Agent, but enable learning in Unity editor/build without python or extra coding.
@@ -31,15 +29,12 @@
 - For more information including installation and usage instructions, go to [Document](Documents/Readme.md).
 
 ## Future Plan:
-We plan to keep this repo updated with latest game related machine learning technologies for the course every year.
+We might or might not update this repository. But it will try to keep it up with Unity ML-Agents at least.
 
 Possible future plans/contributions:
 * Updating [KerasSharp](https://github.com/tcmxx/keras-sharp), maybe with some basic recurrent NN.
 * More example environments.
-* Better API for in game usage and keep updated with Unity ML-Agents API.
 * More algorithms including: Complete baseline PPO from ML-Agents(Curiosity Module and GAIL), Deep Q Learning, Deep Mimic, Evolved Policy Gradient, Genetic Algorithms and so on.
-* Improving the logging tool.
-* Graphic editor for neural network architecture
 
 ## License
 [MIT](LICENSE).
