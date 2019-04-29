@@ -26,6 +26,8 @@ public class AddMenuItems : MonoBehaviour {
         CreateAssets<TrainerParamsMimic, SupervisedLearningNetworkSimple>("TrainerParamSL_" + obj1.scene.name + ".asset",
             "NetworkSL_" + obj1.scene.name + ".asset",
             out trainerParam, out network);
+        network.hiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.hiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
 
         var trainer = obj2.GetComponent<TrainerMimic>();
         trainer.modelRef = obj1.GetComponent<SupervisedLearningModel>();
@@ -55,7 +57,10 @@ public class AddMenuItems : MonoBehaviour {
         CreateAssets<TrainerParamsPPO, RLNetworkSimpleAC>("TrainerParamPPO_" + obj1.scene.name + ".asset",
             "NetworkPPO_" + obj1.scene.name + ".asset",
             out trainerParam, out network);
-
+        network.actorHiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.actorHiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
+        network.criticHiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.criticHiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
 
         var trainer = obj2.GetComponent<TrainerPPO>();
         trainer.modelRef = obj1.GetComponent<RLModelPPO>();
@@ -85,6 +90,10 @@ public class AddMenuItems : MonoBehaviour {
         CreateAssets<TrainerParamsPPO, RLNetworkACSeperateVar>("TrainerParamPPOCMA_" + obj1.scene.name + ".asset",
             "NetworkPPOCMA_" + obj1.scene.name + ".asset",
             out trainerParam, out network);
+        network.actorHiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.actorHiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
+        network.criticHiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.criticHiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
 
         var trainer = obj2.GetComponent<TrainerPPOCMA>();
         trainer.modelRef = obj1.GetComponent<RLModelPPOCMA>();
@@ -111,10 +120,13 @@ public class AddMenuItems : MonoBehaviour {
 
         //try to create parameter assets
         TrainerParamsNeuralEvolution trainerParam = null;
-        SupervisedLearningNetwork network = null;
-        CreateAssets<TrainerParamsNeuralEvolution, SupervisedLearningNetwork>("TrainerParamNE_" + obj1.scene.name + ".asset",
+        SupervisedLearningNetworkSimple network = null;
+        CreateAssets<TrainerParamsNeuralEvolution, SupervisedLearningNetworkSimple>("TrainerParamNE_" + obj1.scene.name + ".asset",
             "NetworkNE_" + obj1.scene.name + ".asset",
             out trainerParam, out network);
+        network.hiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.hiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
+
 
         var trainer = obj2.GetComponent<TrainerNeuralEvolution>();
         trainer.modelRef = obj1.GetComponent<SupervisedLearningModel>();
@@ -145,7 +157,8 @@ public class AddMenuItems : MonoBehaviour {
         CreateAssets<TrainerParamsGAN, GANNetworkDense>("TrainerParamGAN_" + obj1.scene.name + ".asset",
             "NetworkGAN_" + obj1.scene.name + ".asset",
             out trainerParam, out network);
-
+        network.discriminatorHiddenLayers = new List<UnityNetwork.SimpleDenseLayerDef>();
+        network.discriminatorHiddenLayers.Add(new UnityNetwork.SimpleDenseLayerDef());
 
         var trainer = obj2.GetComponent<TrainerMimic>();
         trainer.modelRef = obj1.GetComponent<GANModel>();
