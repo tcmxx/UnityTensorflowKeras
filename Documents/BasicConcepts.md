@@ -44,14 +44,14 @@ You can fisrt go through the [Overview of Unity ML-Agents](https://github.com/Un
 Assume that you are somehow familiar with Unity ML-Agents, then following will be some brief explanation of concepts/key conponents that are used in this repo.
 (To be added)
 ### Trainer
-The Brain in ML-Agent will communiate the with a Trainer to train the Model. We added a `CoreBrainInternalTrainable` on top of the existing core brains in ML-Agent which can communicate with our Trainers. The CoreBrainInternalTrainable works with any Monobehaviour that implement the `ITrainer` interface. 
+Trainer is a type of C# classes we made for the Brain in ML-Agent to communiate the with to train the LearningModel. We added a `CoreBrainInternalTrainable` on top of the existing core brains in ML-Agent which can communicate with our Trainers. The CoreBrainInternalTrainable works with any Monobehaviour that implement the `ITrainer` interface. 
 
 We made some Trainers for you already for specific algorithm including PPO, SupervisedLearning and Evolution Strategy.
 
-### Model
-Models are the core of our AI. You can query information including the actions giving it the observations. Also, it provides interface to train the neural network.
+### LearningModel
+LearningModel is a type of C# classes we made that contains the core logic of our AI algorithms. You can query information including the actions giving it the observations. Also, it provides interface to train the neural network.
 
-Trainers will ask for actions and other training related data from Models during the training, and also ask to train the neural network when enough data can be provided.
+Trainer will ask for actions and other training related data from LearningModel during the training, and also ask to train the neural network when enough data can be provided.
 
 ### UnityNetwork
 
