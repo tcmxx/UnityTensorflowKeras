@@ -1,5 +1,7 @@
 # UnityTensorflowKeras
 
+## Please use [Tensorflow.Net][https://github.com/SciSharp/TensorFlow.NET] instead!! This project will not be maintained.
+
 - It is an extension of [Unity ML agent](https://github.com/Unity-Technologies/ml-agents) for deep learning, primarily reinforcement learning, with in-editor/in-game training support. It also provides interface for another optimization algorithms such as MAES.
 
 - It uses a modified version of [KerasSharp](https://github.com/tcmxx/keras-sharp) and [TensorflowSharp](https://github.com/migueldeicaza/TensorFlowSharp) as the backend, which usesTensorflow c++ lib. No python is needed for model building/evaluation/training. You can even build a standalone(an actual playable game!) with training capability.
